@@ -108,53 +108,53 @@ Examples
 
 **Kernel test in Cli**
 
-   $ checksec.sh --kernel
-   * Kernel protection information:
+	$ checksec.sh --kernel
+	* Kernel protection information:
 
-     Description - List the status of kernel protection mechanisms. Rather than
-     inspect kernel mechanisms that may aid in the prevention of exploitation of
-     userspace processes, this option lists the status of kernel configuration
-     options that harden the kernel itself against attack.
+	Description - List the status of kernel protection mechanisms. Rather than
+	inspect kernel mechanisms that may aid in the prevention of exploitation of
+	userspace processes, this option lists the status of kernel configuration
+	options that harden the kernel itself against attack.
 
-     Kernel config: /proc/config.gz
+	Kernel config: /proc/config.gz
  
-     GCC stack protector support:            Enabled
-     Strict user copy checks:                Disabled
-     Enforce read-only kernel data:          Disabled
-     Restrict /dev/mem access:               Enabled
-     Restrict /dev/kmem access:              Enabled
+		GCC stack protector support:            Enabled
+		Strict user copy checks:                Disabled
+		Enforce read-only kernel data:          Disabled
+		Restrict /dev/mem access:               Enabled
+		Restrict /dev/kmem access:              Enabled
 
-   * grsecurity / PaX: Auto GRKERNSEC
+	* grsecurity / PaX: Auto GRKERNSEC
 
-     Non-executable kernel pages:            Enabled
-     Non-executable pages:                   Enabled
-     Paging Based Non-executable pages:      Enabled
-     Restrict MPROTECT:                      Enabled
-     Address Space Layout Randomization:     Enabled
-     Randomize Kernel Stack:                 Enabled
-     Randomize User Stack:                   Enabled
-     Randomize MMAP Stack:                   Enabled
-     Sanitize freed memory:                  Enabled
-     Sanitize Kernel Stack:                  Enabled
-     Prevent userspace pointer deref:        Enabled
-     Prevent kobject refcount overflow:      Enabled
-     Bounds check heap object copies:        Enabled
-     JIT Hardening:	 	          Enabled
-     Thread Stack Random Gaps: 	          Enabled
-     Disable writing to kmem/mem/port:       Enabled
-     Disable privileged I/O:                 Enabled
-     Harden module auto-loading:             Enabled
-     Chroot Protection:          		  Enabled
-     Deter ptrace process snooping:	  Enabled
-     Larger Entropy Pools:                   Enabled
-     TCP/UDP Blackhole:                      Enabled
-     Deter Exploit Bruteforcing:             Enabled
-     Hide kernel symbols:                    Enabled
+		Non-executable kernel pages:            Enabled
+		Non-executable pages:                   Enabled
+		Paging Based Non-executable pages:      Enabled
+		Restrict MPROTECT:                      Enabled
+		Address Space Layout Randomization:     Enabled
+		Randomize Kernel Stack:                 Enabled
+		Randomize User Stack:                   Enabled
+		Randomize MMAP Stack:                   Enabled
+		Sanitize freed memory:                  Enabled
+ 		Sanitize Kernel Stack:                  Enabled
+		Prevent userspace pointer deref:        Enabled
+		Prevent kobject refcount overflow:      Enabled
+		Bounds check heap object copies:        Enabled
+		JIT Hardening:	 			            Enabled
+		Thread Stack Random Gaps: 	            Enabled
+ 		Disable writing to kmem/mem/port:       Enabled
+     	Disable privileged I/O:                 Enabled
+     	Harden module auto-loading:             Enabled
+     	Chroot Protection:     	        		Enabled
+     	Deter ptrace process snooping:	  		Enabled
+     	Larger Entropy Pools:                   Enabled
+     	TCP/UDP Blackhole:                      Enabled
+     	Deter Exploit Bruteforcing:             Enabled
+     	Hide kernel symbols:                    Enabled
 
-   * Kernel Heap Hardening: No KERNHEAP
+	* Kernel Heap Hardening: No KERNHEAP
 
-     The KERNHEAP hardening patchset is available here:
-       https://www.subreption.com/kernheap/
+	The KERNHEAP hardening patchset is available here:
+	 https://www.subreption.com/kernheap/
 
 
 **Kernel Test in XML**
