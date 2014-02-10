@@ -368,6 +368,16 @@ kernelcheck() {
     exit 0
   fi
 
+  echo_message "  Vanilla Kernel ASLR:   		  " "" "" ""
+  randomize_va=$(sysctl -b kernel.randomize_va_space)
+  if [ $randomize_va == 2 ]; then
+    echo_message "\033[32mFull\033[m\n" "Full," " randomize_va_space='full'" '"randomize_va_space":"full",'
+  elif [ $randomize_va == 1 ]; then
+    echo_message "\033[33mPartial\033[m\n" "Partial," " randomize_va_space='partial'" '"randomize_va_space":"partial",'
+  else
+    echo_message "\033[31mNone\033[m\n" "None," " randomize_va_space='none'" '"randomize_va_space":"none",'
+  fi
+
   echo_message "  GCC stack protector support:            " "" "" ""
   if $kconfig | grep -qi 'CONFIG_CC_STACKPROTECTOR=y'; then
     echo_message "\033[32mEnabled\033[m\n" "Enabled," " gcc_stack_protector='yes'" '"gcc_stack_protector":"yes",'
@@ -588,7 +598,7 @@ kernelcheck() {
       echo_message "\033[31mDisabled\033[m\n" "Disabled" " config_grkernsec_hidesym='no'/>" '"config_grkernsec_hidesym":"no" },'
     fi
   else
-    echo_message "\033[31mNo GRKERNSEC\033[m\n\n" "No GRKERNSEC,,,,,,,," "    <grsecurity config='no' />" '{ "grsecurity_config":"no" },'
+    echo_message "\033[31mNo GRKERNSEC\033[m\n\n" "No GRKERNSEC,,,,,,,," "    <grsecurity config='no' />" '"grsecurity": { "grsecurity_config":"no" },'
     echo_message "  The grsecurity / PaX patchset is available here:\n" "" "" ""
     echo_message "    http://grsecurity.net/\n" "" "" ""
   fi
@@ -598,12 +608,12 @@ kernelcheck() {
 
   if $kconfig | grep -qi 'CONFIG_KERNHEAP=y'; then
     if $kconfig | grep -qi 'CONFIG_KERNHEAP_FULLPOISON=y'; then
-      echo_message "\033[32mFull KERNHEAP\033[m\n\n" "Full KERNHEAP\n" "    <kernheap config='yes' />\n</kernel>\n" '{ "kernheap_config":"yes" } }'
+      echo_message "\033[32mFull KERNHEAP\033[m\n\n" "Full KERNHEAP\n" "    <kernheap config='yes' />\n</kernel>\n" '"kernheap": { "kernheap_config":"yes" } }'
     else
-      echo_message "\033[33mPartial KERNHEAP\033[m\n\n" "Partial KERNHEAP\n" "    <kernheap config='partial' />\n</kernel>\n" '"{ kernheap_config":"partial" } }'
+      echo_message "\033[33mPartial KERNHEAP\033[m\n\n" "Partial KERNHEAP\n" "    <kernheap config='partial' />\n</kernel>\n" '"kernheap": { kernheap_config":"partial" } }'
     fi
   else
-    echo_message "\033[31mNo KERNHEAP\033[m\n\n" "No KERNHEAP\n" "    <kernheap config='no' />\n</kernel>\n" '{ "kernheap_config":"no" } }'
+    echo_message "\033[31mNo KERNHEAP\033[m\n\n" "No KERNHEAP\n" "    <kernheap config='no' />\n</kernel>\n" '"kernheap": { "kernheap_config":"no" } }'
     echo_message "  The KERNHEAP hardening patchset is available here:\n" "" "" "\n"
     echo_message "    https://www.subreption.com/kernheap/\n\n" "" "" ""
   fi
@@ -836,19 +846,19 @@ do
     aslrcheck
     echo_message "* Does the CPU support NX: " "" "" ""
     nxcheck
-    echo_message "         COMMAND    PID RELRO           STACK CANARY      NX/PaX        PIE\n" "" "" "{ \"proc\": "
+    echo_message "         COMMAND    PID RELRO           STACK CANARY      NX/PaX        PIE\n" "" "" '{'
     for N in [1-9]*; do
       if [ $N != $$ ] && readlink -q $N/exe > /dev/null; then
-	name=`head -1 $N/status | cut -b 7-`
-	if [[ $format == "cli" ]]; then
-	    printf "%16s" $name
-	    printf "%7d " $N
-	else
-	  echo_message "" "$name," "<proc name='$name'" "{ \"name\":\"$name\", "
-	  echo_message "" "$N," " pid='$N'" "\"pid\":\"$N\","
-	fi
-	proccheck $N
-	echo_message "\n" "\n" "</proc>\n" ""
+		name=`head -1 $N/status | cut -b 7-`
+		if [[ $format == "cli" ]]; then
+	    	printf "%16s" $name
+	    	printf "%7d " $N
+		else
+	  		echo_message "" "$name," "<proc name='$name'" " \"$name\": { "
+	  		echo_message "" "$N," " pid='$N'" "\"pid\":\"$N\","
+		fi
+		proccheck $N
+		echo_message "\n" "\n" "</proc>\n" ""
       fi
     done
 	echo_message "" "" "" " }"
@@ -881,7 +891,7 @@ do
     aslrcheck
     echo_message "* Does the CPU support NX: " '' '' ''
     nxcheck
-    echo_message "         COMMAND    PID RELRO             STACK CANARY           NX/PaX        PIE\n" '' '' ''
+    echo_message "         COMMAND    PID RELRO             STACK CANARY           NX/PaX        PIE\n" '' '' '{'
     for N in `ps -Ao pid,comm | grep $2 | cut -b1-6`; do
       if [ -d $N ] ; then
 	name=`head -1 $N/status | cut -b 7-`
@@ -889,7 +899,7 @@ do
 	    printf "%16s" $name
 	    printf "%7d " $N
 	else
-	  echo_message "" "$name," "<proc name='$name'" "{ \"proc\": { \"name\":\"$name\","
+	  echo_message "" "$name," "<proc name='$name'" " \"$name\": {"
 	  echo_message "" "$N," " pid='$N'" "\"pid\":\"$N\","
 	fi
 	if [ ! -r $N/exe ] ; then
@@ -904,9 +914,10 @@ do
 	  exit 1
 	fi
 	proccheck $N
-	echo_message "\n" "\n" "</proc>\n" "} }"
+	echo_message "\n" "\n" "</proc>\n" ""
       fi
     done
+	echo_message "\n" "\n" "\n" "}\n"
     exit 0
     ;;
 
