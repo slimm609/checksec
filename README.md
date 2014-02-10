@@ -107,65 +107,70 @@ Examples
 
 
 **Kernel test in Cli**
-$ checksec.sh --kernel
-* Kernel protection information:
 
-  Description - List the status of kernel protection mechanisms. Rather than
-  inspect kernel mechanisms that may aid in the prevention of exploitation of
-  userspace processes, this option lists the status of kernel configuration
-  options that harden the kernel itself against attack.
+ $ checksec.sh --kernel
+ * Kernel protection information:
 
-  Kernel config: /proc/config.gz
+   Description - List the status of kernel protection mechanisms. Rather than
+   inspect kernel mechanisms that may aid in the prevention of exploitation of
+   userspace processes, this option lists the status of kernel configuration
+   options that harden the kernel itself against attack.
+
+   Kernel config: /proc/config.gz
  
-  GCC stack protector support:            Enabled
-  Strict user copy checks:                Disabled
-  Enforce read-only kernel data:          Disabled
-  Restrict /dev/mem access:               Enabled
-  Restrict /dev/kmem access:              Enabled
+   GCC stack protector support:            Enabled
+   Strict user copy checks:                Disabled
+   Enforce read-only kernel data:          Disabled
+   Restrict /dev/mem access:               Enabled
+   Restrict /dev/kmem access:              Enabled
 
-* grsecurity / PaX: Auto GRKERNSEC
+ * grsecurity / PaX: Auto GRKERNSEC
 
-  Non-executable kernel pages:            Enabled
-  Non-executable pages:                   Enabled
-  Paging Based Non-executable pages:      Enabled
-  Restrict MPROTECT:                      Enabled
-  Address Space Layout Randomization:     Enabled
-  Randomize Kernel Stack:                 Enabled
-  Randomize User Stack:                   Enabled
-  Randomize MMAP Stack:                   Enabled
-  Sanitize freed memory:                  Enabled
-  Sanitize Kernel Stack:                  Enabled
-  Prevent userspace pointer deref:        Enabled
-  Prevent kobject refcount overflow:      Enabled
-  Bounds check heap object copies:        Enabled
-  JIT Hardening:	 	          Enabled
-  Thread Stack Random Gaps: 	          Enabled
-  Disable writing to kmem/mem/port:       Enabled
-  Disable privileged I/O:                 Enabled
-  Harden module auto-loading:             Enabled
-  Chroot Protection:          		  Enabled
-  Deter ptrace process snooping:	  Enabled
-  Larger Entropy Pools:                   Enabled
-  TCP/UDP Blackhole:                      Enabled
-  Deter Exploit Bruteforcing:             Enabled
-  Hide kernel symbols:                    Enabled
+   Non-executable kernel pages:            Enabled
+   Non-executable pages:                   Enabled
+   Paging Based Non-executable pages:      Enabled
+   Restrict MPROTECT:                      Enabled
+   Address Space Layout Randomization:     Enabled
+   Randomize Kernel Stack:                 Enabled
+   Randomize User Stack:                   Enabled
+   Randomize MMAP Stack:                   Enabled
+   Sanitize freed memory:                  Enabled
+   Sanitize Kernel Stack:                  Enabled
+   Prevent userspace pointer deref:        Enabled
+   Prevent kobject refcount overflow:      Enabled
+   Bounds check heap object copies:        Enabled
+   JIT Hardening:	 	          Enabled
+   Thread Stack Random Gaps: 	          Enabled
+   Disable writing to kmem/mem/port:       Enabled
+   Disable privileged I/O:                 Enabled
+   Harden module auto-loading:             Enabled
+   Chroot Protection:          		  Enabled
+   Deter ptrace process snooping:	  Enabled
+   Larger Entropy Pools:                   Enabled
+   TCP/UDP Blackhole:                      Enabled
+   Deter Exploit Bruteforcing:             Enabled
+   Hide kernel symbols:                    Enabled
 
-* Kernel Heap Hardening: No KERNHEAP
+ * Kernel Heap Hardening: No KERNHEAP
 
-  The KERNHEAP hardening patchset is available here:
-    https://www.subreption.com/kernheap/
+   The KERNHEAP hardening patchset is available here:
+     https://www.subreption.com/kernheap/
 
 **Kernel Test in XML**
-$ checksec.sh --format xml --kernel
-<?xml version="1.0" encoding="UTF-8"?>
-<kernel config='/boot/config-3.11-2-amd64' gcc_stack_protector='yes' strict_user_copy_check='no' ro_kernel_data='yes' restrict_dev_mem_access='yes' restrict_dev_kmem_access='no'>
+
+ $ checksec.sh --format xml --kernel
+ <?xml version="1.0" encoding="UTF-8"?>
+ <kernel config='/boot/config-3.11-2-amd64' gcc_stack_protector='yes' strict_user_copy_check='no' ro_kernel_data='yes' restrict_dev_mem_access='yes' restrict_dev_kmem_access='no'>
     <grsecurity config='no' />
     <kernheap config='no' />
-</kernel>
+ </kernel>
 
 **Kernel Test in Json**
-$ checksec.sh --format json --kernel
-{ "kernel": { "KernelConfig":"/boot/config-3.11-2-amd64","gcc_stack_protector":"yes","strict_user_copy_check":"no","ro_kernel_data":"yes","restrict_dev_mem_access":"yes","restrict_dev_kmem_access":"no" },{ "grsecurity_config":"no" },{ "kernheap_config":"no" } }
+
+ $ checksec.sh --format json --kernel
+ { "kernel": { "KernelConfig":"/boot/config-3.11-2-amd64","gcc_stack_protector":"yes","strict_user_copy_check":"no","ro_kernel_data":"yes","restrict_dev_mem_access":"yes","restrict_dev_kmem_access":"no" },{ "grsecurity_config":"no" },{ "kernheap_config":"no" } }
+
+
 Warning
 -------
 
