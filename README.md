@@ -159,17 +159,17 @@ Examples
 
 **Kernel Test in XML**
 
- $ checksec.sh --format xml --kernel
- <?xml version="1.0" encoding="UTF-8"?>
- <kernel config='/boot/config-3.11-2-amd64' gcc_stack_protector='yes' strict_user_copy_check='no' ro_kernel_data='yes' restrict_dev_mem_access='yes' restrict_dev_kmem_access='no'>
-    <grsecurity config='no' />
-    <kernheap config='no' />
- </kernel>
+	$ checksec.sh --format xml --kernel
+	<?xml version="1.0" encoding="UTF-8"?>
+	<kernel config='/boot/config-3.11-2-amd64' gcc_stack_protector='yes' strict_user_copy_check='no' ro_kernel_data='yes' restrict_dev_mem_access='yes' restrict_dev_kmem_access='no'>
+		<grsecurity config='no' />
+    	<kernheap config='no' />
+	</kernel>
 
 **Kernel Test in Json**
 
- $ checksec.sh --format json --kernel
- { "kernel": { "KernelConfig":"/boot/config-3.11-2-amd64","gcc_stack_protector":"yes","strict_user_copy_check":"no","ro_kernel_data":"yes","restrict_dev_mem_access":"yes","restrict_dev_kmem_access":"no" },{ "grsecurity_config":"no" },{ "kernheap_config":"no" } }
+	$ checksec.sh --format json --kernel
+ 	{ "kernel": { "KernelConfig":"/boot/config-3.11-2-amd64","gcc_stack_protector":"yes","strict_user_copy_check":"no","ro_kernel_data":"yes","restrict_dev_mem_access":"yes","restrict_dev_kmem_access":"no" },{ "grsecurity_config":"no" },{ "kernheap_config":"no" } }
 
 
 Warning
