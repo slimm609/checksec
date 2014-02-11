@@ -268,16 +268,27 @@ proccheck() {
 
   # check for PIE support
   if $readelf -h $1/exe 2>/dev/null | grep -q 'Type:[[:space:]]*EXEC'; then
-    echo_message '\033[31mNo PIE               \033[m   ' 'No PIE' ' pie="no">' '"pie":"no" },'
+    echo_message '\033[31mNo PIE               \033[m   ' 'No PIE,' ' pie="no"' '"pie":"no",'
   elif $readelf -h $1/exe 2>/dev/null | grep -q 'Type:[[:space:]]*DYN'; then
     if $readelf -d $1/exe 2>/dev/null | grep -q '(DEBUG)'; then
-      echo_message '\033[32mPIE enabled          \033[m   ' 'PIE enabled' ' pie="yes">' '"pie":"yes" },'
+      echo_message '\033[32mPIE enabled          \033[m   ' 'PIE enabled,' ' pie="yes"' '"pie":"yes",'
     else   
-      echo_message '\033[33mDynamic Shared Object\033[m   ' 'Dynamic Shared Object' ' pie="dso">' '"pie":"dso" },'
+      echo_message '\033[33mDynamic Shared Object\033[m   ' 'Dynamic Shared Object,' ' pie="dso"' '"pie":"dso",'
     fi
   else
-    echo_message '\033[33mNot an ELF file      \033[m   ' 'Not an ELF file' ' pie="not_elf">' '"pie":"not_elf" },'
+    echo_message '\033[33mNot an ELF file      \033[m   ' 'Not an ELF file,' ' pie="not_elf"' '"pie":"not_elf",'
   fi
+
+  FS_functions=( $($readelf -s $1/exe | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//') )
+  for FS_elem_functions in $(seq 0 $((${#FS_functions[@]} - 1)))
+  do
+    if [[ ${FS_functions[$FS_elem_functions]} =~ _chk ]] ; then
+      echo_message '\033[32mYes\033[m' 'Yes' " fortify_source='yes'>" '"fortify_source":"yes" },'
+      return
+    fi
+  done
+  echo_message "\033[31mNo\033[m" "No" " fortify_source='no'>" '"fortify_source":"no" },'
+
 }
 
 # check mapped libraries
@@ -846,7 +857,7 @@ do
     aslrcheck
     echo_message "* Does the CPU support NX: " "" "" ""
     nxcheck
-    echo_message "         COMMAND    PID RELRO           STACK CANARY      NX/PaX        PIE\n" "" "" '{'
+    echo_message "         COMMAND    PID RELRO           STACK CANARY      NX/PaX        PIE 			FORTIFY\n" "" "" '{'
     for N in [1-9]*; do
       if [ $N != $$ ] && readlink -q $N/exe > /dev/null; then
 		name=`head -1 $N/status | cut -b 7-`
