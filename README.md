@@ -6,9 +6,9 @@ It has been originally written by Tobias Klein and available here: http://www.tr
 
 Enhancement
 -----------
-Added foritfy_source to proc-all output.
-Added Json, strict XML and updated Grsecurity setion.
-Carried over Robin David's changes with XML and CSV.
+-Added foritfy_source to proc-all output.
+-Added Json, strict XML and updated Grsecurity setion.
+-Carried over Robin David's changes with XML and CSV.
 
 Examples
 --------
