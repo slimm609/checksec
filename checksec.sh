@@ -872,14 +872,14 @@ do
 		echo_message "\n" "\n" "</proc>\n" ""
       fi
     done
-	echo_message "" "" "" " }"
+	echo_message "" "" "" " }\n"
     if [ ! -e /usr/bin/id ] ; then
       echo_message "\n\033[33mNote: If you are running 'checksec.sh' as an unprivileged user, you\n" "" "" ""
-      echo_message "      will not see all processes. Please run the script as root.\033[m\n\n" "" "" ""
+      echo_message "      will not see all processes. Please run the script as root.\033[m\n\n" "" "" "\n"
     else 
       if !(root_privs) ; then
 	echo_message "\n\033[33mNote: You are running 'checksec.sh' as an unprivileged user.\n" "" "" ""
-	echo_message "      Too see all processes, please run the script as root.\033[m\n\n" "" "" ""
+	echo_message "      Too see all processes, please run the script as root.\033[m\n\n" "" "" "\n"
       fi
     fi
     exit 0
@@ -902,7 +902,7 @@ do
     aslrcheck
     echo_message "* Does the CPU support NX: " '' '' ''
     nxcheck
-    echo_message "         COMMAND    PID RELRO             STACK CANARY           NX/PaX        PIE\n" '' '' '{'
+    echo_message "         COMMAND    PID RELRO             STACK CANARY           NX/PaX        PIE              FORTIFY\n" '' '' '{'
     for N in `ps -Ao pid,comm | grep $2 | cut -b1-6`; do
       if [ -d $N ] ; then
 	name=`head -1 $N/status | cut -b 7-`
