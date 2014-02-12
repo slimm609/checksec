@@ -62,7 +62,7 @@ verbose=false
 format="cli"
 SCRIPT_NAME="checksec.sh"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
-SELF_VERSION=2014021101
+SCRIPT_VERSION=2014021101
 
 # FORTIFY_SOURCE vars
 FS_end=_chk
@@ -81,10 +81,10 @@ command_exists () {
 
 fetch() {
 	if type wget > /dev/null 2>&1 ; then
-		wget --no-check-certificate --timestamping -- "${@}"
+		wget --no-check-certificate -O /tmp/checksec.tmp "${@}" 
 	elif type curl > /dev/null 2>&1 ; then
 		while (( ${#} )) ; do
-			curl --insecure --remote-name --time-cond "${1##*/}" -- "${1}"
+			curl --insecure --remote-name -o /tmp/checksec.tmp --time-cond "${1##*/}" -- "${1}"
 			shift
 		done
 	else
@@ -93,9 +93,6 @@ fetch() {
 	fi
 }
 
-mtime() {
-  stat -c'%Y' -- "${1}"
-}
 # version information
 version() {
   echo "checksec.sh v1.6, Brian Davis, github.com/slimm609/checksec.sh, Feburary 2014"
@@ -768,10 +765,13 @@ do
     exit 0
     ;;
   --update)
-    stamp=$(mtime "${0}")
     fetch "${SCRIPT_URL}"
-    if [[ $(mtime "${SCRIPT_NAME}") -ne ${stamp} ]] ; then
-	echo "checksec.sh updated"
+	UPDATE_VERSION=$(grep "^SCRIPT_VERSION" /tmp/checksec.tmp | awk -F"=" '{ print $2 }')
+	echo $UPDATE_VERSION
+    if (( $SCRIPT_VERSION > $UPDATE_VERSION )) ; then
+		echo "checksec.sh updated"
+	else
+		rm -f /tmp/checksec.tmp >&2
     fi
     exit 0
     ;;
