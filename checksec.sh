@@ -93,6 +93,9 @@ fetch() {
 	fi
 }
 
+mtime() {
+  stat -c'%Y' -- "${1}"
+}
 # version information
 version() {
   echo "checksec.sh v1.6, Brian Davis, github.com/slimm609/checksec.sh, Feburary 2014"
