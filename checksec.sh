@@ -771,6 +771,7 @@ do
 		mv /tmp/checksec.sh $0 >/dev/null 2>&1
 		if [ $? == 0 ]; then
 			echo "checksec.sh updated"
+			chmod 755 $0
 		else
 			echo "Error: Could not update... Please check permissions"
 			rm -f /tmp/checksec.tmp >/dev/null 2>&1
