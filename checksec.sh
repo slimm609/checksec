@@ -81,10 +81,10 @@ command_exists () {
 
 fetch() {
 	if type wget > /dev/null 2>&1 ; then
-		wget --no-check-certificate -O /tmp/checksec.tmp "${@}" 
+		wget --no-check-certificate -O /tmp/checksec.tmp "${@}" >/dev/null 2>&1
 	elif type curl > /dev/null 2>&1 ; then
 		while (( ${#} )) ; do
-			curl --insecure --remote-name -o /tmp/checksec.tmp --time-cond "${1##*/}" -- "${1}"
+			curl --insecure --remote-name -o /tmp/checksec.tmp --time-cond "${1##*/}" -- "${1}" >/dev/null 2>&1
 			shift
 		done
 	else
@@ -767,10 +767,10 @@ do
   --update)
     fetch "${SCRIPT_URL}"
 	UPDATE_VERSION=$(grep "^SCRIPT_VERSION" /tmp/checksec.tmp | awk -F"=" '{ print $2 }')
-	echo $UPDATE_VERSION
     if (( $SCRIPT_VERSION > $UPDATE_VERSION )) ; then
 		echo "checksec.sh updated"
 	else
+		echo "checksec.sh not updated... Already on latest version"
 		rm -f /tmp/checksec.tmp >&2
     fi
     exit 0
