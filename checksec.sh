@@ -767,11 +767,19 @@ do
   --update)
     fetch "${SCRIPT_URL}"
 	UPDATE_VERSION=$(grep "^SCRIPT_VERSION" /tmp/checksec.tmp | awk -F"=" '{ print $2 }')
-    if (( $SCRIPT_VERSION > $UPDATE_VERSION )) ; then
-		echo "checksec.sh updated"
+    if [ $SCRIPT_VERSION != $UPDATE_VERSION ]; then
+		mv /tmp/checksec.sh $0 >/dev/null 2>&1
+		if [ $? == 0 ]; then
+			echo "checksec.sh updated"
+		else
+			echo "Error: Could not update... Please check permissions"
+			rm -f /tmp/checksec.tmp >/dev/null 2>&1
+			exit 1
+		fi
 	else
 		echo "checksec.sh not updated... Already on latest version"
-		rm -f /tmp/checksec.tmp >&2
+		rm -f /tmp/checksec.tmp >/dev/null 2>&1
+		exit 1
     fi
     exit 0
     ;;
