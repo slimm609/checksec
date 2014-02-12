@@ -768,7 +768,7 @@ do
     fetch "${SCRIPT_URL}"
 	UPDATE_VERSION=$(grep "^SCRIPT_VERSION" /tmp/checksec.tmp | awk -F"=" '{ print $2 }')
     if [ $SCRIPT_VERSION != $UPDATE_VERSION ]; then
-		mv /tmp/checksec.sh $0 >/dev/null 2>&1
+		mv /tmp/checksec.tmp $0 >/dev/null 2>&1
 		if [ $? == 0 ]; then
 			echo "checksec.sh updated"
 			chmod 755 $0
