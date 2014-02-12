@@ -60,6 +60,9 @@
 have_readelf=1
 verbose=false
 format="cli"
+SCRIPT_NAME="checksec.sh"
+SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
+SELF_VERSION=2014021101
 
 # FORTIFY_SOURCE vars
 FS_end=_chk
@@ -69,8 +72,26 @@ FS_cnt_unchecked=0
 FS_chk_func_libc=0
 FS_functions=0
 FS_libc=0
- 
 
+
+# check if command exists
+command_exists () {
+  type $1  > /dev/null 2>&1;
+}
+
+fetch() {
+	if type wget > /dev/null 2>&1 ; then
+		wget --no-check-certificate --timestamping -- "${@}"
+	elif type curl > /dev/null 2>&1 ; then
+		while (( ${#} )) ; do
+			curl --insecure --remote-name --time-cond "${1##*/}" -- "${1}"
+			shift
+		done
+	else
+		echo 'Neither wget nor curl is available.' >&2
+		exit 1
+	fi
+}
 
 # version information
 version() {
@@ -78,6 +99,7 @@ version() {
   echo "Based off checksec v1.5, Tobias Klein, www.trapkit.de, November 2011"
   echo 
 }
+
 
 # help
 help() {
@@ -96,6 +118,7 @@ help() {
   echo "  --fortify-proc <process ID>"
   echo "  --version"
   echo "  --help"
+  echo "  --update"
   echo
   echo "For more information, see:"
   echo "  http://www.trapkit.de/tools/checksec.html"
@@ -120,10 +143,6 @@ echo_message() {
   fi
 }
 
-# check if command exists
-command_exists () {
-  type $1  > /dev/null 2>&1;
-}
 
 # check if directory exists
 dir_exists () {
@@ -745,7 +764,14 @@ do
     help
     exit 0
     ;;
-
+  --update)
+    stamp=$(mtime "${0}")
+    fetch "${SCRIPT_URL}"
+    if [[ $(mtime "${SCRIPT_NAME}") -ne ${stamp} ]] ; then
+	echo "checksec.sh updated"
+    fi
+    exit 0
+    ;;
   --format)
     list="cli csv xml json"
     if [ -n "$2" ]; then
