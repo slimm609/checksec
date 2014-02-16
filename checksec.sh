@@ -817,7 +817,7 @@ do
     if [ $SCRIPT_VERSION != $UPDATE_VERSION ]; then
 		mv /tmp/checksec.tmp $0 >/dev/null 2>&1
 		if [ $? == 0 ]; then
-			echo "checksec.sh updated"
+			echo "checksec.sh updated - Rev. $UPDATE_VERSION"
 			chmod 755 $0
 		else
 			echo "Error: Could not update... Please check permissions"
