@@ -7,6 +7,7 @@ It has been originally written by Tobias Klein and the original source is availa
 Updates
 -------
 
+	Removed deprecated Kern Heap section (thanks Unspawn)
 	Added SELinux checks as additional checks for kernel security.
 	Added update option to pull the latest release of checksec.
 	Added foritfy_source to proc-all output.
@@ -32,6 +33,10 @@ Examples
     $ checksec.sh --format xml --file /bin/ls
     <?xml version="1.0" encoding="UTF-8"?>
     <file relro="partial" canary="yes" nx="yes" pie="no" rpath="no" runpath="no" filename='/bin/ls'/>
+
+**json**
+	$ checksec.sh --format json --file /bin/ls	
+	{ "file": { "relro":"partial","canary":"yes","nx":"yes","pie":"no","rpath":"no","runpath":"no","filename":"/bin/ls" } }
 
 **Fortify test in cli**
 
@@ -64,49 +69,6 @@ Examples
     * Number of FORTIFY-able functions in the executable : 13
     * Number of checked functions in the executable      : 7
     * Number of unchecked functions in the executable    : 6
-
-
-**Fortify test in csv**
-
-    $ checksec.sh --format csv --fortify-proc 1
-    Yes,Yes
-    fdelt_chk,fdelt,no
-    read,read,yes
-    syslog_chk,syslog,no
-    fprintf_chk,fprintf,no
-    vsnprintf_chk,vsnprintf,no
-    fgets,fgets,yes
-    strncpy,strncpy,yes
-    snprintf_chk,snprintf,no
-    memset,memset,yes
-    strncat_chk,strncat,no
-    memcpy,memcpy,yes
-    fread,fread,yes
-    sprintf_chk,sprintf,no
-    78,116,13,13,6
-
-
-**Fortify test in xml**
-
-    $ checksec.sh --format xml --fortify-proc 1
-     <?xml version="1.0" encoding="UTF-8"?>
-     <fortify-test name='init' pid='1'  libc_fortify_source='yes' binary_compiled_with_fortify='yes'>
-	<function name='fdelt_chk' libc='fdelt' fortifyable='no' />
-	<function name='read' libc='read' fortifyable='yes' />
-	<function name='syslog_chk' libc='syslog' fortifyable='no' />
-	<function name='fprintf_chk' libc='fprintf' fortifyable='no' />
-	<function name='vsnprintf_chk' libc='vsnprintf' fortifyable='no' />
-	<function name='fgets' libc='fgets' fortifyable='yes' />
-	<function name='strncpy' libc='strncpy' fortifyable='yes' />
-	<function name='snprintf_chk' libc='snprintf' fortifyable='no' />
-	<function name='memset' libc='memset' fortifyable='yes' />
-	<function name='strncat_chk' libc='strncat' fortifyable='no' />
-	<function name='memcpy' libc='memcpy' fortifyable='yes' />
-	<function name='fread' libc='fread' fortifyable='yes' />
-	<function name='sprintf_chk' libc='sprintf' fortifyable='no' />
-
-	<stats nb_libc_func='78' nb_total_func='116' nb_fortifyable_func='13' nb_checked_func='13' nb_unchecked_func='6' />
-    </fortify-test>
 
 
 **Kernel test in Cli**

@@ -670,31 +670,17 @@ kernelcheck() {
 
     echo_message "  Hide kernel symbols:                    " "" "" ""
     if $kconfig | grep -qi 'CONFIG_GRKERNSEC_HIDESYM=y'; then
-      echo_message "\033[32mEnabled\033[m\n" "Enabled" " config_grkernsec_hidesym='yes' />" '"config_grkernsec_hidesym":"yes" },'
+      echo_message "\033[32mEnabled\033[m\n" "Enabled" " config_grkernsec_hidesym='yes' />\n</kernel>\n" '"config_grkernsec_hidesym":"yes" },'
     else
-      echo_message "\033[31mDisabled\033[m\n" "Disabled" " config_grkernsec_hidesym='no'/>" '"config_grkernsec_hidesym":"no" },'
+      echo_message "\033[31mDisabled\033[m\n" "Disabled" " config_grkernsec_hidesym='no'/>\n</kernel>\n" '"config_grkernsec_hidesym":"no" },'
     fi
   else
-    echo_message "\033[31mNo GRKERNSEC\033[m\n\n" "No GRKERNSEC,,,,,,,," "    <grsecurity config='no' />" '"grsecurity": { "grsecurity_config":"no" },'
+    echo_message "\033[31mNo GRKERNSEC\033[m\n\n" "No GRKERNSEC,,,,,,,," "    <grsecurity config='no' />\n</kernel>\n" '"grsecurity": { "grsecurity_config":"no" },'
     echo_message "  The grsecurity / PaX patchset is available here:\n" "" "" ""
     echo_message "    http://grsecurity.net/\n" "" "" ""
   fi
-
-  echo_message "\n" "\n" "\n" ""
-  echo_message "* Kernel Heap Hardening: 		  " "" "" ""
-
-  if $kconfig | grep -qi 'CONFIG_KERNHEAP=y'; then
-    if $kconfig | grep -qi 'CONFIG_KERNHEAP_FULLPOISON=y'; then
-      echo_message "\033[32mFull KERNHEAP\033[m\n\n" "Full KERNHEAP\n" "    <kernheap config='yes' />\n</kernel>\n" '"kernheap": { "kernheap_config":"yes" } }'
-    else
-      echo_message "\033[33mPartial KERNHEAP\033[m\n\n" "Partial KERNHEAP\n" "    <kernheap config='partial' />\n</kernel>\n" '"kernheap": { kernheap_config":"partial" } }'
-    fi
-  else
-    echo_message "\033[31mNo KERNHEAP\033[m\n\n" "No KERNHEAP\n" "    <kernheap config='no' />\n</kernel>\n" '"kernheap": { "kernheap_config":"no" } }'
-    echo_message "  The KERNHEAP hardening patchset is available here:\n" "" "" "\n"
-    echo_message "    https://www.subreption.com/kernheap/\n\n" "" "" ""
-  fi
 }
+
 
 # --- FORTIFY_SOURCE subfunctions (start) ---
 
