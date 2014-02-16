@@ -4,8 +4,8 @@ checksec
 Checksec.sh is a bash scrip to check executable properties like (PIE, RELRO, PaX, Canaries, ASLR, Fortify Source).
 It has been originally written by Tobias Klein and the original source is available here: http://www.trapkit.de/tools/checksec.html
 
-Enhancement
------------
+Updates
+-------
 
 	Added SELinux checks as additional checks for kernel security.
 	Added update option to pull the latest release of checksec.
@@ -178,4 +178,4 @@ Examples
 Warning
 -------
 
-Due to the original structure of the script the **--format** argument should be placed first on the command line arguments. Doing differently would have obliged me to do really big changes in the code.
+Due to the original structure of the script the **--format** argument should be placed first on the command line arguments. Doing differently would require really big changes in the code.
