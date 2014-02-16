@@ -62,7 +62,7 @@ verbose=false
 format="cli"
 SCRIPT_NAME="checksec.sh"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
-SCRIPT_VERSION=2014021502
+SCRIPT_VERSION=2014021601
 
 # FORTIFY_SOURCE vars
 FS_end=_chk
@@ -476,17 +476,21 @@ kernelcheck() {
 	sestatus=$?
 	if [ $sestatus == 0 ]; then 
     	echo_message "\033[31mDisabled\033[m\n" "Disabled" "    <selinux enabled='no' />" '"selinux":{ "enabled":"no" },'
+    	echo_message "\n  SELinux infomation available here: \n" "" "" ""
+    	echo_message "    http://selinuxproject.org/\n" "" "" ""
 	elif [ $sestatus == 1 ]; then 
     	echo_message "\033[33mPermissive\033[m\n" "Permissive" "    <selinux enabled='yes' mode='permissive' />" '"selinux":{ "enabled":"yes", "mode":"permissive" },'
 	elif [ $sestatus == 2 ]; then 
     	echo_message "\033[32mEnforcing\033[m\n" "Enforcing" "    <selinux enabled='yes' mode='enforcing' />" '"selinux":{ "enabled":"yes", "mode":"enforcing" },'
 	fi
   else
-    echo_message "\033[31mDisabled\033[m\n" "Disabled" "    <selinux enabled='no' />" '"selinux":{ "enabled":"no" },'
+    echo_message "\033[31mNo SELinux\033[m\n" "Disabled" "    <selinux enabled='no' />" '"selinux":{ "enabled":"no" },'
+    echo_message "\n  SELinux infomation available here: \n" "" "" ""
+    echo_message "    http://selinuxproject.org/\n" "" "" ""
   fi
 
   echo_message "\n" "\n" "\n" ""
-  echo_message "* grsecurity / PaX: " "" "" ""
+  echo_message "* grsecurity / PaX: 			  " "" "" ""
 
   if $kconfig | grep -qi 'CONFIG_GRKERNSEC=y'; then
     if $kconfig | grep -qi 'CONFIG_GRKERNSEC_HIGH=y'; then
@@ -677,7 +681,7 @@ kernelcheck() {
   fi
 
   echo_message "\n" "\n" "\n" ""
-  echo_message "* Kernel Heap Hardening: " "" "" ""
+  echo_message "* Kernel Heap Hardening: 		  " "" "" ""
 
   if $kconfig | grep -qi 'CONFIG_KERNHEAP=y'; then
     if $kconfig | grep -qi 'CONFIG_KERNHEAP_FULLPOISON=y'; then
