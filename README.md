@@ -7,7 +7,8 @@ It has been originally written by Tobias Klein and the original source is availa
 Enhancement
 -----------
 
-	Added update option to pull the latest release of checksec
+	Added SELinux checks as additional checks for kernel security.
+	Added update option to pull the latest release of checksec.
 	Added foritfy_source to proc-all output.
 	Added Json, strict XML and updated Grsecurity setion.
 	Carried over Robin David's changes with XML and CSV.
