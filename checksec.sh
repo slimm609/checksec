@@ -437,9 +437,16 @@ kernelcheck() {
 
   echo_message "  Restrict /dev/kmem access:              " "" "" ""
   if $kconfig | grep -qi 'CONFIG_DEVKMEM=y'; then
-    echo_message "\033[31mDisabled\033[m\n" "Enabled" " restrict_dev_kmem_access='yes'>" '"restrict_dev_kmem_access":"yes" },'
+    echo_message "\033[31mDisabled\033[m\n" "Disabled" " restrict_dev_kmem_access='no'>" '"restrict_dev_kmem_access":"no" },'
   else
-    echo_message "\033[32mEnabled\033[m\n" "Disabled" " restrict_dev_kmem_access='no'>" '"restrict_dev_kmem_access":"no" },'
+    echo_message "\033[32mEnabled\033[m\n" "Enabled" " restrict_dev_kmem_access='yes'>" '"restrict_dev_kmem_access":"yes" },'
+  fi
+
+  echo_message "  Selinux: 	  			  " "" "" ""
+  if $kconfig | grep -qi 'CONFIG_SECURITY_SELINUX=y'; then
+    echo_message "\033[32mEnabled\033[m\n" "Enabled" " restrict_dev_kmem_access='yes'>" '"restrict_dev_kmem_access":"yes" },'
+  else
+    echo_message "\033[31mDisabled\033[m\n" "Disabled" " <selinux enabled='no' />" '"{ "selinux":{ "enabled":"no" } }'
   fi
 
   echo_message "\n" "\n" "\n" ""
