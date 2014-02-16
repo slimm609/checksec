@@ -62,7 +62,7 @@ verbose=false
 format="cli"
 SCRIPT_NAME="checksec.sh"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
-SCRIPT_VERSION=2014021101
+SCRIPT_VERSION=2014021501
 
 # FORTIFY_SOURCE vars
 FS_end=_chk
