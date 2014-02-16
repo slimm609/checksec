@@ -62,7 +62,7 @@ verbose=false
 format="cli"
 SCRIPT_NAME="checksec.sh"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
-SCRIPT_VERSION=2014021501
+SCRIPT_VERSION=2014021502
 
 # FORTIFY_SOURCE vars
 FS_end=_chk
@@ -473,11 +473,12 @@ kernelcheck() {
   echo_message "* Selinux: 	  			  " "" "" ""
   if $kconfig | grep -qi 'CONFIG_SECURITY_SELINUX=y'; then
 	getsestatus
-	if [ $? == 0 ]; then 
+	sestatus=$?
+	if [ $sestatus == 0 ]; then 
     	echo_message "\033[31mDisabled\033[m\n" "Disabled" "    <selinux enabled='no' />" '"selinux":{ "enabled":"no" },'
-	elif [ $? == 1 ]; then 
+	elif [ $sestatus == 1 ]; then 
     	echo_message "\033[33mPermissive\033[m\n" "Permissive" "    <selinux enabled='yes' mode='permissive' />" '"selinux":{ "enabled":"yes", "mode":"permissive" },'
-	elif [ $? == 2 ]; then 
+	elif [ $sestatus == 2 ]; then 
     	echo_message "\033[32mEnforcing\033[m\n" "Enforcing" "    <selinux enabled='yes' mode='enforcing' />" '"selinux":{ "enabled":"yes", "mode":"enforcing" },'
 	fi
   else
