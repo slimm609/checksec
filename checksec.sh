@@ -795,14 +795,16 @@ do
     exit 0
     ;;
   --update)
+	umask 027
 	TMP_FILE=$(mktemp /tmp/checksec.XXXXXXXXXX)
     fetch "${SCRIPT_URL}" "${TMP_FILE}"
 	UPDATE_VERSION=$(grep "^SCRIPT_VERSION" ${TMP_FILE} | awk -F"=" '{ print $2 }')
     if [ $SCRIPT_VERSION != $UPDATE_VERSION ]; then
+		PERMS=$(stat -c "%a" $0)
 		mv $TMP_FILE $0 >/dev/null 2>&1
 		if [ $? == 0 ]; then
 			echo "checksec.sh updated - Rev. $UPDATE_VERSION"
-			chmod 755 $0
+			chmod $PERMS $0
 		else
 			echo "Error: Could not update... Please check permissions"
 			rm -f $TMP_FILE >/dev/null 2>&1
