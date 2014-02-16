@@ -143,6 +143,33 @@ echo_message() {
   fi
 }
 
+getsestatus() {
+if (command_exists getenforce); then
+	sestatus=$(getenforce)
+	if [ "$sestatus" == "Disabled" ]; then
+		status=0
+	elif [ "$sestatus" == "Permissive" ]; then
+		status=1
+	elif [ "$sestatus" == "Enforcing" ]; then
+		status=2
+	fi
+elif (command_exists sestatus); then
+	sestatus=$(sestatus | grep "SELinux status" | awk '{ print $3}')
+	if [ "$sestatus" == "disabled" ]; then
+		status=0
+	elif [ "$sestatus" == "enabled" ]; then
+		sestatus2=$(sestatus | grep "Current" | awk '{ print $3}')
+		if [ "$sestatus2" == "permissive" ]; then
+			status=1
+		elif [ "$sestatus2" == "enforcing" ]; then
+			status=2
+		fi
+	fi
+fi
+
+return $status
+}
+
 
 # check if directory exists
 dir_exists () {
@@ -442,11 +469,19 @@ kernelcheck() {
     echo_message "\033[32mEnabled\033[m\n" "Enabled" " restrict_dev_kmem_access='yes'>" '"restrict_dev_kmem_access":"yes" },'
   fi
 
-  echo_message "  Selinux: 	  			  " "" "" ""
+  echo_message "\n" "\n" "\n" ""
+  echo_message "* Selinux: 	  			  " "" "" ""
   if $kconfig | grep -qi 'CONFIG_SECURITY_SELINUX=y'; then
-    echo_message "\033[32mEnabled\033[m\n" "Enabled" " restrict_dev_kmem_access='yes'>" '"restrict_dev_kmem_access":"yes" },'
+	getsestatus
+	if [ $? == 0 ]; then 
+    	echo_message "\033[31mDisabled\033[m\n" "Disabled" "    <selinux enabled='no' />" '"selinux":{ "enabled":"no" },'
+	elif [ $? == 1 ]; then 
+    	echo_message "\033[33mPermissive\033[m\n" "Permissive" "    <selinux enabled='yes' mode='permissive' />" '"selinux":{ "enabled":"yes", "mode":"permissive" },'
+	elif [ $? == 2 ]; then 
+    	echo_message "\033[32mEnforcing\033[m\n" "Enforcing" "    <selinux enabled='yes' mode='enforcing' />" '"selinux":{ "enabled":"yes", "mode":"enforcing" },'
+	fi
   else
-    echo_message "\033[31mDisabled\033[m\n" "Disabled" " <selinux enabled='no' />" '"{ "selinux":{ "enabled":"no" } }'
+    echo_message "\033[31mDisabled\033[m\n" "Disabled" "    <selinux enabled='no' />" '"selinux":{ "enabled":"no" },'
   fi
 
   echo_message "\n" "\n" "\n" ""
