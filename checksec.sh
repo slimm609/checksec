@@ -810,17 +810,19 @@ do
 	umask 027
 	TMP_FILE=$(mktemp /tmp/checksec.XXXXXXXXXX)
 	SIG_FILE=$(mktemp /tmp/checksec_sig.XXXXXXXX)
+	PUBKEY_FILE=$(mktemp /tmp/checksec_pubkey.XXXXXXXXXX)
     fetch "${SCRIPT_URL}" "${TMP_FILE}"
     fetch "${SIG_URL}" "${SIG_FILE}"
-	if ! $(openssl dgst -sha256 -verify ${PUBKEY} -signature ${SIG_FILE} ${TMP_FILE}); then
+	echo ${PUBKEY} > ${PUBKEY_FILE}
+	if ! $(openssl dgst -sha256 -verify ${PUBKEY_FILE} -signature ${SIG_FILE} ${TMP_FILE}); then
 		echo "file signature does not match. Update may be tampered"
-		rm -f ${TMP_FILE} ${SIG_FILE} >/dev/null 2>&1
+		rm -f ${TMP_FILE} ${SIG_FILE} ${PUBKEY_FILE} >/dev/null 2>&1
 		exit 1
 	fi
 	UPDATE_VERSION=$(grep "^SCRIPT_VERSION" ${TMP_FILE} | awk -F"=" '{ print $2 }')
     if [ ${SCRIPT_VERSION} != ${UPDATE_VERSION} ]; then
 		PERMS=$(stat -c "%a" $0)
-		rm -f ${SIG_FILE} >/dev/null 2>&1
+		rm -f ${SIG_FILE} ${PUBKEY_FILE} >/dev/null 2>&1
 		mv ${TMP_FILE} $0 >/dev/null 2>&1
 		if [ $? == 0 ]; then
 			echo "checksec.sh updated - Rev. $UPDATE_VERSION"
@@ -832,7 +834,7 @@ do
 		fi
 	else
 		echo "checksec.sh not updated... Already on latest version"
-		rm -f $TMP_FILE >/dev/null 2>&1
+		rm -f ${TMP_FILE} ${SIG_FILE} ${PUBKEY_FILE} >/dev/null 2>&1
 		exit 1
     fi
     exit 0
