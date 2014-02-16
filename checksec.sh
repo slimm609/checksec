@@ -62,6 +62,7 @@ verbose=false
 format="cli"
 SCRIPT_NAME="checksec.sh"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
+SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename ${SCRIPT_NAME} .sh).sig"
 SCRIPT_VERSION=2014021602
 
 # FORTIFY_SOURCE vars
@@ -76,7 +77,7 @@ FS_libc=0
 
 # check if command exists
 command_exists () {
-  type $1  > /dev/null 2>&1;
+  type ${1}  > /dev/null 2>&1;
 }
 
 fetch() {
@@ -408,9 +409,9 @@ kernelcheck() {
   if [ -f /proc/config.gz ] ; then
     kconfig="zcat /proc/config.gz"
     echo_message "\033[32m/proc/config.gz\033[m\n\n" '/proc/config.gz' '<kernel config="/proc/config.gz"' '{ "KernelConfig":"/proc/config.gz",'
-  elif [ -f /boot/config-`uname -r` ] ; then
-    kconfig="cat /boot/config-`uname -r`"
-    kern=`uname -r`
+  elif [ -f /boot/config-$(uname -r) ] ; then
+    kconfig="cat /boot/config-$(uname -r)"
+    kern=$(uname -r)
     echo_message "\033[33m/boot/config-$kern\033[m\n\n" "/boot/config-$kern," "<kernel config='/boot/config-$kern'" "{ \"KernelConfig\":\"/boot/config-$kern\","
     echo_message "  Warning: The config on disk may not represent running kernel config!\n\n" "" "" ""
   elif [ -f "${KBUILD_OUTPUT:-/usr/src/linux}"/.config ] ; then
@@ -844,7 +845,7 @@ do
       exit 1
     fi
     # remove trailing slashes
-    tempdir=`echo $2 | sed -e "s/\/*$//"`
+    tempdir=$(echo $2 | sed -e "s/\/*$//")
     if [ ! -d $tempdir ] ; then
       printf "\033[31mError: The directory '$tempdir' does not exist.\033[m\n\n"
       exit 1
@@ -859,7 +860,7 @@ do
 	  printf "\033[31mError: No read permissions for '$tempdir/$N' (run as root).\033[m\n"
 	else
 	  # ELF executable?
-	  out=`file $N`
+	  out=$(file $N)
 	  if [[ ! $out =~ ELF ]] ; then
 	    if [ "$verbose" = "true" ] ; then
 	      echo_message "\033[34m*** Not an ELF file: $tempdir/" "" "" ""
@@ -869,7 +870,7 @@ do
 	  else
 	    echo_message "" "" "    " ""
 	    filecheck $N
-	    if [ `find $tempdir/$N \( -perm -004000 -o -perm -002000 \) -type f -print` ]; then
+	    if [ $(find $tempdir/$N \( -perm -004000 -o -perm -002000 \) -type f -print) ]; then
 	      echo_message "\033[37;41m$2$N\033[m\n" ",$2$N\n" " filename='$2$N' />\n" "\"filename\":\"$2$N\" "
 	    else
 	      echo_message "$tempdir/$N\n" ",$tempdir/$N\n" " filename='$tempdir/$N' />\n" "\"filename\":\"$tempdir/$N\" "
@@ -901,7 +902,7 @@ do
       exit 1
     fi
     # ELF executable?
-    out=`file $2`
+    out=$(file $2)
     if [[ ! $out =~ ELF ]] ; then
       printf "\033[31mError: Not an ELF file: "
       file $2
@@ -910,7 +911,7 @@ do
     fi
     echo_message "RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FILE\n" '' '' ''
     filecheck $2
-    if [ `find $2 \( -perm -004000 -o -perm -002000 \) -type f -print` ] ; then
+    if [ $(find $2 \( -perm -004000 -o -perm -002000 \) -type f -print) ] ; then
       echo_message "\033[37;41m$2$N\033[m" ",$2$N" " filename='$2$N'/>\n" ",\"filename\":\"$2$N\" } }"
     else
       echo_message "$2\n" ",$2\n" " filename='$2'/>\n" ",\"filename\":\"$2\" } }"
@@ -931,7 +932,7 @@ do
     echo_message "         COMMAND    PID RELRO           STACK CANARY      NX/PaX        PIE 			FORTIFY\n" "" "" '{'
     for N in [1-9]*; do
       if [ $N != $$ ] && readlink -q $N/exe > /dev/null; then
-		name=`head -1 $N/status | cut -b 7-`
+		name=$(head -1 $N/status | cut -b 7-)
 		if [[ $format == "cli" ]]; then
 	    	printf "%16s" $name
 	    	printf "%7d " $N
@@ -974,9 +975,9 @@ do
     echo_message "* Does the CPU support NX: " '' '' ''
     nxcheck
     echo_message "         COMMAND    PID RELRO           STACK CANARY      NX/PaX        PIE 			FORTIFY\n" "" "" '{'
-    for N in `ps -Ao pid,comm | grep $2 | cut -b1-6`; do
+    for N in $(ps -Ao pid,comm | grep $2 | cut -b1-6); do
       if [ -d $N ] ; then
-	name=`head -1 $N/status | cut -b 7-`
+	name=$(head -1 $N/status | cut -b 7-)
 	if [[ $format == "cli" ]]; then
 	    printf "%16s" $name
 	    printf "%7d " $N
@@ -989,7 +990,7 @@ do
 	    printf "\033[31mNo read permissions for '/proc/$N/exe' (run as root).\033[m\n\n"
 	    exit 1
 	  fi
-	  if [ ! `readlink $N/exe` ] ; then
+	  if [ ! $(readlink $N/exe) ] ; then
 	    printf "\033[31mPermission denied. Requested process ID belongs to a kernel thread.\033[m\n\n"
 	    exit 1
 	  fi
@@ -1024,7 +1025,7 @@ do
     echo_message "         COMMAND    PID RELRO             STACK CANARY           NX/PaX        PIE\n" '' '' '' 
     N=$2
     if [ -d $N ] ; then
-	name=`head -1 $N/status | cut -b 7-`
+	name=$(head -1 $N/status | cut -b 7-)
 	if [[ $format == "cli" ]]; then
 	    printf "%16s" $name
 	    printf "%7d " $N
@@ -1038,7 +1039,7 @@ do
 	  printf "\033[31mNo read permissions for '/proc/$N/exe' (run as root).\033[m\n\n"
 	  exit 1
 	fi
-	if [ ! `readlink $N/exe` ] ; then
+	if [ ! $(readlink $N/exe) ] ; then
 	  printf "\033[31mPermission denied. Requested process ID belongs to a kernel thread.\033[m\n\n"
 	  exit 1
 	fi
@@ -1078,7 +1079,7 @@ do
       exit 1
     fi
     # ELF executable?
-    out=`file $2`
+    out=$(file $2)
     if [[ ! $out =~ ELF ]] ; then
       printf "\033[31mError: Not an ELF file: "
       file $2
@@ -1130,7 +1131,7 @@ do
 	  printf "\033[31mNo read permissions for '/proc/$N/exe' (run as root).\033[m\n\n"
 	  exit 1
 	fi
-	if [ ! `readlink $N/exe` ] ; then
+	if [ ! $(readlink $N/exe) ] ; then
 	  printf "\033[31mPermission denied. Requested process ID belongs to a kernel thread.\033[m\n\n"
 	  exit 1
 	fi
@@ -1148,7 +1149,7 @@ do
 	printf "\033[31mError: libc not found.\033[m\n\n"
 	exit 1
       fi
-      name=`head -1 $N/status | cut -b 7-`
+      name=$(head -1 $N/status | cut -b 7-)
       echo_message  "* Process name (PID)                         : $name ($N)\n" "" "" ""
       FS_chk_func_libc=( $($readelf -s $FS_libc | grep _chk@@ | awk '{ print $8 }' | cut -c 3- | sed -e 's/_chk@.*//') )
       FS_functions=( $($readelf -s $2/exe | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//') )
