@@ -81,12 +81,9 @@ command_exists () {
 
 fetch() {
 	if type wget > /dev/null 2>&1 ; then
-		wget --no-check-certificate -O /tmp/checksec.tmp "${@}" >/dev/null 2>&1
+		wget --no-check-certificate -O "${2}" "${1}" >/dev/null 2>&1
 	elif type curl > /dev/null 2>&1 ; then
-		while (( ${#} )) ; do
-			curl --insecure --remote-name -o /tmp/checksec.tmp --time-cond "${1##*/}" -- "${1}" >/dev/null 2>&1
-			shift
-		done
+		curl --insecure --remote-name -o "${2}" "${1}" >/dev/null 2>&1
 	else
 		echo 'Neither wget nor curl is available.' >&2
 		exit 1
@@ -798,21 +795,22 @@ do
     exit 0
     ;;
   --update)
-    fetch "${SCRIPT_URL}"
-	UPDATE_VERSION=$(grep "^SCRIPT_VERSION" /tmp/checksec.tmp | awk -F"=" '{ print $2 }')
+	TMP_FILE=$(mktemp /tmp/checksec.XXXXXXXXXX)
+    fetch "${SCRIPT_URL}" "${TMP_FILE}"
+	UPDATE_VERSION=$(grep "^SCRIPT_VERSION" ${TMP_FILE} | awk -F"=" '{ print $2 }')
     if [ $SCRIPT_VERSION != $UPDATE_VERSION ]; then
-		mv /tmp/checksec.tmp $0 >/dev/null 2>&1
+		mv $TMP_FILE $0 >/dev/null 2>&1
 		if [ $? == 0 ]; then
 			echo "checksec.sh updated - Rev. $UPDATE_VERSION"
 			chmod 755 $0
 		else
 			echo "Error: Could not update... Please check permissions"
-			rm -f /tmp/checksec.tmp >/dev/null 2>&1
+			rm -f $TMP_FILE >/dev/null 2>&1
 			exit 1
 		fi
 	else
 		echo "checksec.sh not updated... Already on latest version"
-		rm -f /tmp/checksec.tmp >/dev/null 2>&1
+		rm -f $TMP_FILE >/dev/null 2>&1
 		exit 1
     fi
     exit 0
