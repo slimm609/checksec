@@ -64,6 +64,17 @@ SCRIPT_NAME="checksec.sh"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
 SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename ${SCRIPT_NAME} .sh).sig"
 SCRIPT_VERSION=2014021602
+read -r -d '' PUBKEY <<'EOF'
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwgndry6Xbi4O0Gl5Oe3I
+uydr2VjGXmx2E3KawL++QwkaUODG8EnOn0xVuKVddJaf67FlswzOb8uDTCN7lYDg
+qJAwf6YS9AluNQFiEAhEFX1/Gl2/SJqGaxEUOGNUw529kpUGC06czHxD4G/ucABY
+ONbZoUsZHbdgeCnyk5w6tIk70Je6fvznCkbqmFaKE2BxVLDKSIbH0SjNWOtR2azd
+uWzvEMdUqefVcaq+P1cWGK7/xVYR6Ew0MZA7VSLdDHeEErIoJsu/3eZyDyd9ZRRo
+gij36GSvHTDrU5eWWFStCMT3oCD8LJ5impQyjVwvy3vxeSUc5dw+YP549Oc4qvo6
+9wIDAQAB
+-----END PUBLIC KEY-----
+EOF
 
 # FORTIFY_SOURCE vars
 FS_end=_chk
@@ -798,11 +809,19 @@ do
   --update)
 	umask 027
 	TMP_FILE=$(mktemp /tmp/checksec.XXXXXXXXXX)
+	SIG_FILE=$(mktemp /tmp/checksec_sig.XXXXXXXX)
     fetch "${SCRIPT_URL}" "${TMP_FILE}"
+    fetch "${SIG_URL}" "${SIG_FILE}"
+	if ! $(openssl dgst -sha256 -verify ${PUBKEY} -signature ${SIG_FILE} ${TMP_FILE}); then
+		echo "file signature does not match. Update may be tampered"
+		rm -f ${TMP_FILE} ${SIG_FILE} >/dev/null 2>&1
+		exit 1
+	fi
 	UPDATE_VERSION=$(grep "^SCRIPT_VERSION" ${TMP_FILE} | awk -F"=" '{ print $2 }')
-    if [ $SCRIPT_VERSION != $UPDATE_VERSION ]; then
+    if [ ${SCRIPT_VERSION} != ${UPDATE_VERSION} ]; then
 		PERMS=$(stat -c "%a" $0)
-		mv $TMP_FILE $0 >/dev/null 2>&1
+		rm -f ${SIG_FILE} >/dev/null 2>&1
+		mv ${TMP_FILE} $0 >/dev/null 2>&1
 		if [ $? == 0 ]; then
 			echo "checksec.sh updated - Rev. $UPDATE_VERSION"
 			chmod $PERMS $0
