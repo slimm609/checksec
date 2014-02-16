@@ -121,7 +121,7 @@ help() {
   echo "  --update"
   echo
   echo "For more information, see:"
-  echo "  http://www.trapkit.de/tools/checksec.html"
+  echo "  http://github.com/slimm609/checksec.sh"
   echo
 }
 
