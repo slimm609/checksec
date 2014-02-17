@@ -63,7 +63,7 @@ format="cli"
 SCRIPT_NAME="checksec.sh"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
 SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename ${SCRIPT_NAME} .sh).sig"
-SCRIPT_VERSION=2014021604
+SCRIPT_VERSION=2014021605
 
 #openssl public key for verification of updates
 read -r -d '' PUBKEY <<'EOF'
@@ -99,6 +99,7 @@ fetch() {
 # version information
 version() {
   echo "checksec.sh v1.6, Brian Davis, github.com/slimm609/checksec.sh, Feburary 2014"
+  echo "Revision: ${SCRIPT_VERSION}"
   echo "Based off checksec v1.5, Tobias Klein, www.trapkit.de, November 2011"
   echo 
 }
