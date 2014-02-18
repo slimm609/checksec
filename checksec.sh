@@ -446,18 +446,22 @@ kernelcheck() {
     echo_message "\033[31mDisabled\033[m\n" "Disabled," " gcc_stack_protector='no'" '"gcc_stack_protector":"no",'
   fi
 
-  echo_message "  Strict user copy checks:                " "" "" ""
-  if $kconfig | grep -qi 'CONFIG_DEBUG_STRICT_USER_COPY_CHECKS=y'; then
-    echo_message "\033[32mEnabled\033[m\n" "Enabled," " strict_user_copy_check='yes'" '"strict_user_copy_check":"yes",'
-  else
-    echo_message "\033[31mDisabled\033[m\n" "Disabled," " strict_user_copy_check='no'" '"strict_user_copy_check":"no",'
+  if ! $kconfig | grep -qi 'CONFIG_PAX_SIZE_OVERFLOW=y'; then
+    echo_message "  Strict user copy checks:                " "" "" ""
+    if $kconfig | grep -qi 'CONFIG_DEBUG_STRICT_USER_COPY_CHECKS=y'; then
+      echo_message "\033[32mEnabled\033[m\n" "Enabled," " strict_user_copy_check='yes'" '"strict_user_copy_check":"yes",'
+    else
+      echo_message "\033[31mDisabled\033[m\n" "Disabled," " strict_user_copy_check='no'" '"strict_user_copy_check":"no",'
+    fi
   fi
 
-  echo_message "  Enforce read-only kernel data:          " "" "" ""
-  if $kconfig | grep -qi 'CONFIG_DEBUG_RODATA=y'; then
-    echo_message "\033[32mEnabled\033[m\n" "Enabled," " ro_kernel_data='yes'" '"ro_kernel_data":"yes",'
-  else
-    echo_message "\033[31mDisabled\033[m\n" "Disabled," " ro_kernel_data='no'" '"ro_kernel_data":"no",'
+  if ! $kconfig | grep -qi 'CONFIG_PAX'; then
+    echo_message "  Enforce read-only kernel data:          " "" "" ""
+    if $kconfig | grep -qi 'CONFIG_DEBUG_RODATA=y'; then
+      echo_message "\033[32mEnabled\033[m\n" "Enabled," " ro_kernel_data='yes'" '"ro_kernel_data":"yes",'
+    else
+      echo_message "\033[31mDisabled\033[m\n" "Disabled," " ro_kernel_data='no'" '"ro_kernel_data":"no",'
+    fi
   fi
   echo_message "  Restrict /dev/mem access:               " "" "" ""
   if $kconfig | grep -qi 'CONFIG_STRICT_DEVMEM=y'; then
