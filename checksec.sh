@@ -446,7 +446,7 @@ kernelcheck() {
     echo_message "\033[31mDisabled\033[m\n" "Disabled," " gcc_stack_protector='no'" '"gcc_stack_protector":"no",'
   fi
 
-  if $kconfig | grep -qi 'CONFIG_PAX_SIZE_OVERFLOW is not set'; then
+  if ! $kconfig | grep -qi 'CONFIG_PAX_SIZE_OVERFLOW=y'; then
     echo_message "  Strict user copy checks:                " "" "" ""
     if $kconfig | grep -qi 'CONFIG_DEBUG_STRICT_USER_COPY_CHECKS=y'; then
       echo_message "\033[32mEnabled\033[m\n" "Enabled," " strict_user_copy_check='yes'" '"strict_user_copy_check":"yes",'
