@@ -7,6 +7,7 @@ It has been originally written by Tobias Klein and the original source is availa
 Updates
 -------
 
+	Implemented changelog
 	merged in JIT and MODHARDEN changes (Thanks N8Fear)
 	Removed deprecated Kern Heap section (thanks Unspawn)
 	Added SELinux checks as additional checks for kernel security.
