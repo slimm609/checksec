@@ -6,7 +6,7 @@ Rev-2014021605 	Brian Davis 	<slimm609@gmail.com>
 Rev-2014021601	Brian Davis 	<slimm609@gmail.com>
 		* checksec.sh: Removed deprecated Kern Heap section (thanks Unspawn)
 
-2014-02-14		Brian Davis		<slimm609@gmail.com>
+2014-02-14	Brian Davis		<slimm609@gmail.com>
 		* checksec.sh: Updated to version 1.6
 		* checksec.sh: Implemented rev numbers and --update option
 		* checksec.sh: Added SELinux checks as additional checks for kernel security.
