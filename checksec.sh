@@ -455,7 +455,7 @@ kernelcheck() {
     fi
   fi
 
-  if $kconfig | grep -qi 'CONFIG_BROKEN=y'; then
+  if ! $kconfig | grep -qi 'CONFIG_PAX'; then
     echo_message "  Enforce read-only kernel data:          " "" "" ""
     if $kconfig | grep -qi 'CONFIG_DEBUG_RODATA=y'; then
       echo_message "\033[32mEnabled\033[m\n" "Enabled," " ro_kernel_data='yes'" '"ro_kernel_data":"yes",'
