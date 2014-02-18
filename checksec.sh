@@ -63,7 +63,7 @@ format="cli"
 SCRIPT_NAME="checksec.sh"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
 SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename ${SCRIPT_NAME} .sh).sig"
-SCRIPT_VERSION=2014021605
+SCRIPT_VERSION=2014021801
 
 #openssl public key for verification of updates
 read -r -d '' PUBKEY <<'EOF'
