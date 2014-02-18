@@ -638,7 +638,11 @@ kernelcheck() {
     if $kconfig | grep -qi 'CONFIG_GRKERNSEC_MODHARDEN=y'; then
       echo_message "\033[32mEnabled\033[m\n" "Enabled," " config_grkernsec_modharden='yes'" '"config_grkernsec_modharden":"yes",'
     else
-      echo_message "\033[31mDisabled\033[m\n" "Disabled," " config_grkernsec_modharden='no'" '"config_grkernsec_modharden":"no",'
+      if $kconfig | grep -qi 'CONFIG_MODULES=y'; then
+        echo_message "\033[31mDisabled\033[m\n" "Disabled," " config_grkernsec_modharden='no'" '"config_grkernsec_modharden":"no",'
+      else
+        echo_message "\033[32mNo module support\033[m\n" "No module support, " " config_modules='no'" '"config_modules":"no",'
+      fi
     fi
 
     echo_message "  Chroot Protection:          		  " "" "" ""
