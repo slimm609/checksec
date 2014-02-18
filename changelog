@@ -1,3 +1,5 @@
+Rev-2014021802  Brian Davis		<slimm609@gmail.com>
+		* checksec.sh: merged in RODATA and STRICT_USER_COPY changes (Thanks N8Fear)
 Rev-2014021801  Brian Davis		<slimm609@gmail.com>
 		* checksec.sh: merged in JIT and MODHARDEN changes (Thanks N8Fear)
 Rev-2014021605 	Brian Davis 	<slimm609@gmail.com>
