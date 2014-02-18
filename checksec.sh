@@ -606,7 +606,11 @@ kernelcheck() {
     if $kconfig | grep -qi 'CONFIG_GRKERNSEC_JIT_HARDEN=y'; then
       echo_message "\033[32mEnabled\033[m\n" "Enabled," " config_grkernsec_jit_harden='yes'" '"config_grkernsec_jit_harden":"yes",'
     else
-      echo_message "\033[31mDisabled\033[m\n" "Disabled," " config_grkernsec_jit_harden='no'" '"config_grkernsec_jit_harden":"no",'
+      if $kconfig | grep -qi 'CONFIG_BPF_JIT=y'; then
+        echo_message "\033[31mDisabled\033[m\n" "Disabled," " config_grkernsec_jit_harden='no'" '"config_grkernsec_jit_harden":"no",'
+      else
+        echo_message "\033[32mNo BPF JIT\033[m\n" "No BPF JIT," " config_bpf_jit='no'" '"config_bpf_jit":"no",'
+      fi
     fi
 
     echo_message "  Thread Stack Random Gaps: 	          " "" "" ""
