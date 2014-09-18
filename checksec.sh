@@ -898,7 +898,7 @@ do
 	  else
 	    echo_message "" "" "    " ""
 	    filecheck $N
-	    if [ $(find $tempdir/$N \( -perm -004000 -o -perm -002000 \) -type f -print) ]; then
+	    if [ $(find $N \( -perm -004000 -o -perm -002000 \) -type f -print) ]; then
 	      echo_message "\033[37;41m$2$N\033[m\n" ",$2$N\n" " filename='$2$N' />\n" "\"filename\":\"$2$N\" "
 	    else
 	      echo_message "$tempdir/$N\n" ",$tempdir/$N\n" " filename='$tempdir/$N' />\n" "\"filename\":\"$tempdir/$N\" "
