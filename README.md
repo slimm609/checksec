@@ -1,7 +1,7 @@
 checksec
 ========
 
-Checksec.sh is a bash scrip to check executable properties like (PIE, RELRO, PaX, Canaries, ASLR, Fortify Source).
+Checksec is a bash scrip to check executable properties like (PIE, RELRO, PaX, Canaries, ASLR, Fortify Source).
 It has been originally written by Tobias Klein and the original source is available here: http://www.trapkit.de/tools/checksec.html
 
 Updates
