@@ -1,3 +1,5 @@
+Rev-2015060201  Brian Davis		<slimm609@gmail.com>
+		* checksec.sh: merged in fortified/fortify-able stats on --file output changed (Thanks Boos) 
 Rev-2015011201  Brian Davis		<slimm609@gmail.com>
 		* checksec.sh: moved checksec.sh to checksec
 Rev-2014021802  Brian Davis		<slimm609@gmail.com>
