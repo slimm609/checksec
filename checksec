@@ -63,7 +63,7 @@ format="cli"
 SCRIPT_NAME="checksec"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
 SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename ${SCRIPT_NAME} .sh).sig"
-SCRIPT_VERSION=2015060201
+SCRIPT_VERSION=2015011201
 
 #openssl public key for verification of updates
 read -r -d '' PUBKEY <<'EOF'
@@ -78,6 +78,17 @@ FS_cnt_unchecked=0
 FS_chk_func_libc=0
 FS_functions=0
 FS_libc=0
+
+check_binaries() 
+{
+	for command in readelf cat awk sysctl uname mktemp openssl grep stat file find head ps readlink basename id; do
+
+		if !(command_exists $command); then
+			echo -e "\e[31mWARNING: '$command' not found! It's required for most checks.\e[0m"
+		fi
+	done
+}
+
 
 
 # check if command exists
@@ -107,6 +118,7 @@ version() {
 
 # help
 help() {
+  
   echo "Usage: checksec [--format {cli|csv|xml|json}] [OPTION]"
   echo
   echo
@@ -127,6 +139,8 @@ help() {
   echo "For more information, see:"
   echo "  http://github.com/slimm609/checksec.sh"
   echo
+
+  check_binaries
 }
 
 #run help if nothing is passed
@@ -271,7 +285,7 @@ filecheck() {
   fi
 
   if $readelf -d $1 2>/dev/null | grep -q 'runpath'; then
-   echo_message '\033[31mRUNPATH    \033[m  ' 'RUNPATH,' ' runpath="yes"' '"runpath":"yes",'
+   echo_message '\033[31mRUNPATH    \033[m  ' 'RUNPATH' ' runpath="yes"' '"runpath":"yes",'
   else
    echo_message '\033[32mNo RUNPATH \033[m  ' 'No RUNPATH,' ' runpath="no"' '"runpath":"no",'
   fi
@@ -849,6 +863,9 @@ else
      readelf=eu-readelf
   fi
 fi
+
+
+check_binaries
 
 #while [[ "$@" != "" ]]
 while test -n "$1"
