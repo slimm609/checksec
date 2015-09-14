@@ -883,7 +883,7 @@ done
 
 # --- FORTIFY_SOURCE subfunctions (end) ---
 
-for command in cat awk sysctl uname mktemp openssl grep stat file find head ps readlink basename id wget curl; do
+for command in cat awk sysctl uname mktemp openssl grep stat file find head ps readlink basename id wget curl which; do
     if !(command_exists $command); then
        echo -e "\e[31mWARNING: '$command' not found! It's required for most checks.\e[0m"
        exit 255
