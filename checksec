@@ -59,6 +59,7 @@
 
 
 # global vars
+debug=false
 have_readelf=1
 verbose=false
 format="cli"
@@ -89,8 +90,10 @@ command_exists () {
 
 fetch() {
 	if type wget > /dev/null 2>&1 ; then
+    $debug && echo "fetching update via wget"
 		wget --no-check-certificate -O "${2}" "${1}" >/dev/null 2>&1
 	elif type curl > /dev/null 2>&1 ; then
+    $debug && echo "fetching update via curl"
 		curl --insecure --remote-name -o "${2}" "${1}" >/dev/null 2>&1
 	else
 		echo 'Neither wget nor curl is available.' >&2
@@ -150,7 +153,9 @@ echo_message() {
 }
 
 getsestatus() {
+  $debug && echo "fuction getsestatus"
 if (command_exists getenforce); then
+  $debug && echo "fuction getsestatus->getenforce"
 	sestatus=$(getenforce)
 	if [ "$sestatus" == "Disabled" ]; then
 		status=0
@@ -160,6 +165,7 @@ if (command_exists getenforce); then
 		status=2
 	fi
 elif (command_exists sestatus); then
+  $debug && echo "fuction getsestatus->sestatus"
 	sestatus=$(sestatus | grep "SELinux status" | awk '{ print $3}')
 	if [ "$sestatus" == "disabled" ]; then
 		status=0
@@ -179,6 +185,7 @@ return $status
 
 # check if directory exists
 dir_exists () {
+  $debug && echo "fuction dir_exists"
   if [ -d $1 ] ; then
     return 0
   else
@@ -188,6 +195,7 @@ dir_exists () {
 
 # check user privileges
 root_privs () {
+ $debug && echo "***function root_privs"
   if [ $(/usr/bin/id -u) -eq 0 ] ; then
     return 0
   else
@@ -197,16 +205,18 @@ root_privs () {
 
 # check if input is numeric
 isNumeric () {
+  $debug && echo "***function isNumeric"
   echo "$@" | grep -q -v "[^0-9]"
 }
 
 # check if input is a string
 isString () {
+  $debug && echo "***function isString"
   echo "$@" | grep -q -v "[^A-Za-z]"
 }
 
 FS_count() {
-
+  $debug && echo "***function FS_Count"
   for FS_elem_libc in $(seq 0 $((${#FS_chk_func_libc[@]} - 1)))
   do
     for FS_elem_functions in $(seq 0 $((${#FS_functions[@]} - 1)))
@@ -227,7 +237,9 @@ FS_count() {
 
 # check file(s)
 filecheck() {
+  $debug && echo "***function filecheck"
   # check for RELRO support
+  $debug && echo "***function filecheck->RELRO"
   if $readelf -l $1 2>/dev/null | grep -q 'GNU_RELRO'; then
     if $readelf -d $1 2>/dev/null | grep -q 'BIND_NOW'; then
       echo_message '\033[32mFull RELRO   \033[m   ' 'Full RELRO,' '<file relro="full"' '{ "file": { "relro":"full",'
@@ -239,6 +251,7 @@ filecheck() {
   fi
 
   # check for stack canary support
+  $debug && echo -e "\n***function filecheck->canary"
   if $readelf -s $1 2>/dev/null | grep -q '__stack_chk_fail'; then
     echo_message '\033[32mCanary found   \033[m   ' 'Canary found,' ' canary="yes"' '"canary":"yes",'
   else
@@ -246,6 +259,7 @@ filecheck() {
   fi
 
   # check for NX support
+  $debug && echo -e "\n***function filecheck->nx"
   if $readelf -W -l $1 2>/dev/null | grep 'GNU_STACK' | grep -q 'RWE'; then
     echo_message '\033[31mNX disabled\033[m   ' 'NX disabled,' ' nx="no"' '"nx":"no",'
   else
@@ -253,6 +267,7 @@ filecheck() {
   fi 
 
   # check for PIE support
+  $debug && echo -e "\n***function filecheck->pie"
   if $readelf -h $1 2>/dev/null | grep -q 'Type:[[:space:]]*EXEC'; then
     echo_message '\033[31mNo PIE       \033[m   ' 'No PIE,' ' pie="no"' '"pie":"no",'
   elif $readelf -h $1 2>/dev/null | grep -q 'Type:[[:space:]]*DYN'; then
@@ -266,6 +281,7 @@ filecheck() {
   fi 
 
   # check for rpath / run path
+  $debug && echo -e "\n***function filecheck->rpath"
   if $readelf -d $1 2>/dev/null | grep -q 'rpath'; then
    echo_message '\033[31mRPATH    \033[m  ' 'RPATH,' ' rpath="yes"' '"rpath":"yes",'
   else
@@ -279,6 +295,7 @@ filecheck() {
   fi
 
   # check for FORTIFY SOURCE
+  $debug && echo "***function filecheck->fortify"
 	if [ -e /lib/libc.so.6 ] ; then
       FS_libc=/lib/libc.so.6
     elif [ -e /lib64/libc.so.6 ] ; then
@@ -313,7 +330,9 @@ filecheck() {
 
 # check process(es)
 proccheck() {
+  $debug && echo -e "\n***function proccheck"
   # check for RELRO support
+  $debug && echo "***function proccheck->RELRO"
   if $readelf -l $1/exe 2>/dev/null | grep -q 'Program Headers'; then
     if $readelf -l $1/exe 2>/dev/null | grep -q 'GNU_RELRO'; then
       if $readelf -d $1/exe 2>/dev/null | grep -q 'BIND_NOW'; then
@@ -330,6 +349,7 @@ proccheck() {
   fi
 
   # check for stack canary support
+  $debug && echo -e "\n***function proccheck->canary"
   if $readelf -s $1/exe 2>/dev/null | grep -q 'Symbol table'; then
     if $readelf -s $1/exe 2>/dev/null | grep -q '__stack_chk_fail'; then
       echo_message '\033[32mCanary found   \033[m   ' 'Canary found,' ' canary="yes"' '"canary":"yes",'
@@ -345,6 +365,7 @@ proccheck() {
   fi
 
   # first check for PaX support
+  $debug && echo -e "\n***function proccheck->PAX"
   if cat $1/status 2> /dev/null | grep -q 'PaX:'; then
     pageexec=( $(cat $1/status 2> /dev/null | grep 'PaX:' | cut -b6) )
     segmexec=( $(cat $1/status 2> /dev/null | grep 'PaX:' | cut -b10) )
@@ -364,6 +385,7 @@ proccheck() {
       echo_message '\033[31mPaX disabled\033[m  ' 'Pax disabled,' ' pax="no"' '"pax":"no",'
     fi
   # fallback check for NX support
+  $debug && echo -e "\n***function proccheck->NX"
   elif $readelf -W -l $1/exe 2>/dev/null | grep 'GNU_STACK' | grep -q 'RWE'; then
     echo_message '\033[31mNX disabled\033[m   ' 'NX disabled,' ' nx="no"' '"nx":"no",'
   else
@@ -371,6 +393,7 @@ proccheck() {
   fi 
 
   # check for PIE support
+  $debug && echo -e "\n***function proccheck->PIE"
   if $readelf -h $1/exe 2>/dev/null | grep -q 'Type:[[:space:]]*EXEC'; then
     echo_message '\033[31mNo PIE               \033[m   ' 'No PIE,' ' pie="no"' '"pie":"no",'
   elif $readelf -h $1/exe 2>/dev/null | grep -q 'Type:[[:space:]]*DYN'; then
@@ -397,6 +420,7 @@ proccheck() {
 
 # check mapped libraries
 libcheck() {
+  $debug && echo "***function libcheck"
   libs=( $(awk '{ print $6 }' /proc/$1/maps | grep '/' | sort -u | xargs file | grep ELF | awk '{ print $1 }' | sed 's/:/ /') )
  
   echo_message "\n* Loaded libraries (file information, # of mapped files: ${#libs[@]}):\n\n" "" "" ""
@@ -412,7 +436,9 @@ libcheck() {
 
 # check for system-wide ASLR support
 aslrcheck() {
+  $debug && echo "***function aslrcheck"
   # PaX ASLR support
+  $debug && echo -e "\n***function aslrcheck->PAX ASLR"
   if !(cat /proc/1/status 2> /dev/null | grep -q 'Name:') ; then
     echo_message ':\033[33m insufficient privileges for PaX ASLR checks\033[m\n' '' '' ''
     echo_message '  Fallback to standard Linux ASLR check' '' '' ''
@@ -426,6 +452,7 @@ aslrcheck() {
       echo_message '\033[31mPaX ASLR disabled\033[m\n\n' '' '' ''
     fi
   else
+  $debug && echo -e "\n***function aslrcheck->randomize_va_space"
     # standard Linux 'kernel.randomize_va_space' ASLR support
     # (see the kernel file 'Documentation/sysctl/kernel.txt' for a detailed description)
     echo_message " (kernel.randomize_va_space): " '' '' ''
@@ -451,6 +478,7 @@ aslrcheck() {
 
 # check cpu nx flag
 nxcheck() {
+  $debug && echo -e "\n***function nxcheck"
   if grep -q nx /proc/cpuinfo; then
     echo_message '\033[32mYes\033[m\n\n' '' '' ''
   else
@@ -460,6 +488,7 @@ nxcheck() {
 
 # check for kernel protection mechanisms
 kernelcheck() {
+  $debug && echo "***function kernelcheck"
   echo_message "  Description - List the status of kernel protection mechanisms. Rather than\n" '' '' ''
   echo_message "  inspect kernel mechanisms that may aid in the prevention of exploitation of\n" '' '' ''
   echo_message "  userspace processes, this option lists the status of kernel configuration\n" '' '' ''
@@ -756,6 +785,7 @@ kernelcheck() {
 
 # is FORTIFY_SOURCE supported by libc?
 FS_libc_check() {
+  $debug && echo "***function FS_libc_check"
   echo_message "* FORTIFY_SOURCE support available (libc)    : " "" ""
 
   if [ "${#FS_chk_func_libc[@]}" != "0" ] ; then
@@ -768,6 +798,7 @@ FS_libc_check() {
 
 # was the binary compiled with FORTIFY_SOURCE?
 FS_binary_check() {
+  $debug && echo "***function FS_binary_check"
   echo_message "* Binary compiled with FORTIFY_SOURCE support: " "" "" ""
 
   for FS_elem_functions in $(seq 0 $((${#FS_functions[@]} - 1)))
@@ -782,13 +813,16 @@ FS_binary_check() {
 }
 
 FS_comparison() {
+  $debug && echo "***function FS_comparison"
   echo_message "\n" "" ""
   echo_message " ------ EXECUTABLE-FILE ------- . -------- LIBC --------\n" "" "" ""
   echo_message " FORTIFY-able library functions | Checked function names\n" "" "" ""
   echo_message " -------------------------------------------------------\n" "" "" ""
 
+  $debug && echo -e "\n***function FS_comparison->FS_elem_libc"
   for FS_elem_libc in $(seq 0 $((${#FS_chk_func_libc[@]} - 1)))
   do
+    $debug && echo -e "\n***function FS_comparison->FS_elem_libc->FS_elem_functions"
     for FS_elem_functions in $(seq 0 $((${#FS_functions[@]} - 1)))
     do
       FS_tmp_func=${FS_functions[$FS_elem_functions]}
@@ -829,6 +863,7 @@ FS_comparison() {
 }
 
 FS_summary() {
+  $debug && echo "***function FS_summary"
   echo_message "\n" "" "\n" "" 
   echo_message "SUMMARY:\n\n" "" "" ""
   echo_message "* Number of checked functions in libc                : ${#FS_chk_func_libc[@]}\n" "${#FS_chk_func_libc[@]}," "    <stats nb_libc_func='${#FS_chk_func_libc[@]}'" "{ \"stats\": { \"nb_libc_func\":\"${#FS_chk_func_libc[@]}\","
@@ -839,9 +874,16 @@ FS_summary() {
   echo_message "\n" "\n" "\n" ""
 }
 
+debug_report() {
+for command in awk sysctl uname mktemp openssl grep stat file find head ps readlink basename id wget curl readelf eu-readelf; do
+      path="$(which $command)"
+      echo $(ls -l $path)
+done
+}
+
 # --- FORTIFY_SOURCE subfunctions (end) ---
 
-for command in readelf cat awk sysctl uname mktemp openssl grep stat file find head ps readlink basename id; do
+for command in cat awk sysctl uname mktemp openssl grep stat file find head ps readlink basename id wget curl; do
     if !(command_exists $command); then
        echo -e "\e[31mWARNING: '$command' not found! It's required for most checks.\e[0m"
        exit 255
@@ -853,7 +895,6 @@ if (command_exists readelf); then
 elif (command_exists eu-readelf); then
      readelf=eu-readelf
 fi
-
 #while [[ "$@" != "" ]]
 while test -n "$1"
 do
@@ -868,6 +909,11 @@ do
   --help|-h)
     help
     exit 0
+    ;;
+  -d)
+    debug=true
+    debug_report
+    shift 1
     ;;
   --update)
 	umask 027
