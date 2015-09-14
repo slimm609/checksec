@@ -65,7 +65,7 @@ format="cli"
 SCRIPT_NAME="checksec"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
 SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename ${SCRIPT_NAME} .sh).sig"
-SCRIPT_VERSION=2015060201
+SCRIPT_VERSION=2015091301
 
 #openssl public key for verification of updates
 read -r -d '' PUBKEY <<'EOF'
@@ -841,15 +841,17 @@ FS_summary() {
 
 # --- FORTIFY_SOURCE subfunctions (end) ---
 
-if !(command_exists readelf)  && !(command_exists eu-readelf); then
-  echo "\033[31mWarning: 'readelf' not found! It's required for most checks.\033[m\n\n"
-  have_readelf=0
-else
-  if (command_exists readelf); then
+for command in readelf cat awk sysctl uname mktemp openssl grep stat file find head ps readlink basename id; do
+    if !(command_exists $command); then
+       echo -e "\e[31mWARNING: '$command' not found! It's required for most checks.\e[0m"
+       exit 255
+    fi
+done
+  
+if (command_exists readelf); then
      readelf=readelf
-  elif (command_exists eu-readelf); then
+elif (command_exists eu-readelf); then
      readelf=eu-readelf
-  fi
 fi
 
 #while [[ "$@" != "" ]]

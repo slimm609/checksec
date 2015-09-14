@@ -1,3 +1,9 @@
+Rev-2015091301  Brian Davis     <slimm609@gmail.com>
+        * checksec.sh: merged in changes for fedora/epel compilance 
+          Thanks Besser82
+        * checksec.sh: updated check binaries on run
+		  Thanks Roberto Martelloni
+
 Rev-2015060201	Brian Davis		<slimm609@gmail.com>
 		* checksec.sh: merged in fortified/fortify-able stats on --file output changed
 		  Thanks Roberto Martelloni
