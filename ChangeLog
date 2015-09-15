@@ -1,3 +1,6 @@
+Rev-2015091501  Brian Davis     <slimm609@gmail.com> 
+        * checksec.sh: added additional debug output for troubleshooting purposes
+
 Rev-2015091401  Brian Davis     <slimm609@gmail.com> 
         * checksec.sh: added debug option for troubleshooting purposes
 
