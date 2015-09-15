@@ -66,7 +66,7 @@ format="cli"
 SCRIPT_NAME="checksec"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
 SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename ${SCRIPT_NAME} .sh).sig"
-SCRIPT_VERSION=2015091504
+SCRIPT_VERSION=2015091505
 
 #openssl public key for verification of updates
 read -r -d '' PUBKEY <<'EOF'
@@ -505,12 +505,14 @@ kernelcheck() {
     echo_message "  Warning: The config on disk may not represent running kernel config!\n\n" "" "" ""
   elif [ -f "${KBUILD_OUTPUT:-/usr/src/linux}"/.config ] ; then
     kconfig="cat ${KBUILD_OUTPUT:-/usr/src/linux}/.config"
-    echo_message "\033[33m%s\033[m\n\n" "${KBUILD_OUTPUT:-/usr/src/linux}/.config" "${KBUILD_OUTPUT:-/usr/src/linux}/.config," "<kernel config='${KBUILD_OUTPUT:-/usr/src/linux}/.config'" "{ \"KernelConfig\":\"${KBUILD_OUTPUT:-/usr/src/linux}/.config\","
+    echo_message "\033[33m${KBUILD_OUTPUT:-/usr/src/linux}/.config\033[m\n\n" "${KBUILD_OUTPUT:-/usr/src/linux}/.config," "<kernel config='${KBUILD_OUTPUT:-/usr/src/linux}/.config'" "{ \"KernelConfig\":\"${KBUILD_OUTPUT:-/usr/src/linux}/.config\","
     echo_message "  Warning: The config on disk may not represent running kernel config!\n\n" "" "" ""
   else
     echo_message "\033[31mNOT FOUND\033[m\n\n" "NOT FOUND,,,,,,," "<kernel config='not_found' />" '{ "KernelConfig":"not_found",'
     exit 0
   fi
+  $debug && echo $($kconfig | grep "CONFIG_GRKERNSEC")
+  $debug && echo $($kconfig | grep "CONFIG_PAX")
 
   echo_message "  Vanilla Kernel ASLR:   		  " "" "" ""
   randomize_va=$(sysctl -b kernel.randomize_va_space)
