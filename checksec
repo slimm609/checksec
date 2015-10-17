@@ -539,15 +539,6 @@ kernelcheck() {
     echo_message "\033[31mDisabled\033[m\n" "Disabled," " gcc_stack_protector='no'" '"gcc_stack_protector":"no",'
   fi
 
-  if ! $kconfig | grep -qi 'CONFIG_PAX_SIZE_OVERFLOW=y'; then
-    echo_message "  Strict user copy checks:                " "" "" ""
-    if $kconfig | grep -qi 'CONFIG_DEBUG_STRICT_USER_COPY_CHECKS=y'; then
-      echo_message "\033[32mEnabled\033[m\n" "Enabled," " strict_user_copy_check='yes'" '"strict_user_copy_check":"yes",'
-    else
-      echo_message "\033[31mDisabled\033[m\n" "Disabled," " strict_user_copy_check='no'" '"strict_user_copy_check":"no",'
-    fi
-  fi
-
   if ! $kconfig | grep -qi 'CONFIG_PAX'; then
     echo_message "  Enforce read-only kernel data:          " "" "" ""
     if $kconfig | grep -qi 'CONFIG_DEBUG_RODATA=y'; then
@@ -556,6 +547,7 @@ kernelcheck() {
       echo_message "\033[31mDisabled\033[m\n" "Disabled," " ro_kernel_data='no'" '"ro_kernel_data":"no",'
     fi
   fi
+
   echo_message "  Restrict /dev/mem access:               " "" "" ""
   if $kconfig | grep -qi 'CONFIG_STRICT_DEVMEM=y'; then
     echo_message "\033[32mEnabled\033[m\n" "Enabled," " restrict_dev_mem_access='yes'" '"restrict_dev_mem_access":"yes",'
@@ -569,6 +561,26 @@ kernelcheck() {
   else
     echo_message "\033[32mEnabled\033[m\n" "Enabled" " restrict_dev_kmem_access='yes'>" '"restrict_dev_kmem_access":"yes" },'
   fi
+
+#x86 only
+  echo_message "\n" "\n" "\n" ""
+  echo_message "* X86 only: 	  			 \n" "" "" ""
+
+  if ! $kconfig | grep -qi 'CONFIG_PAX_SIZE_OVERFLOW=y'; then
+    echo_message "  Strict user copy checks:                " "" "" ""
+    if $kconfig | grep -qi 'CONFIG_DEBUG_STRICT_USER_COPY_CHECKS=y'; then
+      echo_message "\033[32mEnabled\033[m\n" "Enabled," " strict_user_copy_check='yes'" '"strict_user_copy_check":"yes",'
+    else
+      echo_message "\033[31mDisabled\033[m\n" "Disabled," " strict_user_copy_check='no'" '"strict_user_copy_check":"no",'
+    fi
+  fi
+
+  echo_message "  Address space layout randomization:     " "" "" ""
+  if $kconfig | grep -qi 'CONFIG_RANDOMIZE_BASE=y'; then
+    echo_message "\033[32mEnabled\033[m\n" "Enabled" " random_address_space_layout='yes'>" '"random_address_space_layout":"yes" },'
+   else
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " random_address_space_layout='no'" '"random_address_space_layout":"no",'
+   fi
 
   echo_message "\n" "\n" "\n" ""
   echo_message "* Selinux: 	  			  " "" "" ""
