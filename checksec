@@ -540,6 +540,22 @@ kernelcheck() {
     echo_message "\033[31mDisabled\033[m\n" "Disabled," " protect_hardlinks='none'" '"protect_hardlinks":"none",'
   fi
 
+  echo_message "  Ipv4 reverse path filtering: 		  " "" "" ""
+  ipv4_rpath=$(sysctl -b -e net.ipv4.conf.all.rp_filter)
+  if [ $ipv4_rpath == 1 ]; then
+    echo_message "\033[32mEnabled\033[m\n" "Enabled," " ipv4_rpath='full'" '"ipv4_rpath":"full",'
+  else
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " ipv4_rpath='none'" '"ipv4_rpath":"none",'
+  fi
+
+  echo_message "  Ipv6 reverse path filtering: 		  " "" "" ""
+  ipv6_rpath=$(sysctl -b -e net.ipv6.conf.all.rp_filter)
+  if [ x$ipv6_rpath == x1 ]; then
+    echo_message "\033[32mEnabled\033[m\n" "Enabled," " ipv6_rpath='full'" '"ipv6_rpath":"full",'
+  else
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " ipv6_rpath='none'" '"ipv6_rpath":"none",'
+  fi
+
   echo_message "  Kernel heap randomization:              " "" "" ""
   # NOTE: y means it turns off kernel heap randomization for backwards compatability (libc5)
   if $kconfig | grep -qi 'CONFIG_COMPAT_BRK=y'; then
