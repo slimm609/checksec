@@ -524,6 +524,22 @@ kernelcheck() {
     echo_message "\033[31mNone\033[m\n" "None," " randomize_va_space='none'" '"randomize_va_space":"none",'
   fi
 
+  echo_message "  Protected symlinks:   		  " "" "" ""
+  symlink=$(sysctl -b fs.protected_symlinks)
+  if [ $symlink == 1 ]; then
+    echo_message "\033[32mEnabled\033[m\n" "Enabled," " protect_symlinks='full'" '"protect_symlinks":"full",'
+  else
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " protect_symlinks='none'" '"protect_symlinks":"none",'
+  fi
+
+  echo_message "  Protected hardlinks:   		  " "" "" ""
+  hardlink=$(sysctl -b fs.protected_hardlinks)
+  if [ $hardlink == 1 ]; then
+    echo_message "\033[32mEnabled\033[m\n" "Enabled," " protect_hardlinks='full'" '"protect_hardlinks":"full",'
+  else
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " protect_hardlinks='none'" '"protect_hardlinks":"none",'
+  fi
+
   echo_message "  Kernel heap randomization:              " "" "" ""
   # NOTE: y means it turns off kernel heap randomization for backwards compatability (libc5)
   if $kconfig | grep -qi 'CONFIG_COMPAT_BRK=y'; then
