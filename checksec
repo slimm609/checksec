@@ -527,33 +527,33 @@ kernelcheck() {
   echo_message "  Protected symlinks:   		  " "" "" ""
   symlink=$(sysctl -b fs.protected_symlinks)
   if [ $symlink == 1 ]; then
-    echo_message "\033[32mEnabled\033[m\n" "Enabled," " protect_symlinks='full'" '"protect_symlinks":"full",'
+    echo_message "\033[32mEnabled\033[m\n" "Enabled," " protect_symlinks='yes'" '"protect_symlinks":"yes",'
   else
-    echo_message "\033[31mDisabled\033[m\n" "Disabled," " protect_symlinks='none'" '"protect_symlinks":"none",'
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " protect_symlinks='no'" '"protect_symlinks":"no",'
   fi
 
   echo_message "  Protected hardlinks:   		  " "" "" ""
   hardlink=$(sysctl -b fs.protected_hardlinks)
   if [ $hardlink == 1 ]; then
-    echo_message "\033[32mEnabled\033[m\n" "Enabled," " protect_hardlinks='full'" '"protect_hardlinks":"full",'
+    echo_message "\033[32mEnabled\033[m\n" "Enabled," " protect_hardlinks='yes'" '"protect_hardlinks":"yes",'
   else
-    echo_message "\033[31mDisabled\033[m\n" "Disabled," " protect_hardlinks='none'" '"protect_hardlinks":"none",'
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " protect_hardlinks='no'" '"protect_hardlinks":"no",'
   fi
 
   echo_message "  Ipv4 reverse path filtering: 		  " "" "" ""
   ipv4_rpath=$(sysctl -b -e net.ipv4.conf.all.rp_filter)
-  if [ $ipv4_rpath == 1 ]; then
-    echo_message "\033[32mEnabled\033[m\n" "Enabled," " ipv4_rpath='full'" '"ipv4_rpath":"full",'
+  if [ x$ipv4_rpath == x1 ]; then
+    echo_message "\033[32mEnabled\033[m\n" "Enabled," " ipv4_rpath='yes'" '"ipv4_rpath":"yes",'
   else
-    echo_message "\033[31mDisabled\033[m\n" "Disabled," " ipv4_rpath='none'" '"ipv4_rpath":"none",'
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " ipv4_rpath='no'" '"ipv4_rpath":"no",'
   fi
 
   echo_message "  Ipv6 reverse path filtering: 		  " "" "" ""
   ipv6_rpath=$(sysctl -b -e net.ipv6.conf.all.rp_filter)
   if [ x$ipv6_rpath == x1 ]; then
-    echo_message "\033[32mEnabled\033[m\n" "Enabled," " ipv6_rpath='full'" '"ipv6_rpath":"full",'
+    echo_message "\033[32mEnabled\033[m\n" "Enabled," " ipv6_rpath='yes'" '"ipv6_rpath":"yes",'
   else
-    echo_message "\033[31mDisabled\033[m\n" "Disabled," " ipv6_rpath='none'" '"ipv6_rpath":"none",'
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " ipv6_rpath='no'" '"ipv6_rpath":"no",'
   fi
 
   echo_message "  Kernel heap randomization:              " "" "" ""
