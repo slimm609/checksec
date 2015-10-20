@@ -37,7 +37,7 @@
 #
 # --- Modified Version --- 
 # Name	  : checksec.sh
-# Version : 1.6
+# Version : 1.7.0
 # Author  : Brian Davis
 # Date	  : Feburary 2014
 # Download: https://github.com/slimm609/checksec.sh
@@ -68,15 +68,17 @@ format="cli"
 SCRIPT_NAME="checksec"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
 SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename ${SCRIPT_NAME} .sh).sig"
-SCRIPT_VERSION=2015091505
-
+SCRIPT_VERSION=2015102001
+SCRIPT_MAJOR=1
+SCRIPT_MINOR=7
+SCRIPT_REVISION=0
 
 #determine architecture and bitcount
 if ((1<<32)); then
     bitcount="64"
- else
+else
     bitcount="32"
- fi
+fi
 
 sysarch=$(uname -m)
 if [[ "$sysarch" == x86_64 ]]; then 
@@ -122,8 +124,7 @@ fetch() {
 
 # version information
 version() {
-  echo "checksec.sh v1.6, Brian Davis, github.com/slimm609/checksec.sh, Jan 2015"
-  echo "Revision: ${SCRIPT_VERSION}"
+  echo "checksec v${SCRIPT_MAJOR}.${SCRIPT_MINOR}.${SCRIPT_REVISION}, Brian Davis, github.com/slimm609/checksec.sh, Oct 2015"
   echo "Based off checksec v1.5, Tobias Klein, www.trapkit.de, November 2011"
   echo 
 }
