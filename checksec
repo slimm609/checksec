@@ -524,20 +524,51 @@ kernelcheck() {
     echo_message "\033[31mNone\033[m\n" "None," " randomize_va_space='none'" '"randomize_va_space":"none",'
   fi
 
+  echo_message "  Protected symlinks:   		  " "" "" ""
+  symlink=$(sysctl -b fs.protected_symlinks)
+  if [ $symlink == 1 ]; then
+    echo_message "\033[32mEnabled\033[m\n" "Enabled," " protect_symlinks='yes'" '"protect_symlinks":"yes",'
+  else
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " protect_symlinks='no'" '"protect_symlinks":"no",'
+  fi
+
+  echo_message "  Protected hardlinks:   		  " "" "" ""
+  hardlink=$(sysctl -b fs.protected_hardlinks)
+  if [ $hardlink == 1 ]; then
+    echo_message "\033[32mEnabled\033[m\n" "Enabled," " protect_hardlinks='yes'" '"protect_hardlinks":"yes",'
+  else
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " protect_hardlinks='no'" '"protect_hardlinks":"no",'
+  fi
+
+  echo_message "  Ipv4 reverse path filtering: 		  " "" "" ""
+  ipv4_rpath=$(sysctl -b -e net.ipv4.conf.all.rp_filter)
+  if [ x$ipv4_rpath == x1 ]; then
+    echo_message "\033[32mEnabled\033[m\n" "Enabled," " ipv4_rpath='yes'" '"ipv4_rpath":"yes",'
+  else
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " ipv4_rpath='no'" '"ipv4_rpath":"no",'
+  fi
+
+  echo_message "  Ipv6 reverse path filtering: 		  " "" "" ""
+  ipv6_rpath=$(sysctl -b -e net.ipv6.conf.all.rp_filter)
+  if [ x$ipv6_rpath == x1 ]; then
+    echo_message "\033[32mEnabled\033[m\n" "Enabled," " ipv6_rpath='yes'" '"ipv6_rpath":"yes",'
+  else
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " ipv6_rpath='no'" '"ipv6_rpath":"no",'
+  fi
+
+  echo_message "  Kernel heap randomization:              " "" "" ""
+  # NOTE: y means it turns off kernel heap randomization for backwards compatability (libc5)
+  if $kconfig | grep -qi 'CONFIG_COMPAT_BRK=y'; then
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " kernel_heap_randomization='no'" '"kernel_heap_randomization":"no",'
+  else
+    echo_message "\033[32mEnabled\033[m\n" "Enabled," " kernel_heap_randomization='yes'" '"kernel_heap_randomization":"yes",'
+  fi
+
   echo_message "  GCC stack protector support:            " "" "" ""
   if $kconfig | grep -qi 'CONFIG_CC_STACKPROTECTOR=y'; then
     echo_message "\033[32mEnabled\033[m\n" "Enabled," " gcc_stack_protector='yes'" '"gcc_stack_protector":"yes",'
   else
     echo_message "\033[31mDisabled\033[m\n" "Disabled," " gcc_stack_protector='no'" '"gcc_stack_protector":"no",'
-  fi
-
-  if ! $kconfig | grep -qi 'CONFIG_PAX_SIZE_OVERFLOW=y'; then
-    echo_message "  Strict user copy checks:                " "" "" ""
-    if $kconfig | grep -qi 'CONFIG_DEBUG_STRICT_USER_COPY_CHECKS=y'; then
-      echo_message "\033[32mEnabled\033[m\n" "Enabled," " strict_user_copy_check='yes'" '"strict_user_copy_check":"yes",'
-    else
-      echo_message "\033[31mDisabled\033[m\n" "Disabled," " strict_user_copy_check='no'" '"strict_user_copy_check":"no",'
-    fi
   fi
 
   if ! $kconfig | grep -qi 'CONFIG_PAX'; then
@@ -548,6 +579,7 @@ kernelcheck() {
       echo_message "\033[31mDisabled\033[m\n" "Disabled," " ro_kernel_data='no'" '"ro_kernel_data":"no",'
     fi
   fi
+
   echo_message "  Restrict /dev/mem access:               " "" "" ""
   if $kconfig | grep -qi 'CONFIG_STRICT_DEVMEM=y'; then
     echo_message "\033[32mEnabled\033[m\n" "Enabled," " restrict_dev_mem_access='yes'" '"restrict_dev_mem_access":"yes",'
@@ -561,6 +593,37 @@ kernelcheck() {
   else
     echo_message "\033[32mEnabled\033[m\n" "Enabled" " restrict_dev_kmem_access='yes'>" '"restrict_dev_kmem_access":"yes" },'
   fi
+
+#x86 only
+  echo_message "\n" "\n" "\n" ""
+  echo_message "* X86 only: 	  			 \n" "" "" ""
+
+  if ! $kconfig | grep -qi 'CONFIG_PAX_SIZE_OVERFLOW=y'; then
+    echo_message "  Strict user copy checks:                " "" "" ""
+    if $kconfig | grep -qi 'CONFIG_DEBUG_STRICT_USER_COPY_CHECKS=y'; then
+      echo_message "\033[32mEnabled\033[m\n" "Enabled," " strict_user_copy_check='yes'" '"strict_user_copy_check":"yes",'
+    else
+      echo_message "\033[31mDisabled\033[m\n" "Disabled," " strict_user_copy_check='no'" '"strict_user_copy_check":"no",'
+    fi
+  fi
+
+  echo_message "  Address space layout randomization:     " "" "" ""
+  if $kconfig | grep -qi 'CONFIG_RANDOMIZE_BASE=y'; then
+    echo_message "\033[32mEnabled\033[m\n" "Enabled" " random_address_space_layout='yes'>" '"random_address_space_layout":"yes" },'
+   else
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " random_address_space_layout='no'" '"random_address_space_layout":"no",'
+   fi
+
+#ARM only
+  echo_message "\n" "\n" "\n" ""
+  echo_message "* ARM only: 	  			 \n" "" "" ""
+
+  echo_message "  Restrict kernel memory permissions:     " "" "" ""
+  if $kconfig | grep -qi 'CONFIG_ARM_KERNMEM_PERMS=y'; then
+    echo_message "\033[32mEnabled\033[m\n" "Enabled" " arm_kernmem_perms='yes'>" '"arm_kernmem_perms":"yes" },'
+   else
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " arm_kernmem_perms='no'" '"arm_kernmem_perms":"no",'
+   fi
 
   echo_message "\n" "\n" "\n" ""
   echo_message "* Selinux: 	  			  " "" "" ""
