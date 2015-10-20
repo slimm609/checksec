@@ -534,7 +534,7 @@ kernelcheck() {
   $debug && echo $($kconfig | grep "CONFIG_PAX")
 
   echo_message "  Vanilla Kernel ASLR:   		  " "" "" ""
-  randomize_va=$(sysctl -b kernel.randomize_va_space)
+  randomize_va=$(sysctl -b -e kernel.randomize_va_space)
   if [ x$randomize_va == x2 ]; then
     echo_message "\033[32mFull\033[m\n" "Full," " randomize_va_space='full'" '"randomize_va_space":"full",'
   elif [ x$randomize_va == x1 ]; then
@@ -544,7 +544,7 @@ kernelcheck() {
   fi
 
   echo_message "  Protected symlinks:   		  " "" "" ""
-  symlink=$(sysctl -b fs.protected_symlinks)
+  symlink=$(sysctl -b -e fs.protected_symlinks)
   if [ x$symlink == x1 ]; then
     echo_message "\033[32mEnabled\033[m\n" "Enabled," " protect_symlinks='yes'" '"protect_symlinks":"yes",'
   else
@@ -552,7 +552,7 @@ kernelcheck() {
   fi
 
   echo_message "  Protected hardlinks:   		  " "" "" ""
-  hardlink=$(sysctl -b fs.protected_hardlinks)
+  hardlink=$(sysctl -b -e fs.protected_hardlinks)
   if [ x$hardlink == x1 ]; then
     echo_message "\033[32mEnabled\033[m\n" "Enabled," " protect_hardlinks='yes'" '"protect_hardlinks":"yes",'
   else
