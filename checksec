@@ -535,9 +535,9 @@ kernelcheck() {
 
   echo_message "  Vanilla Kernel ASLR:   		  " "" "" ""
   randomize_va=$(sysctl -b kernel.randomize_va_space)
-  if [ $randomize_va == 2 ]; then
+  if [ x$randomize_va == x2 ]; then
     echo_message "\033[32mFull\033[m\n" "Full," " randomize_va_space='full'" '"randomize_va_space":"full",'
-  elif [ $randomize_va == 1 ]; then
+  elif [ x$randomize_va == x1 ]; then
     echo_message "\033[33mPartial\033[m\n" "Partial," " randomize_va_space='partial'" '"randomize_va_space":"partial",'
   else
     echo_message "\033[31mNone\033[m\n" "None," " randomize_va_space='none'" '"randomize_va_space":"none",'
@@ -545,7 +545,7 @@ kernelcheck() {
 
   echo_message "  Protected symlinks:   		  " "" "" ""
   symlink=$(sysctl -b fs.protected_symlinks)
-  if [ $symlink == 1 ]; then
+  if [ x$symlink == x1 ]; then
     echo_message "\033[32mEnabled\033[m\n" "Enabled," " protect_symlinks='yes'" '"protect_symlinks":"yes",'
   else
     echo_message "\033[31mDisabled\033[m\n" "Disabled," " protect_symlinks='no'" '"protect_symlinks":"no",'
@@ -553,7 +553,7 @@ kernelcheck() {
 
   echo_message "  Protected hardlinks:   		  " "" "" ""
   hardlink=$(sysctl -b fs.protected_hardlinks)
-  if [ $hardlink == 1 ]; then
+  if [ x$hardlink == x1 ]; then
     echo_message "\033[32mEnabled\033[m\n" "Enabled," " protect_hardlinks='yes'" '"protect_hardlinks":"yes",'
   else
     echo_message "\033[31mDisabled\033[m\n" "Disabled," " protect_hardlinks='no'" '"protect_hardlinks":"no",'
