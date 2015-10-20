@@ -57,6 +57,8 @@
 # Download: http://www.trapkit.de/tools/checksec.html
 # Changes : http://www.trapkit.de/tools/checksec_changes.txt
 
+#set global lang to C
+export LC_ALL="C"
 
 # global vars
 debug=false
@@ -67,6 +69,23 @@ SCRIPT_NAME="checksec"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
 SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename ${SCRIPT_NAME} .sh).sig"
 SCRIPT_VERSION=2015091505
+
+
+#determine architecture and bitcount
+if ((1<<32)); then
+    bitcount="64"
+ else
+    bitcount="32"
+ fi
+
+sysarch=$(uname -m)
+if [[ "$sysarch" == x86_64 ]]; then 
+    arch="64"
+elif [[ "$sysarch" == i?86 ]]; then
+    arch="32"
+elif [[ "$sysarch" =~ arm ]]; then
+    arch="arm"
+fi
 
 #openssl public key for verification of updates
 read -r -d '' PUBKEY <<'EOF'
@@ -595,6 +614,7 @@ kernelcheck() {
   fi
 
 #x86 only
+if [ "$arch" == "32" ]; then 
   echo_message "\n" "\n" "\n" ""
   echo_message "* X86 only: 	  			 \n" "" "" ""
 
@@ -613,8 +633,10 @@ kernelcheck() {
    else
     echo_message "\033[31mDisabled\033[m\n" "Disabled," " random_address_space_layout='no'" '"random_address_space_layout":"no",'
    fi
+fi
 
 #ARM only
+if [ "$arch" == "arm" ]; then
   echo_message "\n" "\n" "\n" ""
   echo_message "* ARM only: 	  			 \n" "" "" ""
 
@@ -624,6 +646,8 @@ kernelcheck() {
    else
     echo_message "\033[31mDisabled\033[m\n" "Disabled," " arm_kernmem_perms='no'" '"arm_kernmem_perms":"no",'
    fi
+fi
+
 
   echo_message "\n" "\n" "\n" ""
   echo_message "* Selinux: 	  			  " "" "" ""
