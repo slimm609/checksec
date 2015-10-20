@@ -1,6 +1,7 @@
 Rev-2015102001  Brian Davis     <slimm609@gmail.com>
         * checksec.sh: Set static LC_ALL to resolve LANG errors. Resolves Ticket #13
         * checksec.sh: Merged in additional kernel options and arch specfic options.  Ticket #14 
+          Thanks philippedeswert
         * checksec.sh: Updated to 1.7.0 to support revision releases.
         * checksec.sh: put in checks to not display checks that are for different architectures.
 
