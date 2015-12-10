@@ -986,13 +986,19 @@ done
 
 # --- FORTIFY_SOURCE subfunctions (end) ---
 
+commandsmissing=false
 for command in cat awk sysctl uname mktemp openssl grep stat file find head ps readlink basename id wget curl which; do
     if !(command_exists $command); then
        echo -e "\e[31mWARNING: '$command' not found! It's required for most checks.\e[0m"
-       exit 255
+       commandsmissing=true
     fi
 done
-  
+
+if [ $commandsmissing = "true" ]; then
+    echo -e "\n\e[31mWARNING: Not all necessary commands found. Some tests might not work!\e[0m\n"
+    sleep 5
+fi  
+
 if (command_exists readelf); then
      readelf=readelf
 elif (command_exists eu-readelf); then
