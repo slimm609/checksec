@@ -513,9 +513,12 @@ kernelcheck() {
   echo_message "  inspect kernel mechanisms that may aid in the prevention of exploitation of\n" '' '' ''
   echo_message "  userspace processes, this option lists the status of kernel configuration\n" '' '' ''
   echo_message "  options that harden the kernel itself against attack.\n\n" '' '' ''
-  echo_message "  Kernel config: " '' '' '{ "kernel": '
+  echo_message "  Kernel config:\n" '' '' '{ "kernel": '
   
-  if [ -f /proc/config.gz ] ; then
+  if [ ! "$1" == "" ] ; then
+    kconfig="cat $1"
+    echo_message "  Warning: The config $kconfig on disk may not represent running kernel config!\n\n" "" "" ""
+  elif [ -f /proc/config.gz ] ; then
     kconfig="zcat /proc/config.gz"
     echo_message "\033[32m/proc/config.gz\033[m\n\n" '/proc/config.gz' '<kernel config="/proc/config.gz"' '{ "KernelConfig":"/proc/config.gz",'
   elif [ -f /boot/config-$(uname -r) ] ; then
@@ -1284,9 +1287,15 @@ do
     ;;
 
   --kernel)
-    cd /proc
-    echo_message "* Kernel protection information:\n\n" "" "" ""
-    kernelcheck 
+    if [ -e $2 ] && [ ! -d $2 ]; then
+      configfile=$(pwd -P)/$2
+      echo_message "* Kernel protection information for : $configfile \n\n" "" "" ""
+      cd /proc && kernelcheck $configfile
+    else
+      cd /proc
+      echo_message "* Kernel protection information:\n\n" "" "" ""
+      kernelcheck
+    fi
     exit 0
     ;;
 
