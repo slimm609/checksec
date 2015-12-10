@@ -618,7 +618,7 @@ kernelcheck() {
   fi
 
 #x86 only
-if [ "$arch" == "32" ]; then 
+if [ "$arch" == "32" ] || [ "$arch" == "64" ]; then
   echo_message "\n" "\n" "\n" ""
   echo_message "* X86 only: 	  			 \n" "" "" ""
 
