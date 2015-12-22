@@ -124,7 +124,7 @@ fetch() {
 
 # version information
 version() {
-  echo "checksec v${SCRIPT_MAJOR}.${SCRIPT_MINOR}.${SCRIPT_REVISION}, Brian Davis, github.com/slimm609/checksec.sh, Oct 2015"
+  echo "checksec v${SCRIPT_MAJOR}.${SCRIPT_MINOR}.${SCRIPT_REVISION}, Brian Davis, github.com/slimm609/checksec.sh, Dec 2015"
   echo "Based off checksec v1.5, Tobias Klein, www.trapkit.de, November 2011"
   echo 
 }
@@ -382,6 +382,17 @@ proccheck() {
     else
       echo -n -e '\033[33mNo symbol table found \033[m  '
     fi
+  fi
+
+  # check for Seccomp mode
+  $debug && echo -e "\n***function proccheck->Seccomp"
+  seccomp=( $(cat $1/status 2> /dev/null | grep 'Seccomp:' | cut -b10) )
+  if [[ "$seccomp" == "1" ]] ; then
+    echo_message '\033[32mSeccomp strict\033[m   ' 'Seccomp strict,' ' seccomp="strict"' '"seccomp":"strict",'
+  elif [[ "$seccomp" == "2" ]] ; then
+    echo_message '\033[32mSeccomp-bpf   \033[m   ' 'Seccomp-bpf,' ' seccomp="bpf"' '"seccomp":"bpf",'
+  else
+    echo_message '\033[31mNo Seccomp    \033[m   ' 'No Seccomp,' ' seccomp="no"' '"seccomp":"no",'
   fi
 
   # first check for PaX support
@@ -1171,7 +1182,7 @@ do
     aslrcheck
     echo_message "* Does the CPU support NX: " "" "" ""
     nxcheck
-    echo_message "         COMMAND    PID RELRO           STACK CANARY            NX/PaX        PIE                     FORTIFY\n" "" "" '{'
+    echo_message "         COMMAND    PID RELRO           STACK CANARY            SECCOMP          NX/PaX        PIE                     FORTIFY\n" "" "" '{'
     for N in [1-9]*; do
       if [ $N != $$ ] && readlink -q $N/exe > /dev/null; then
 		name=$(head -1 $N/status | cut -b 7-)
@@ -1216,7 +1227,7 @@ do
     aslrcheck
     echo_message "* Does the CPU support NX: " '' '' ''
     nxcheck
-    echo_message "         COMMAND    PID RELRO           STACK CANARY            NX/PaX        PIE                     FORTIFY\n" "" "" '{'
+    echo_message "         COMMAND    PID RELRO           STACK CANARY            SECCOMP          NX/PaX        PIE                     FORTIFY\n" "" "" '{'
     for N in $(ps -Ao pid,comm | grep $2 | cut -b1-6); do
       if [ -d $N ] ; then
 	name=$(head -1 $N/status | cut -b 7-)

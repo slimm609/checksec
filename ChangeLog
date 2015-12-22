@@ -3,6 +3,7 @@ Rev-2015122101  Brian Davis     <slimm609@gmail.com>
             Thanks philippedeswert 
         * checksec.sh: split off mandatory tool from optional tools. 
         * checksec.sh: Updated to 1.7.1
+		* checksec.sh: Added Seccomp tests from olivierlemoal.
 
 Rev-2015102001  Brian Davis     <slimm609@gmail.com>
         * checksec.sh: Set static LC_ALL to resolve LANG errors. Resolves Ticket #13
