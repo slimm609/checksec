@@ -513,9 +513,12 @@ kernelcheck() {
   echo_message "  inspect kernel mechanisms that may aid in the prevention of exploitation of\n" '' '' ''
   echo_message "  userspace processes, this option lists the status of kernel configuration\n" '' '' ''
   echo_message "  options that harden the kernel itself against attack.\n\n" '' '' ''
-  echo_message "  Kernel config: " '' '' '{ "kernel": '
+  echo_message "  Kernel config:\n" '' '' '{ "kernel": '
   
-  if [ -f /proc/config.gz ] ; then
+  if [ ! "$1" == "" ] ; then
+    kconfig="cat $1"
+    echo_message "  Warning: The config $kconfig on disk may not represent running kernel config!\n\n" "" "" ""
+  elif [ -f /proc/config.gz ] ; then
     kconfig="zcat /proc/config.gz"
     echo_message "\033[32m/proc/config.gz\033[m\n\n" '/proc/config.gz' '<kernel config="/proc/config.gz"' '{ "KernelConfig":"/proc/config.gz",'
   elif [ -f /boot/config-$(uname -r) ] ; then
@@ -615,7 +618,7 @@ kernelcheck() {
   fi
 
 #x86 only
-if [ "$arch" == "32" ]; then 
+if [ "$arch" == "32" ] || [ "$arch" == "64" ]; then
   echo_message "\n" "\n" "\n" ""
   echo_message "* X86 only: 	  			 \n" "" "" ""
 
@@ -983,13 +986,19 @@ done
 
 # --- FORTIFY_SOURCE subfunctions (end) ---
 
+commandsmissing=false
 for command in cat awk sysctl uname mktemp openssl grep stat file find head ps readlink basename id wget curl which; do
     if !(command_exists $command); then
        echo -e "\e[31mWARNING: '$command' not found! It's required for most checks.\e[0m"
-       exit 255
+       commandsmissing=true
     fi
 done
-  
+
+if [ $commandsmissing = "true" ]; then
+    echo -e "\n\e[31mWARNING: Not all necessary commands found. Some tests might not work!\e[0m\n"
+    sleep 5
+fi  
+
 if (command_exists readelf); then
      readelf=readelf
 elif (command_exists eu-readelf); then
@@ -1284,9 +1293,15 @@ do
     ;;
 
   --kernel)
-    cd /proc
-    echo_message "* Kernel protection information:\n\n" "" "" ""
-    kernelcheck 
+    if [ -e $2 ] && [ ! -d $2 ]; then
+      configfile=$(pwd -P)/$2
+      echo_message "* Kernel protection information for : $configfile \n\n" "" "" ""
+      cd /proc && kernelcheck $configfile
+    else
+      cd /proc
+      echo_message "* Kernel protection information:\n\n" "" "" ""
+      kernelcheck
+    fi
     exit 0
     ;;
 
