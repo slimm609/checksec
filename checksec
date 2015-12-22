@@ -994,15 +994,18 @@ for command in cat awk sysctl uname mktemp openssl grep stat file find head ps r
     fi
 done
 
-if [ $commandsmissing = "true" ]; then
+if [ $commandsmissing == true ]; then
     echo -e "\n\e[31mWARNING: Not all necessary commands found. Some tests might not work!\e[0m\n"
-    sleep 5
+    sleep 2
 fi  
 
 if (command_exists readelf); then
      readelf=readelf
 elif (command_exists eu-readelf); then
      readelf=eu-readelf
+else
+    echo -e "\n\e[31mERROR: readelf is a required tool for almost all tests. Aborting...\e[0m\n"
+    exit
 fi
 #while [[ "$@" != "" ]]
 while test -n "$1"
