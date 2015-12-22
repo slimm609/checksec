@@ -372,15 +372,15 @@ proccheck() {
   $debug && echo -e "\n***function proccheck->canary"
   if $readelf -s $1/exe 2>/dev/null | grep -q 'Symbol table'; then
     if $readelf -s $1/exe 2>/dev/null | grep -q '__stack_chk_fail'; then
-      echo_message '\033[32mCanary found   \033[m   ' 'Canary found,' ' canary="yes"' '"canary":"yes",'
+      echo_message '\033[32mCanary found         \033[m   ' 'Canary found,' ' canary="yes"' '"canary":"yes",'
     else
-      echo_message '\033[31mNo canary found\033[m   ' 'No Canary found,' ' canary="no"' '"canary":"no",'
+      echo_message '\033[31mNo canary found      \033[m   ' 'No Canary found,' ' canary="no"' '"canary":"no",'
     fi
   else
-    if [ "$1" != "1" ] ; then
+    if [ "$1" == "1" ] ; then
       echo -n -e '\033[33mPermission denied    \033[m  '
     else
-      echo -n -e '\033[33mNo symbol table found\033[m  '
+      echo -n -e '\033[33mNo symbol table found \033[m  '
     fi
   fi
 
@@ -1171,7 +1171,7 @@ do
     aslrcheck
     echo_message "* Does the CPU support NX: " "" "" ""
     nxcheck
-    echo_message "         COMMAND    PID RELRO           STACK CANARY      NX/PaX        PIE 			FORTIFY\n" "" "" '{'
+    echo_message "         COMMAND    PID RELRO           STACK CANARY            NX/PaX        PIE                     FORTIFY\n" "" "" '{'
     for N in [1-9]*; do
       if [ $N != $$ ] && readlink -q $N/exe > /dev/null; then
 		name=$(head -1 $N/status | cut -b 7-)
@@ -1216,7 +1216,7 @@ do
     aslrcheck
     echo_message "* Does the CPU support NX: " '' '' ''
     nxcheck
-    echo_message "         COMMAND    PID RELRO           STACK CANARY      NX/PaX        PIE 			FORTIFY\n" "" "" '{'
+    echo_message "         COMMAND    PID RELRO           STACK CANARY            NX/PaX        PIE                     FORTIFY\n" "" "" '{'
     for N in $(ps -Ao pid,comm | grep $2 | cut -b1-6); do
       if [ -d $N ] ; then
 	name=$(head -1 $N/status | cut -b 7-)
