@@ -118,6 +118,7 @@ fetch() {
 		curl --insecure --remote-name -o "${2}" "${1}" >/dev/null 2>&1
 	else
 		echo 'Warning: Neither wget nor curl is available. online updates unavailable' >&2
+		exit 1
 	fi
 }
 
