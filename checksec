@@ -117,8 +117,7 @@ fetch() {
     $debug && echo "fetching update via curl"
 		curl --insecure --remote-name -o "${2}" "${1}" >/dev/null 2>&1
 	else
-		echo 'Neither wget nor curl is available.' >&2
-		exit 1
+		echo 'Warning: Neither wget nor curl is available. online updates unavailable' >&2
 	fi
 }
 
