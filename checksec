@@ -517,11 +517,7 @@ kernelcheck() {
   
   if [ ! "$1" == "" ] ; then
     kconfig="cat $1"
-<<<<<<< HEAD
     echo_message "  Warning: The config $1 on disk may not represent running kernel config!\n\n" "" "" ""
-=======
-    echo_message "  Warning: The config $kconfig on disk may not represent running kernel config!\n\n" "" "" ""
->>>>>>> 2a65354cba6bc9b07cc82303b81dfb84de41c0d6
   elif [ -f /proc/config.gz ] ; then
     kconfig="zcat /proc/config.gz"
     echo_message "\033[32m/proc/config.gz\033[m\n\n" '/proc/config.gz' '<kernel config="/proc/config.gz"' '{ "KernelConfig":"/proc/config.gz",'
@@ -1301,7 +1297,6 @@ do
 
   --kernel)
     if [ -e $2 ] && [ ! -d $2 ]; then
-<<<<<<< HEAD
 	  if [ -s $(pwd -P)/$2 ]; then 
       		configfile=$(pwd -P)/$2
 	  elif [ -s $2 ]; then
@@ -1310,9 +1305,6 @@ do
 			"Error: config file specified do not exist"
 			exit 1
 	  fi 
-=======
-      configfile=$(pwd -P)/$2
->>>>>>> 2a65354cba6bc9b07cc82303b81dfb84de41c0d6
       echo_message "* Kernel protection information for : $configfile \n\n" "" "" ""
       cd /proc && kernelcheck $configfile
     else
