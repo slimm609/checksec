@@ -1,3 +1,7 @@
+Rev-2015122201  Brian Davis     <slimm609@gmail.com>
+        * checksec.sh: Merged in json fixes. 
+            Thanks jpouellet
+
 Rev-2015122101  Brian Davis     <slimm609@gmail.com>
         * checksec.sh: Merged in passing in command line kernel config, x86 fix and optional tools.
             Thanks philippedeswert 
