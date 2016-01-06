@@ -238,9 +238,9 @@ isString () {
 
 FS_count() {
   $debug && echo "***function FS_Count"
-  for FS_elem_libc in $(seq 0 $((${#FS_chk_func_libc[@]} - 1)))
+  for ((FS_elem_libc=0; FS_elem_libc<${#FS_chk_func_libc[@]}; FS_elem_libc++))
   do
-    for FS_elem_functions in $(seq 0 $((${#FS_functions[@]} - 1)))
+    for ((FS_elem_functions=0; FS_elem_functions<${#FS_functions[@]}; FS_elem_functions++))
     do
       FS_tmp_func=${FS_functions[$FS_elem_functions]}
       FS_tmp_libc=${FS_chk_func_libc[$FS_elem_libc]}
@@ -336,7 +336,7 @@ filecheck() {
   FS_functions=( $($readelf -s $1 | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//') )
   FS_count 
 
-  for FS_elem_functions in $(seq 0 $((${#FS_functions[@]} - 1)))
+  for ((FS_elem_functions=0; FS_elem_functions<${#FS_functions[@]}; FS_elem_functions++))
   do
     if [[ ${FS_functions[$FS_elem_functions]} =~ _chk ]] ; then
       echo_message '\033[32mYes\033[m' 'Yes,' ' fortify_source="yes" ' '"fortify_source":"yes",'
@@ -440,7 +440,7 @@ proccheck() {
   fi
 
   FS_functions=( $($readelf -s $1/exe | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//') )
-  for FS_elem_functions in $(seq 0 $((${#FS_functions[@]} - 1)))
+  for ((FS_elem_functions=0; FS_elem_functions<${#FS_functions[@]}; FS_elem_functions++))
   do
     if [[ ${FS_functions[$FS_elem_functions]} =~ _chk ]] ; then
       echo_message '\033[32mYes\033[m' 'Yes' " fortify_source='yes'>" '"fortify_source":"yes" },'
@@ -458,7 +458,7 @@ libcheck() {
  
   echo_message "\n* Loaded libraries (file information, # of mapped files: ${#libs[@]}):\n\n" "" "" ""
   
-  for element in $(seq 0 $((${#libs[@]} - 1)))
+  for ((element=0; element<${#libs[@]}; element++))
   do
     echo_message "  ${libs[$element]}:\n" "${libs[$element]}," "" ""
     echo_message "    " "" "    " ""
@@ -907,7 +907,7 @@ FS_binary_check() {
   $debug && echo "***function FS_binary_check"
   echo_message "* Binary compiled with FORTIFY_SOURCE support: " "" "" ""
 
-  for FS_elem_functions in $(seq 0 $((${#FS_functions[@]} - 1)))
+  for ((FS_elem_functions=0; FS_elem_functions<${#FS_functions[@]}; FS_elem_functions++))
   do
     if [[ ${FS_functions[$FS_elem_functions]} =~ _chk ]] ; then
       echo_message "\033[32mYes\033[m\n" "Yes\n" " binary_compiled_with_fortify='yes'>\n" '"binary_compiled_with_fortify":"yes"'
@@ -926,10 +926,10 @@ FS_comparison() {
   echo_message " -------------------------------------------------------\n" "" "" ""
 
   $debug && echo -e "\n***function FS_comparison->FS_elem_libc"
-  for FS_elem_libc in $(seq 0 $((${#FS_chk_func_libc[@]} - 1)))
+  for ((FS_elem_libc=0; FS_elem_libc<${#FS_chk_func_libc[@]}; FS_elem_libc++))
   do
     $debug && echo -e "\n***function FS_comparison->FS_elem_libc->FS_elem_functions"
-    for FS_elem_functions in $(seq 0 $((${#FS_functions[@]} - 1)))
+    for ((FS_elem_functions=0; FS_elem_functions<${#FS_functions[@]}; FS_elem_functions++))
     do
       FS_tmp_func=${FS_functions[$FS_elem_functions]}
       FS_tmp_libc=${FS_chk_func_libc[$FS_elem_libc]}
