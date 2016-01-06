@@ -1,3 +1,7 @@
+Rev-2016010501  Brian Davis     <slimm609@gmail.com>
+        * checksec.sh: Fixed sysctl path issue #20
+            Thanks hartwork
+
 Rev-2015122201  Brian Davis     <slimm609@gmail.com>
         * checksec.sh: Merged in json fixes. 
             Thanks jpouellet
