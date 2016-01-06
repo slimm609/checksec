@@ -1,3 +1,6 @@
+Rev-2016010502  Brian Davis     <slimm609@gmail.com>
+        * checksec.sh: Added some extra debug output and started cleanup. 
+
 Rev-2016010501  Brian Davis     <slimm609@gmail.com>
         * checksec.sh: Fixed sysctl path issue #20
             Thanks hartwork

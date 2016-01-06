@@ -68,10 +68,10 @@ format="cli"
 SCRIPT_NAME="checksec"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
 SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename ${SCRIPT_NAME} .sh).sig"
-SCRIPT_VERSION=2016010501
+SCRIPT_VERSION=2016010502
 SCRIPT_MAJOR=1
 SCRIPT_MINOR=7
-SCRIPT_REVISION=1
+SCRIPT_REVISION=2
 
 #determine architecture and bitcount
 if ((1<<32)); then
@@ -109,6 +109,7 @@ command_exists () {
   type ${1}  > /dev/null 2>&1;
 }
 
+# Fetch the update
 fetch() {
 	if type wget > /dev/null 2>&1 ; then
     $debug && echo "fetching update via wget"
@@ -172,6 +173,7 @@ echo_message() {
   fi
 }
 
+# check selinux status
 getsestatus() {
   $debug && echo -e "\n***fuction getsestatus"
 if (command_exists getenforce); then
@@ -201,7 +203,6 @@ fi
 
 return $status
 }
-
 
 # check if directory exists
 dir_exists () {
@@ -308,6 +309,7 @@ filecheck() {
    echo_message '\033[32mNo RPATH \033[m  ' 'No RPATH,' ' rpath="no"' '"rpath":"no",'
   fi
 
+  $debug && echo -e "\n***function filecheck->runpath"
   if $readelf -d $1 2>/dev/null | grep -q 'runpath'; then
    echo_message '\033[31mRUNPATH    \033[m  ' 'RUNPATH,' ' runpath="yes"' '"runpath":"yes",'
   else
@@ -994,8 +996,6 @@ for command in awk sysctl uname mktemp openssl grep stat file find head ps readl
       fi    
 done
 }
-
-# --- FORTIFY_SOURCE subfunctions (end) ---
 
 commandsmissing=false
 for command in cat awk sysctl uname mktemp openssl grep stat file find head ps readlink basename id wget curl which; do
