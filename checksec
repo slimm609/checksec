@@ -73,6 +73,10 @@ SCRIPT_MAJOR=1
 SCRIPT_MINOR=7
 SCRIPT_REVISION=2
 
+if [ $(id -u) != 0 ]; then
+    export PATH=$PATH:/sbin/
+fi
+
 #determine architecture and bitcount
 if ((1<<32)); then
     bitcount="64"
@@ -998,7 +1002,7 @@ done
 }
 
 commandsmissing=false
-for command in cat awk sysctl uname mktemp openssl grep stat file find head ps readlink basename id wget curl which; do
+for command in cat awk sysctl uname mktemp openssl grep stat file find head ps readlink basename id which; do
     if !(command_exists $command); then
        echo -e "\e[31mWARNING: '$command' not found! It's required for most checks.\e[0m"
        commandsmissing=true
