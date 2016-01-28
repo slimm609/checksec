@@ -902,8 +902,8 @@ fi
 			else
     			echo_message "    grsecurity.$command:\t\t " "" "" ""
 			fi
-    		grcheck=$(sysctl -b -e kernel.grsecurity.$command)
-        	if [ x$grcheck != "x0" ]; then
+    		grcheck=$(sysctl -b kernel.grsecurity.$command 2>/dev/null || echo $?)
+        	if [ x$grcheck != "x255" ] && [ x$grcheck != "x0" ]; then
 				echo_message "\033[32mEnabled\033[m\n" "Enabled," "grsec_sysctl_$command='yes'" "\"grsec_sysctl_$command\":\"yes\","
     		else
 				echo_message "\033[31mDisabled\033[m\n" "Disabled," "grsec_sysctl_$command='no'" "\"grsec_sysctl_$command\":\"no\","
