@@ -1069,7 +1069,7 @@ do
     debug_report
     shift 1
     ;;
-  --update)
+  --update|--upgrade)
 	umask 027
 	TMP_FILE=$(mktemp /tmp/checksec.XXXXXXXXXX)
 	SIG_FILE=$(mktemp /tmp/checksec_sig.XXXXXXXX)
@@ -1102,7 +1102,7 @@ do
     fi
     exit 0
     ;;
-  --format)
+  --format|--output|-o)
     list="cli csv xml json"
     if [ -n "$2" ]; then
       if [[ ! $list =~ "$2" ]]; then
@@ -1117,7 +1117,7 @@ do
     shift 2
     ;;
   
-  --dir)
+  --dir|-d)
     if [ "$3" = "-v" ] ; then
       verbose=true
     fi
