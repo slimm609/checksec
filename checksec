@@ -534,7 +534,7 @@ kernelcheck() {
   
   if [ ! "$1" == "" ] ; then
     kconfig="cat $1"
-    echo_message "  Warning: The config $1 on disk may not represent running kernel config!\n\n" "" "" ""
+    echo_message "  Warning: The config $1 on disk may not represent running kernel config!\n\n" "$1" "<kernel config=\"$1\"" ""
   elif [ -f /proc/config.gz ] ; then
     kconfig="zcat /proc/config.gz"
     echo_message "\033[32m/proc/config.gz\033[m\n\n" '/proc/config.gz' '<kernel config="/proc/config.gz"' '{ "KernelConfig":"/proc/config.gz",'
@@ -629,14 +629,14 @@ kernelcheck() {
 
   echo_message "  Restrict /dev/kmem access:              " "" "" ""
   if $kconfig | grep -qi 'CONFIG_DEVKMEM=y'; then
-    echo_message "\033[31mDisabled\033[m\n" "Disabled" " restrict_dev_kmem_access='no'>" '"restrict_dev_kmem_access":"no" },'
+    echo_message "\033[31mDisabled\033[m\n" "Disabled" " restrict_dev_kmem_access='no'" '"restrict_dev_kmem_access":"no" },'
   else
-    echo_message "\033[32mEnabled\033[m\n" "Enabled" " restrict_dev_kmem_access='yes'>" '"restrict_dev_kmem_access":"yes" },'
+    echo_message "\033[32mEnabled\033[m\n" "Enabled" " restrict_dev_kmem_access='yes'" '"restrict_dev_kmem_access":"yes" },'
   fi
 
 #x86 only
 if [ "$arch" == "32" ] || [ "$arch" == "64" ]; then
-  echo_message "\n" "\n" "\n" ""
+  echo_message "\n" "\n" "" ""
   echo_message "* X86 only: 	  			 \n" "" "" ""
 
   if ! $kconfig | grep -qi 'CONFIG_PAX_SIZE_OVERFLOW=y'; then
@@ -652,7 +652,7 @@ if [ "$arch" == "32" ] || [ "$arch" == "64" ]; then
   if $kconfig | grep -qi 'CONFIG_RANDOMIZE_BASE=y'; then
     echo_message "\033[32mEnabled\033[m\n" "Enabled" " random_address_space_layout='yes'>" '"random_address_space_layout":"yes" },'
    else
-    echo_message "\033[31mDisabled\033[m\n" "Disabled," " random_address_space_layout='no'" '"random_address_space_layout":"no",'
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " random_address_space_layout='no'>" '"random_address_space_layout":"no",'
    fi
 fi
 
@@ -665,7 +665,7 @@ if [ "$arch" == "arm" ]; then
   if $kconfig | grep -qi 'CONFIG_ARM_KERNMEM_PERMS=y'; then
     echo_message "\033[32mEnabled\033[m\n" "Enabled" " arm_kernmem_perms='yes'>" '"arm_kernmem_perms":"yes" },'
    else
-    echo_message "\033[31mDisabled\033[m\n" "Disabled," " arm_kernmem_perms='no'" '"arm_kernmem_perms":"no",'
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " arm_kernmem_perms='no'>" '"arm_kernmem_perms":"no",'
    fi
 fi
 
@@ -904,11 +904,12 @@ fi
 			fi
     		grcheck=$(sysctl -b kernel.grsecurity.$command 2>/dev/null || echo $?)
         	if [ x$grcheck != "x255" ] && [ x$grcheck != "x0" ]; then
-				echo_message "\033[32mEnabled\033[m\n" "Enabled," "grsec_sysctl_$command='yes'" "\"grsec_sysctl_$command\":\"yes\","
+				echo_message "\033[32mEnabled\033[m\n" "Enabled," " grsec_sysctl_$command='yes'" "\"grsec_sysctl_$command\":\"yes\","
     		else
-				echo_message "\033[31mDisabled\033[m\n" "Disabled," "grsec_sysctl_$command='no'" "\"grsec_sysctl_$command\":\"no\","
+				echo_message "\033[31mDisabled\033[m\n" "Disabled," " grsec_sysctl_$command='no'" "\"grsec_sysctl_$command\":\"no\","
     		fi
 		done
+	 echo_message "" "" " />\n</kernel>\n" ""
 	fi
   else
     echo_message "\033[31mNo GRKERNSEC\033[m\n\n" "No GRKERNSEC,,,,,,,," "    <grsecurity config='no' />\n</kernel>\n" '"grsecurity": { "grsecurity_config":"no" },'
@@ -1211,7 +1212,7 @@ do
     cd /proc
     echo_message "* System-wide ASLR" "" "" ""
     aslrcheck
-    echo_message "* Does the CPU support NX: " "" "" ""
+    echo_message "* Does the CPU support NX: " "" "<procs>" ""
     nxcheck
     echo_message "         COMMAND    PID RELRO           STACK CANARY            SECCOMP          NX/PaX        PIE                     FORTIFY\n" "" "" '{'
     for N in [1-9]*; do
@@ -1228,7 +1229,7 @@ do
 		echo_message "\n" "\n" "</proc>\n" ""
       fi
     done
-	echo_message "" "" "" " }\n"
+	echo_message "" "" "</procs>" " }\n"
     if [ ! -e /usr/bin/id ] ; then
       echo_message "\n\033[33mNote: If you are running 'checksec.sh' as an unprivileged user, you\n" "" "" ""
       echo_message "      will not see all processes. Please run the script as root.\033[m\n\n" "" "" "\n"
