@@ -38,6 +38,16 @@ if [ $? != 0 ]; then
  echo "fortify-file xml validation failed"
  exit
 fi
+ 
+#check xml for dir 
+../checksec --format xml --dir /sbin > output.xml
+xmllint --noout output.xml
+if [ $? != 0 ]; then
+ echo "dir xml validation failed"
+ exit
+fi
 
 
+
+echo "All XML validation tests passed xmllint"
 rm -f output.xml
