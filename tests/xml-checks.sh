@@ -1,14 +1,11 @@
 #!/bin/bash
 
-../checksec --help > /dev/null
-
-
 #check xml for proc-all
 ../checksec --format xml --proc-all > output.xml
 xmllint --noout output.xml
 if [ $? != 0 ]; then
  echo "proc-all xml validation failed"
- #exit
+ exit
 fi
 #check xml for kernel
 ../checksec --format xml --kernel > output.xml
@@ -25,6 +22,7 @@ if [ $? != 0 ]; then
  echo "custom kernel xml validation failed"
  exit
 fi
+
 #check xml for file
 ../checksec --format xml --file /bin/ls > output.xml
 xmllint --noout output.xml
@@ -33,7 +31,13 @@ if [ $? != 0 ]; then
  exit
 fi
 
-
+#check xml for fortify file
+../checksec --format xml --fortify-file /bin/ls > output.xml
+xmllint --noout output.xml
+if [ $? != 0 ]; then
+ echo "fortify-file xml validation failed"
+ exit
+fi
 
 
 rm -f output.xml

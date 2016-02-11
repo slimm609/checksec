@@ -336,10 +336,12 @@ filecheck() {
     fi
 
 
+  FS_cnt_checked=0
+  FS_cnt_total=0
   FS_chk_func_libc=( $($readelf -s $FS_libc | grep _chk@@ | awk '{ print $8 }' | cut -c 3- | sed -e 's/_chk@.*//') )
   FS_functions=( $($readelf -s $1 | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//') )
   FS_count 
-
+	
   for ((FS_elem_functions=0; FS_elem_functions<${#FS_functions[@]}; FS_elem_functions++))
   do
     if [[ ${FS_functions[$FS_elem_functions]} =~ _chk ]] ; then
@@ -349,9 +351,9 @@ filecheck() {
       return
     fi
   done
-  echo_message "\033[31mNo\033[m" "No," ' fortify_source="no" ' '"fortify_source":"no",'
-  echo_message "\t$FS_cnt_checked\t" ${FS_cnt_checked},  "fortified=\"$FS_cnt_checked\" " "\"fortified\":\"${FS_cnt_checked}\","
-  echo_message "\t${FS_cnt_total}\t" ${FS_cnt_total} "fortify-able=\"$FS_cnt_total\"" "\"fortify-able\":\"$FS_cnt_total\""
+  	echo_message "\033[31mNo\033[m" "No," ' fortify_source="no" ' '"fortify_source":"no",'
+ 	echo_message "\t$FS_cnt_checked\t" ${FS_cnt_checked},  "fortified=\"$FS_cnt_checked\" " "\"fortified\":\"${FS_cnt_checked}\","
+  	echo_message "\t${FS_cnt_total}\t" ${FS_cnt_total} "fortify-able=\"$FS_cnt_total\"" "\"fortify-able\":\"$FS_cnt_total\""
 }
 
 # check process(es)
@@ -927,9 +929,9 @@ FS_libc_check() {
   echo_message "* FORTIFY_SOURCE support available (libc)    : " "" ""
 
   if [ "${#FS_chk_func_libc[@]}" != "0" ] ; then
-    echo_message "\033[32mYes\033[m\n" "Yes," " libc_fortify_source='yes' />" '"libc_fortify_source":"yes"'
+    echo_message "\033[32mYes\033[m\n" "Yes," " libc_fortify_source='yes' " '"libc_fortify_source":"yes"'
   else
-    echo_message "\033[31mNo\033[m\n" "No," " libc_fortify_source='no' />" '"libc_fortify_source":"no"'
+    echo_message "\033[31mNo\033[m\n" "No," " libc_fortify_source='no' " '"libc_fortify_source":"no"'
     exit 1
   fi
 }
@@ -966,13 +968,13 @@ FS_comparison() {
       FS_tmp_func=${FS_functions[$FS_elem_functions]}
       FS_tmp_libc=${FS_chk_func_libc[$FS_elem_libc]}
 
-      if [[ $FS_tmp_func =~ ^$FS_tmp_libc$ ]] ; then
+   if [[ $FS_tmp_func =~ ^$FS_tmp_libc$ ]] ; then
 	if [[ $format == "cli" ]]; then
 	    printf " \033[31m%-30s\033[m | __%s%s\n" $FS_tmp_func $FS_tmp_libc $FS_end
 	else
 	  if [ $FS_elem_functions == 0 ]; then
 	    echo_message "" "$FS_tmp_func,$FS_tmp_libc,yes\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifyable='yes' />\n" "{ \"function\": { \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifyable\":\"yes\" }"
-	  elif [ $FS_elem_functions == $((${FS_functions[@]} - 1 )) ]; then
+	  elif [ $FS_elem_functions == $((${#FS_functions[@]} - 1 )) ]; then
 	    echo_message "" "$FS_tmp_func,$FS_tmp_libc,yes\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifyable='yes' />\n" "{ \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifyable\":\"yes\" } }"
 	  else
 	    echo_message "" "$FS_tmp_func,$FS_tmp_libc,yes\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifyable='yes' />\n" "{ \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifyable\":\"yes\" },"
@@ -980,21 +982,21 @@ FS_comparison() {
 	fi
         let FS_cnt_total++
         let FS_cnt_unchecked++
-      elif [[ $FS_tmp_func =~ ^$FS_tmp_libc(_chk) ]] ; then
-      	if [[ $format == "cli" ]]; then
-	    printf " \033[32m%-30s\033[m | __%s%s\n" $FS_tmp_func $FS_tmp_libc $FS_end
-	else
-	  if [ $FS_elem_functions == 0 ]; then
-	  echo_message "" "$FS_tmp_func,$FS_tmp_libc,no\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifyable='no' />\n" "{ \"function\": { \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifyable\":\"no\" }"
-	  elif [ $FS_elem_functions == $((${FS_functions[@]} - 1 )) ]; then
-	  echo_message "" "$FS_tmp_func,$FS_tmp_libc,no\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifyable='no' />\n" "{ \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifyable\":\"no\" } }"
-	  else
-	  echo_message "" "$FS_tmp_func,$FS_tmp_libc,no\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifyable='no' />\n" "{ \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifyable\":\"no\" },"
-	  fi
+   elif [[ $FS_tmp_func =~ ^$FS_tmp_libc(_chk) ]] ; then
+     	if [[ $format == "cli" ]]; then
+	    	printf " \033[32m%-30s\033[m | __%s%s\n" $FS_tmp_func $FS_tmp_libc $FS_end
+  	  else
+	  	if [ $FS_elem_functions == 0 ]; then
+	  		echo_message "" "$FS_tmp_func,$FS_tmp_libc,no\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifyable='no' />\n" "{ \"function\": { \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifyable\":\"no\" }"
+	  	elif [ $FS_elem_functions == $((${#FS_functions[@]} - 1 )) ]; then
+	  		echo_message "" "$FS_tmp_func,$FS_tmp_libc,no\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifyable='no' />\n" "{ \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifyable\":\"no\" } }"
+	  	else
+	  		echo_message "" "$FS_tmp_func,$FS_tmp_libc,no\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifyable='no' />\n" "{ \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifyable\":\"no\" },"
+	  	fi
 	fi
         let FS_cnt_total++
         let FS_cnt_checked++
-      fi
+   fi
 
     done
   done
@@ -1136,7 +1138,7 @@ do
       exit 1
     fi
     cd $tempdir
-    echo_message "RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FILE\n" '' "<dir name='$tempdir'>\n" "{ \"dir\": { \"name\":\"$tempdir\" } "
+    echo_message "RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FORTIFY Checked         Total   Filename\n" '' "<dir name='$tempdir'>\n" "{ \"dir\": { \"name\":\"$tempdir\" } "
     
     for N in [A-Za-z]*; do
       if [ "$N" != "[A-Za-z]*" ]; then
