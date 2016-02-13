@@ -536,7 +536,7 @@ kernelcheck() {
   
   if [ ! "$1" == "" ] ; then
     kconfig="cat $1"
-    echo_message "  Warning: The config $1 on disk may not represent running kernel config!\n\n" "$1" "<kernel config=\"$1\"" ""
+    echo_message "  Warning: The config $1 on disk may not represent running kernel config!\n\n" "$1" "<kernel config=\"$1\"" "{ \"KernelConfig\":\"$1\","
   elif [ -f /proc/config.gz ] ; then
     kconfig="zcat /proc/config.gz"
     echo_message "\033[32m/proc/config.gz\033[m\n\n" '/proc/config.gz' '<kernel config="/proc/config.gz"' '{ "KernelConfig":"/proc/config.gz",'
@@ -697,17 +697,17 @@ fi
 
   if $kconfig | grep -qi 'CONFIG_GRKERNSEC=y'; then
     if $kconfig | grep -qi 'CONFIG_GRKERNSEC_HIGH=y'; then
-      echo_message "\033[32mHigh GRKERNSEC\033[m\n\n" "High GRKERNSEC," "    <grsecurity config='high'" '{ "grsecurity_config":"high",'
+      echo_message "\033[32mHigh GRKERNSEC\033[m\n\n" "High GRKERNSEC," "    <grsecurity config='high'" '"grsecurity": { "grsecurity_config":"high",'
     elif $kconfig | grep -qi 'CONFIG_GRKERNSEC_MEDIUM=y'; then
-      echo_message "\033[33mMedium GRKERNSEC\033[m\n\n" "Medium GRKERNSEC," "    <grsecurity config='medium'" '{ "grsecurity_config":"medium",'
+      echo_message "\033[33mMedium GRKERNSEC\033[m\n\n" "Medium GRKERNSEC," "    <grsecurity config='medium'" '"grsecurity": { "grsecurity_config":"medium",'
     elif $kconfig | grep -qi 'CONFIG_GRKERNSEC_LOW=y'; then
-      echo_message "\033[31mLow GRKERNSEC\033[m\n\n" "Low GRKERNSEC," "    <grsecurity config='low'" '{ "grsecurity_config":"low",'
+      echo_message "\033[31mLow GRKERNSEC\033[m\n\n" "Low GRKERNSEC," "    <grsecurity config='low'" '"grsecurity": { "grsecurity_config":"low",'
     elif $kconfig | grep -qi 'CONFIG_GRKERNSEC_CONFIG_AUTO=y'; then
-      echo_message "\033[33mAuto GRKERNSEC\033[m\n\n" "Auto GRKERNSEC," "    <grsecurity config='auto'" '{ "grsecurity_config":"auto",'
+      echo_message "\033[33mAuto GRKERNSEC\033[m\n\n" "Auto GRKERNSEC," "    <grsecurity config='auto'" '"grsecurity": { "grsecurity_config":"auto",'
     elif $kconfig | grep -qi 'CONFIG_GRKERNSEC_CONFIG_CUSTOM=y'; then
-      echo_message "\033[31mCustom GRKERNSEC\033[m\n\n" "Custom GRKERNSEC," "    <grsecurity config='custom'" '{ "grsecurity_config":"custom",'
+      echo_message "\033[31mCustom GRKERNSEC\033[m\n\n" "Custom GRKERNSEC," "    <grsecurity config='custom'" '"grsecurity": { "grsecurity_config":"custom",'
     else
-      echo_message "\033[33mCustom GRKERNSEC\033[m\n\n" "Custom GRKERNSEC," "    <grsecurity config='custom'" '{ "grsecurity_config":"custom",'
+      echo_message "\033[33mCustom GRKERNSEC\033[m\n\n" "Custom GRKERNSEC," "    <grsecurity config='custom'" '"grsecurity": { "grsecurity_config":"custom",'
     fi
 
     echo_message "  Non-executable kernel pages:            " "" "" ""
@@ -914,7 +914,7 @@ fi
 	 echo_message "" "" " />\n</kernel>\n" ""
 	fi
   else
-    echo_message "\033[31mNo GRKERNSEC\033[m\n\n" "No GRKERNSEC,,,,,,,," "    <grsecurity config='no' />\n</kernel>\n" '"grsecurity": { "grsecurity_config":"no" },'
+    echo_message "\033[31mNo GRKERNSEC\033[m\n\n" "No GRKERNSEC,,,,,,,," "    <grsecurity config='no' />\n</kernel>\n" '"grsecurity": { "grsecurity_config":"no" } }'
     echo_message "  The grsecurity / PaX patchset is available here:\n" "" "" ""
     echo_message "    http://grsecurity.net/\n" "" "" ""
   fi
