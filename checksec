@@ -1217,8 +1217,16 @@ do
     echo_message "* Does the CPU support NX: " "" "<procs>" ""
     nxcheck
     echo_message "         COMMAND    PID RELRO           STACK CANARY            SECCOMP          NX/PaX        PIE                     FORTIFY\n" "" "" '{'
+	lastpid=0
+	currpid=0
     for N in [1-9]*; do
       if [ $N != $$ ] && readlink -q $N/exe > /dev/null; then
+	   let lastpid++
+	  fi 
+    done
+    for N in [1-9]*; do
+      if [ $N != $$ ] && readlink -q $N/exe > /dev/null; then
+		let currpid++
 		name=$(head -1 $N/status | cut -b 7-)
 		if [[ $format == "cli" ]]; then
 	    	printf "%16s" $name
@@ -1228,7 +1236,11 @@ do
 	  		echo_message "" "$N," " pid='$N'" "\"pid\":\"$N\","
 		fi
 		proccheck $N
-		echo_message "\n" "\n" "</proc>\n" ","
+		if [ $lastpid == $currpid ]; then 
+			echo_message "\n" "\n" "</proc>\n" ""
+		else
+			echo_message "\n" "\n" "</proc>\n" ","
+		fi
       fi
     done
 	echo_message "" "" "</procs>" " }\n"
