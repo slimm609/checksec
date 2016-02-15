@@ -1,3 +1,9 @@
+Rev-2016021501  Brian Davis     <slimm609@gmail.com>
+        * checksec.sh: updated to 1.7.3
+        * checksec.sh: added xml and json validation tests
+        * checksec.sh: fixed xml and json errors from validation tests
+        * checksec.sh: expanded grsecurity checks and cleaned up formatting
+
 Rev-2016010502  Brian Davis     <slimm609@gmail.com>
         * checksec.sh: Added some extra debug output and started cleanup. 
 
