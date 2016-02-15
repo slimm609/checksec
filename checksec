@@ -267,12 +267,12 @@ filecheck() {
   $debug && echo "***function filecheck->RELRO"
   if $readelf -l $1 2>/dev/null | grep -q 'GNU_RELRO'; then
     if $readelf -d $1 2>/dev/null | grep -q 'BIND_NOW'; then
-      echo_message '\033[32mFull RELRO   \033[m   ' 'Full RELRO,' '<file relro="full"' '{ "file": { "relro":"full",'
+      echo_message '\033[32mFull RELRO   \033[m   ' 'Full RELRO,' '<file relro="full"' ' "file": { "relro":"full",'
     else
-      echo_message '\033[33mPartial RELRO\033[m   ' 'Partial RELRO,' '<file relro="partial"' '{ "file": { "relro":"partial",'
+      echo_message '\033[33mPartial RELRO\033[m   ' 'Partial RELRO,' '<file relro="partial"' ' "file": { "relro":"partial",'
     fi
   else
-    echo_message '\033[31mNo RELRO     \033[m   ' 'No RELRO,' '<file relro="no"' '{ "file": { "relro":"no",'
+    echo_message '\033[31mNo RELRO     \033[m   ' 'No RELRO,' '<file relro="no"' ' "file": { "relro":"no",'
   fi
 
   # check for stack canary support
@@ -895,7 +895,7 @@ fi
     fi
 
     if $kconfig | grep -qi 'CONFIG_GRKERNSEC_SYSCTL=y'; then
-    	echo_message "  Grsec sysctl options:\n" "" "" ""
+    	echo_message "  Grsec sysctl options:\n" "" "" '"grsecurity_sysctl": {'
 		for command in audit_chdir audit_gid audit_group audit_mount audit_ptrace chroot_caps chroot_deny_bad_rename chroot_deny_chmod chroot_deny_chroot chroot_deny_fchdir chroot_deny_mknod chroot_deny_mount chroot_deny_pivot chroot_deny_shmat chroot_deny_sysctl chroot_deny_unix chroot_enforce_chdir chroot_execlog chroot_findtask chroot_restrict_nice consistent_setxid deny_new_usb deter_bruteforce disable_priv_io dmesg enforce_symlinksifowner exec_logging fifo_restrictions forkfail_logging grsec_lock harden_ipc harden_ptrace ip_blackhole lastack_retries linking_restrictions ptrace_readexec resource_logging romount_protect rwxmap_logging signal_logging socket_all socket_all_gid socket_client socket_client_gid socket_server socket_server_gid symlinkown_gid timechange_logging tpe tpe_gid tpe_invert tpe_restrict_all; do 
 			if [ $(echo grsecurity.$command | wc -c) -gt 27 ]; then
     			echo_message "    grsecurity.$command:\t " "" "" ""
@@ -906,10 +906,15 @@ fi
 			fi
     		grcheck=$(sysctl -b kernel.grsecurity.$command 2>/dev/null || echo $?)
         	if [ x$grcheck != "x255" ] && [ x$grcheck != "x0" ]; then
-				echo_message "\033[32mEnabled\033[m\n" "Enabled," " grsec_sysctl_$command='yes'" "\"grsec_sysctl_$command\":\"yes\","
+				echo_message "\033[32mEnabled\033[m\n" "Enabled," " grsec_sysctl_$command='yes'" "\"grsec_sysctl_$command\":\"yes\""
     		else
-				echo_message "\033[31mDisabled\033[m\n" "Disabled," " grsec_sysctl_$command='no'" "\"grsec_sysctl_$command\":\"no\","
+				echo_message "\033[31mDisabled\033[m\n" "Disabled," " grsec_sysctl_$command='no'" "\"grsec_sysctl_$command\":\"no\""
     		fi
+			if [ "$command" == "tpe_restrict_all" ]; then
+				echo_message "" "" "" " } }"
+			else
+				echo_message "" "" "" ","
+			fi
 		done
 	 echo_message "" "" " />\n</kernel>\n" ""
 	fi
@@ -929,9 +934,9 @@ FS_libc_check() {
   echo_message "* FORTIFY_SOURCE support available (libc)    : " "" ""
 
   if [ "${#FS_chk_func_libc[@]}" != "0" ] ; then
-    echo_message "\033[32mYes\033[m\n" "Yes," " libc_fortify_source='yes' " '"libc_fortify_source":"yes"'
+    echo_message "\033[32mYes\033[m\n" "Yes," " libc_fortify_source='yes' " '"libc_fortify_source":"yes",'
   else
-    echo_message "\033[31mNo\033[m\n" "No," " libc_fortify_source='no' " '"libc_fortify_source":"no"'
+    echo_message "\033[31mNo\033[m\n" "No," " libc_fortify_source='no' " '"libc_fortify_source":"no",'
     exit 1
   fi
 }
@@ -944,11 +949,11 @@ FS_binary_check() {
   for ((FS_elem_functions=0; FS_elem_functions<${#FS_functions[@]}; FS_elem_functions++))
   do
     if [[ ${FS_functions[$FS_elem_functions]} =~ _chk ]] ; then
-      echo_message "\033[32mYes\033[m\n" "Yes\n" " binary_compiled_with_fortify='yes'>\n" '"binary_compiled_with_fortify":"yes"'
+      echo_message "\033[32mYes\033[m\n" "Yes\n" " binary_compiled_with_fortify='yes'>\n" '"binary_compiled_with_fortify":"yes",'
       return
     fi
   done
-  echo_message "\033[31mNo\033[m\n" "No\n" " binary_compiled_with_fortify='no'>\n" '"binary_compiled_with_fortify":"no"'
+  echo_message "\033[31mNo\033[m\n" "No\n" " binary_compiled_with_fortify='no'>\n" '"binary_compiled_with_fortify":"no",'
   exit 1
 }
 
@@ -973,11 +978,11 @@ FS_comparison() {
 	    printf " \033[31m%-30s\033[m | __%s%s\n" $FS_tmp_func $FS_tmp_libc $FS_end
 	else
 	  if [ $FS_elem_functions == 0 ]; then
-	    echo_message "" "$FS_tmp_func,$FS_tmp_libc,yes\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifyable='yes' />\n" "{ \"function\": { \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifyable\":\"yes\" }"
+	    echo_message "" "$FS_tmp_func,$FS_tmp_libc,yes\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifyable='yes' />\n" "\"function\": { \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifyable\":\"yes\" },"
 	  elif [ $FS_elem_functions == $((${#FS_functions[@]} - 1 )) ]; then
-	    echo_message "" "$FS_tmp_func,$FS_tmp_libc,yes\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifyable='yes' />\n" "{ \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifyable\":\"yes\" } }"
+	    echo_message "" "$FS_tmp_func,$FS_tmp_libc,yes\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifyable='yes' />\n" "\"function\": { \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifyable\":\"yes\" },"
 	  else
-	    echo_message "" "$FS_tmp_func,$FS_tmp_libc,yes\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifyable='yes' />\n" "{ \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifyable\":\"yes\" },"
+	    echo_message "" "$FS_tmp_func,$FS_tmp_libc,yes\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifyable='yes' />\n" "\"function\": { \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifyable\":\"yes\" },"
 	  fi
 	fi
         let FS_cnt_total++
@@ -987,11 +992,11 @@ FS_comparison() {
 	    	printf " \033[32m%-30s\033[m | __%s%s\n" $FS_tmp_func $FS_tmp_libc $FS_end
   	  else
 	  	if [ $FS_elem_functions == 0 ]; then
-	  		echo_message "" "$FS_tmp_func,$FS_tmp_libc,no\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifyable='no' />\n" "{ \"function\": { \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifyable\":\"no\" }"
+	  		echo_message "" "$FS_tmp_func,$FS_tmp_libc,no\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifyable='no' />\n" "\"function\": { \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifyable\":\"no\" },"
 	  	elif [ $FS_elem_functions == $((${#FS_functions[@]} - 1 )) ]; then
-	  		echo_message "" "$FS_tmp_func,$FS_tmp_libc,no\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifyable='no' />\n" "{ \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifyable\":\"no\" } }"
+	  		echo_message "" "$FS_tmp_func,$FS_tmp_libc,no\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifyable='no' />\n" "\"function\": { \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifyable\":\"no\" },"
 	  	else
-	  		echo_message "" "$FS_tmp_func,$FS_tmp_libc,no\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifyable='no' />\n" "{ \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifyable\":\"no\" },"
+	  		echo_message "" "$FS_tmp_func,$FS_tmp_libc,no\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifyable='no' />\n" "\"function\": { \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifyable\":\"no\" },"
 	  	fi
 	fi
         let FS_cnt_total++
@@ -1006,11 +1011,11 @@ FS_summary() {
   $debug && echo "***function FS_summary"
   echo_message "\n" "" "\n" "" 
   echo_message "SUMMARY:\n\n" "" "" ""
-  echo_message "* Number of checked functions in libc                : ${#FS_chk_func_libc[@]}\n" "${#FS_chk_func_libc[@]}," "    <stats nb_libc_func='${#FS_chk_func_libc[@]}'" "{ \"stats\": { \"nb_libc_func\":\"${#FS_chk_func_libc[@]}\","
+  echo_message "* Number of checked functions in libc                : ${#FS_chk_func_libc[@]}\n" "${#FS_chk_func_libc[@]}," "    <stats nb_libc_func='${#FS_chk_func_libc[@]}'" " \"stats\": { \"nb_libc_func\":\"${#FS_chk_func_libc[@]}\","
   echo_message "* Total number of library functions in the executable: ${#FS_functions[@]}\n" "${#FS_functions[@]}," " nb_total_func='${#FS_functions[@]}'" "\"nb_total_func\":\"${#FS_functions[@]}\","
   echo_message "* Number of FORTIFY-able functions in the executable : $FS_cnt_total\n"  "$FS_cnt_total," " nb_fortifyable_func='$FS_cnt_total'" "\"nb_fortifyable_func\":\"$FS_cnt_total\","
   echo_message "* Number of checked functions in the executable      : \033[32m$FS_cnt_checked\033[m\n" "$FS_cnt_checked," " nb_checked_func='$FS_cnt_checked'" "\"nb_checked_func\":\"$FS_cnt_checked\","
-  echo_message "* Number of unchecked functions in the executable    : \033[31m$FS_cnt_unchecked\033[m\n" "$FS_cnt_unchecked" " nb_unchecked_func='$FS_cnt_unchecked' />" "\"nb_unchecked_func\":\"$FS_cnt_unchecked\" } }"
+  echo_message "* Number of unchecked functions in the executable    : \033[31m$FS_cnt_unchecked\033[m\n" "$FS_cnt_unchecked" " nb_unchecked_func='$FS_cnt_unchecked' />" "\"nb_unchecked_func\":\"$FS_cnt_unchecked\" } "
   echo_message "\n" "\n" "\n" ""
 }
 
@@ -1138,32 +1143,47 @@ do
       exit 1
     fi
     cd $tempdir
-    echo_message "RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FORTIFY Checked         Total   Filename\n" '' "<dir name='$tempdir'>\n" "{ \"dir\": { \"name\":\"$tempdir\" } "
-    
+    echo_message "RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FORTIFY Checked         Total   Filename\n" '' "<dir name='$tempdir'>\n" "{ \"dir\": { \"name\":\"$tempdir\" },"
+	fdircount=0
+	fdirtotal=0
     for N in [A-Za-z]*; do
       if [ "$N" != "[A-Za-z]*" ]; then
-	# read permissions?
-	if [ ! -r $N ]; then
-	  printf "\033[31mError: No read permissions for '$tempdir/$N' (run as root).\033[m\n"
-	else
-	  # ELF executable?
-	  out=$(file $N)
-	  if [[ ! $out =~ ELF ]] ; then
-	    if [ "$verbose" = "true" ] ; then
-	      echo_message "\033[34m*** Not an ELF file: $tempdir/" "" "" ""
-	      file $N
-	      echo_message "\033[m" "" "" ""
-	    fi
-	  else
-	    echo_message "" "" "    " ""
-	    filecheck $N
-	    if [ $(find $N \( -perm -004000 -o -perm -002000 \) -type f -print) ]; then
-	      echo_message "\033[37;41m$2$N\033[m\n" ",$2$N\n" " filename='$2$N' />\n" "\"filename\":\"$2$N\" "
-	    else
-	      echo_message "$tempdir/$N\n" ",$tempdir/$N\n" " filename='$tempdir/$N' />\n" "\"filename\":\"$tempdir/$N\" "
-	    fi
+	  	out=$(file $N)
+	  	if [[  $out =~ ELF ]] ; then
+			let fdirtotal++	
+		fi
 	  fi
-	fi
+	done
+    for N in [A-Za-z]*; do
+      if [ "$N" != "[A-Za-z]*" ]; then
+		# read permissions?
+		if [ ! -r $N ]; then
+	  		printf "\033[31mError: No read permissions for '$tempdir/$N' (run as root).\033[m\n"
+		else
+	  		# ELF executable?
+	  		out=$(file $N)
+	  		if [[ ! $out =~ ELF ]] ; then
+	    		if [ "$verbose" = "true" ] ; then
+	      			echo_message "\033[34m*** Not an ELF file: $tempdir/" "" "" ""
+	      			file $N
+	      			echo_message "\033[m" "" "" ""
+	    		fi
+	  		else
+	  			let fdircount++
+	    		echo_message "" "" "    " ""
+	    		filecheck $N
+	    		if [ $(find $N \( -perm -004000 -o -perm -002000 \) -type f -print) ]; then
+	      			echo_message "\033[37;41m$2$N\033[m\n" ",$2$N\n" " filename='$2$N' />\n" ",\"filename\":\"$2$N\"}"
+	    		else
+	      			echo_message "$tempdir/$N\n" ",$tempdir/$N\n" " filename='$tempdir/$N' />\n" ",\"filename\":\"$tempdir/$N\"}"
+	    		fi
+				if [ $fdircount == $fdirtotal ]; then
+					echo_message "" "" "" ""
+				else
+					echo_message "" "" "" ","
+				fi
+	  		fi
+		fi
       fi
     done
     echo_message "" "" "</dir>\n" "}"
@@ -1196,7 +1216,7 @@ do
       printf "\033[m\n"
       exit 1
     fi
-    echo_message "RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH\tFORTIFY\tFORTIFIED FORTIFY-able  FILE\n" '' '' ''
+    echo_message "RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH\tFORTIFY\tFORTIFIED FORTIFY-able  FILE\n" '' '' '{'
     filecheck $2
     if [ $(find $2 \( -perm -004000 -o -perm -002000 \) -type f -print) ] ; then
       echo_message "\033[37;41m$2$N\033[m" ",$2$N" " filename='$2$N'/>\n" ",\"filename\":\"$2$N\" } }"
