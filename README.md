@@ -29,6 +29,7 @@ Examples
     <file relro="partial" canary="yes" nx="yes" pie="no" rpath="no" runpath="no" filename='/bin/ls'/>
 
 **json**
+
 	$ checksec.sh --format json --file /bin/ls	
 	{ "file": { "relro":"partial","canary":"yes","nx":"yes","pie":"no","rpath":"no","runpath":"no","filename":"/bin/ls" } }
 
