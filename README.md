@@ -6,7 +6,7 @@ It has been originally written by Tobias Klein and the original source is availa
 
 Updates
 -------
-   Last Update: 02-15-2016
+   Last Update: 02-18-2016
 
 Examples
 --------
