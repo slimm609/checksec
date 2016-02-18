@@ -1,4 +1,10 @@
 Rev-2016021501  Brian Davis     <slimm609@gmail.com>
+        * checksec.sh: merged in zsh completion 
+            Thanks Vaeth
+        * checksec.sh: added man page for checksec
+        * checksec.sh: updated readme to reflect output in place of format option
+
+Rev-2016021501  Brian Davis     <slimm609@gmail.com>
         * checksec.sh: updated to 1.7.3
         * checksec.sh: added xml and json validation tests
         * checksec.sh: fixed xml and json errors from validation tests
