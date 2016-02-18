@@ -68,7 +68,7 @@ format="cli"
 SCRIPT_NAME="checksec"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
 SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename ${SCRIPT_NAME} .sh).sig"
-SCRIPT_VERSION=2016021501
+SCRIPT_VERSION=2016021801
 SCRIPT_MAJOR=1
 SCRIPT_MINOR=7
 SCRIPT_REVISION=3
@@ -137,7 +137,7 @@ version() {
 
 # help
 help() {
-  echo "Usage: checksec [--format {cli|csv|xml|json}] [OPTION]"
+  echo "Usage: checksec [--output {cli|csv|xml|json}] [OPTION]"
   echo
   echo
   echo "Options:"

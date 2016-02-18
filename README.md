@@ -19,18 +19,18 @@ Examples
 
 **csv**
 
-    $ checksec.sh --format csv --file /bin/ls
+    $ checksec.sh --output csv --file /bin/ls
     Partial RELRO,Canary found,NX enabled,No PIE,No RPATH,No RUNPATH,/bin/ls
 
 **xml**
     
-    $ checksec.sh --format xml --file /bin/ls
+    $ checksec.sh --output xml --file /bin/ls
     <?xml version="1.0" encoding="UTF-8"?>
     <file relro="partial" canary="yes" nx="yes" pie="no" rpath="no" runpath="no" filename='/bin/ls'/>
 
 **json**
 
-	$ checksec.sh --format json --file /bin/ls	
+	$ checksec.sh --output json --file /bin/ls	
 	{ "file": { "relro":"partial","canary":"yes","nx":"yes","pie":"no","rpath":"no","runpath":"no","filename":"/bin/ls" } }
 
 **Fortify test in cli**
@@ -119,7 +119,7 @@ Examples
 
 **Kernel Test in XML**
 
-	$ checksec.sh --format xml --kernel
+	$ checksec.sh --output xml --kernel
 	<?xml version="1.0" encoding="UTF-8"?>
 	<kernel config='/boot/config-3.11-2-amd64' gcc_stack_protector='yes' strict_user_copy_check='no' ro_kernel_data='yes' restrict_dev_mem_access='yes' restrict_dev_kmem_access='no'>
 		<grsecurity config='no' />
@@ -128,11 +128,11 @@ Examples
 
 **Kernel Test in Json**
 
-	$ checksec.sh --format json --kernel
+	$ checksec.sh --output json --kernel
  	{ "kernel": { "KernelConfig":"/boot/config-3.11-2-amd64","gcc_stack_protector":"yes","strict_user_copy_check":"no","ro_kernel_data":"yes","restrict_dev_mem_access":"yes","restrict_dev_kmem_access":"no" },{ "grsecurity_config":"no" },{ "kernheap_config":"no" } }
 
 
 Warning
 -------
 
-Due to the original structure of the script the **--format** argument should be placed first on the command line arguments. Doing differently would require really big changes in the code.
+Due to the original structure of the script the **--output** argument should be placed first on the command line arguments. Doing differently would require really big changes in the code.
