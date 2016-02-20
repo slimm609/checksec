@@ -1,3 +1,9 @@
+Rev-2016022002  Brian Davis     <slimm609@gmail.com>
+        * checksec.sh: updated to 1.7.4
+        * checksec.sh: fixed man page 
+        * checksec.sh: added pkg_release option to disable updates for packaged releases
+        * checksec.sh: cleanup up proc-libs
+
 Rev-2016021501  Brian Davis     <slimm609@gmail.com>
         * checksec.sh: merged in zsh completion 
             Thanks Vaeth

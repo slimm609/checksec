@@ -68,10 +68,11 @@ format="cli"
 SCRIPT_NAME="checksec"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
 SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename ${SCRIPT_NAME} .sh).sig"
-SCRIPT_VERSION=2016022001
+SCRIPT_VERSION=2016022002
 SCRIPT_MAJOR=1
 SCRIPT_MINOR=7
 SCRIPT_REVISION=4
+pkg_release=false
 
 if [ $(id -u) != 0 ]; then
     export PATH=$PATH:/sbin/
@@ -152,7 +153,9 @@ help() {
   echo "  --fortify-proc (-fp) <process ID>"
   echo "  --version"
   echo "  --help"
-  echo "  --update"
+  if ! $pkg_release; then
+  	echo "  --update"
+  fi
   echo
   echo "For more information, see:"
   echo "  http://github.com/slimm609/checksec.sh"
@@ -1079,6 +1082,11 @@ do
     shift 1
     ;;
   --update|--upgrade)
+	if $pkg_release; then
+      printf "\033[31mError: Unknown option '$1'.\033[m\n\n"
+      help
+      exit 1
+    fi
 	umask 027
 	TMP_FILE=$(mktemp /tmp/checksec.XXXXXXXXXX)
 	SIG_FILE=$(mktemp /tmp/checksec_sig.XXXXXXXX)
