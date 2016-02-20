@@ -483,12 +483,11 @@ aslrcheck() {
   # PaX ASLR support
   $debug && echo -e "\n***function aslrcheck->PAX ASLR"
   if !(cat /proc/1/status 2> /dev/null | grep -q 'Name:') ; then
-    echo_message ':\033[33m insufficient privileges for PaX ASLR checks\033[m\n' '' '' ''
+    echo_message '\033[33m insufficient privileges for PaX ASLR checks\033[m\n' '' '' ''
     echo_message '  Fallback to standard Linux ASLR check' '' '' ''
   fi
   
   if cat /proc/1/status 2> /dev/null | grep -q 'PaX:'; then
-    printf ": "
     if cat /proc/1/status 2> /dev/null | grep 'PaX:' | grep -q 'R'; then
       echo_message '\033[32mPaX ASLR enabled\033[m\n\n' '' '' ''
     else
