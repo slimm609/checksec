@@ -1,0 +1,66 @@
+\" Process this file with
+.\" groff -man -Tascii foo.1
+.\"
+.TH CHECKSEC 7 "FEBURARY 2016" Linux "User Manuals"
+.SH NAME
+checksec \- check executables and kernel properties
+.SH SYNOPSIS
+.B checksec [options] [file]
+.SH DESCRIPTION
+.B checksec
+is a bash script used to check the properties of executables 
+(like PIE, RELRO, PaX, Canaries, ASLR, Fortify Source) and kernel security 
+options (like GRSecurity and SELinux).
+.SH OPTIONS
+.TP
+\fB\-o\fP or \fB\--output\fP or \fB\--format\fP \fB{cli|csv|xml|json}\fP
+Output the results in different formats for ingestion to other applications.
+NOTE: This option must go before any other options currently
+.TP
+\fB\-h\fP or \fB\--help\fP
+Displays the help text
+.TP
+\fB\-f\fP or \fB\--file\fP
+Checks individual files for security features compiled into the executable
+.TP
+\fB\-d\fP or \fB\--dir\fP
+Recursively checks all executable files in the directory for security features compiled into the executables
+.TP
+\fB\-p\fP or \fB\--proc\fP
+Checks the security features of a running process by name
+.TP
+\fB\-pa\fP or \fB\--proc-all\fP
+Checks the security features of all running processes
+.TP
+\fB\-pl\fP or \fB\--proc-libs\fP
+Checks the security features of the all libraries of a running process ID
+.TP
+\fB\-k\fP or \fB\--kernel\fP
+Checks the security features of the running kernel or a specified kernel config
+.TP
+\fB\-ff\fP or \fB\--fortify-file\fP
+Checks the fortifiability of a file and if any of the fortifiable features have already been compiled into the file
+.TP
+\fB\-fp\fP or \fB\--fortify-proc\fP
+Checks the fortifiability of a running process and if any of the fortifiable features have already been compiled in  
+.TP
+\fB\--version\fP 
+Shows the current version of the running software
+.TP
+\fB\-u\fP or \fB\--update\fP or \fB\--upgrade\fP
+Checks source for a signed update and updates the application if available
+
+.SH DIAGNOSTICS
+The following diagnostics may be issued on stderr:
+ 
+Permission Denied.
+.RS
+For most of the checks you must be root..
+.RE
+Debugging 
+.RS
+\fB\--debug\fP option can be specified for debug level output
+.SH AUTHORS
+Brian Davis <slimm609 at gmail dot com>
+.RE
+Checksec was originally written by Tobias Klein 

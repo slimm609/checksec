@@ -12,7 +12,7 @@ fi
 #check json for kernel
 echo "starting kernel check - json"
 ../checksec --format json --kernel > output.json
-jsonlint  output.json > /dev/bull
+jsonlint  output.json > /dev/null
 if [ $? != 0 ]; then
  echo "kernel json validation failed"
  exit
