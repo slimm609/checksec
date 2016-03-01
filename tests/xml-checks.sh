@@ -42,12 +42,12 @@ fi
 
 #check xml for fortify file
 echo "starting fortify-file check - xml"
-if [ -f /bin/ls ]; then 
-../checksec --format xml --fortify-file /bin/ls > output.json
-elif [ -f /bin/bash ]; then
+if [ -f /bin/bash ]; then 
 ../checksec --format xml --fortify-file /bin/bash > output.json
 elif [ -f /bin/sh ]; then
 ../checksec --format xml --fortify-file /bin/sh > output.json
+elif [ -f /bin/ls ]; then
+../checksec --format xml --fortify-file /bin/ls > output.json
 else
  echo "could not find valid file to test"
  exit 255
