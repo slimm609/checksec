@@ -1,4 +1,14 @@
 #!/bin/bash
+if [ -f /bin/bash ]; then 
+	test_file="/bin/bash"
+elif [ -f /bin/sh ]; then
+	test_file="/bin/sh"
+elif [ -f /bin/ls ]; then
+	test_file="/bin/ls"
+else
+ echo "could not find valid file to test"
+ exit 255
+fi
 
 #check json for proc-all
 echo "starting proc-all check - json"
@@ -32,7 +42,7 @@ fi
 
 #check json for file
 echo "starting file check - json"
-../checksec --format json --file /bin/ls > output.json
+../checksec --format json --file $test_file > output.json
 jsonlint  output.json > /dev/null
 RET=$?
 if [ $RET != 0 ]; then
@@ -42,16 +52,7 @@ fi
 
 #check json for fortify file
 echo "starting fortify-file check - json"
-if [ -f /bin/bash ]; then 
-../checksec --format json --fortify-file /bin/bash > output.json
-elif [ -f /bin/sh ]; then
-../checksec --format json --fortify-file /bin/sh > output.json
-elif [ -f /bin/ls ]; then
-../checksec --format json --fortify-file /bin/ls > output.json
-else
- echo "could not find valid file to test"
- exit 255
-fi
+../checksec --format json --fortify-file $test_file > output.json
 jsonlint output.json > /dev/null
 RET=$?
 if [ $RET != 0 ]; then
