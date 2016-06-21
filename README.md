@@ -8,6 +8,10 @@ Updates
 -------
    Last Update: 2016-04-12
 
+For OSX
+-------
+Install the binutils via brew `brew install binutils`
+
 Examples
 --------
 
