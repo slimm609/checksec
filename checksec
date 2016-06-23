@@ -1056,6 +1056,8 @@ if (command_exists readelf); then
      readelf=readelf
 elif (command_exists eu-readelf); then
      readelf=eu-readelf
+elif (command_exists greadelf); then
+     readelf=greadelf
 else
     echo -e "\n\e[31mERROR: readelf is a required tool for almost all tests. Aborting...\e[0m\n"
     exit
