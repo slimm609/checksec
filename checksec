@@ -214,7 +214,7 @@ return $status
 # check if directory exists
 dir_exists () {
   $debug && echo "fuction dir_exists"
-  if [ -d $1 ] ; then
+  if [ -d "$1" ] ; then
     return 0
   else
     return 1
@@ -240,7 +240,7 @@ isNumeric () {
 # check if input is a string
 isString () {
   $debug && echo "***function isString"
-  echo "$@" | grep -q -v "[^A-Za-z]"
+  echo "$@" | grep -q -v "[^ A-Z_a-z]"
 }
 
 FS_count() {
@@ -268,8 +268,8 @@ filecheck() {
   $debug && echo "***function filecheck"
   # check for RELRO support
   $debug && echo "***function filecheck->RELRO"
-  if $readelf -l $1 2>/dev/null | grep -q 'GNU_RELRO'; then
-    if $readelf -d $1 2>/dev/null | grep -q 'BIND_NOW'; then
+  if $readelf -l "$1" 2>/dev/null | grep -q 'GNU_RELRO'; then
+    if $readelf -d "$1" 2>/dev/null | grep -q 'BIND_NOW'; then
       echo_message '\033[32mFull RELRO   \033[m   ' 'Full RELRO,' '<file relro="full"' ' "file": { "relro":"full",'
     else
       echo_message '\033[33mPartial RELRO\033[m   ' 'Partial RELRO,' '<file relro="partial"' ' "file": { "relro":"partial",'
@@ -280,7 +280,7 @@ filecheck() {
 
   # check for stack canary support
   $debug && echo -e "\n***function filecheck->canary"
-  if $readelf -s $1 2>/dev/null | grep -q '__stack_chk_fail'; then
+  if $readelf -s "$1" 2>/dev/null | grep -q '__stack_chk_fail'; then
     echo_message '\033[32mCanary found   \033[m   ' 'Canary found,' ' canary="yes"' '"canary":"yes",'
   else
     echo_message '\033[31mNo canary found\033[m   ' 'No Canary found,' ' canary="no"' '"canary":"no",'
@@ -288,7 +288,7 @@ filecheck() {
 
   # check for NX support
   $debug && echo -e "\n***function filecheck->nx"
-  if $readelf -W -l $1 2>/dev/null | grep 'GNU_STACK' | grep -q 'RWE'; then
+  if $readelf -W -l "$1" 2>/dev/null | grep 'GNU_STACK' | grep -q 'RWE'; then
     echo_message '\033[31mNX disabled\033[m   ' 'NX disabled,' ' nx="no"' '"nx":"no",'
   else
     echo_message '\033[32mNX enabled \033[m   ' 'NX enabled,' ' nx="yes"' '"nx":"yes",'
@@ -296,10 +296,10 @@ filecheck() {
 
   # check for PIE support
   $debug && echo -e "\n***function filecheck->pie"
-  if $readelf -h $1 2>/dev/null | grep -q 'Type:[[:space:]]*EXEC'; then
+  if $readelf -h "$1" 2>/dev/null | grep -q 'Type:[[:space:]]*EXEC'; then
     echo_message '\033[31mNo PIE       \033[m   ' 'No PIE,' ' pie="no"' '"pie":"no",'
-  elif $readelf -h $1 2>/dev/null | grep -q 'Type:[[:space:]]*DYN'; then
-    if $readelf -d $1 2>/dev/null | grep -q '(DEBUG)'; then
+  elif $readelf -h "$1" 2>/dev/null | grep -q 'Type:[[:space:]]*DYN'; then
+    if $readelf -d "$1" 2>/dev/null | grep -q '(DEBUG)'; then
       echo_message '\033[32mPIE enabled  \033[m   ' 'PIE enabled,' ' pie="yes"' '"pie":"yes",'
     else   
       echo_message '\033[33mDSO          \033[m   ' 'DSO,' ' pie="dso"' '"pie":"dso",'
@@ -310,14 +310,14 @@ filecheck() {
 
   # check for rpath / run path
   $debug && echo -e "\n***function filecheck->rpath"
-  if $readelf -d $1 2>/dev/null | grep -q 'rpath'; then
+  if $readelf -d "$1" 2>/dev/null | grep -q 'rpath'; then
    echo_message '\033[31mRPATH    \033[m  ' 'RPATH,' ' rpath="yes"' '"rpath":"yes",'
   else
    echo_message '\033[32mNo RPATH \033[m  ' 'No RPATH,' ' rpath="no"' '"rpath":"no",'
   fi
 
   $debug && echo -e "\n***function filecheck->runpath"
-  if $readelf -d $1 2>/dev/null | grep -q 'runpath'; then
+  if $readelf -d "$1" 2>/dev/null | grep -q 'runpath'; then
    echo_message '\033[31mRUNPATH    \033[m  ' 'RUNPATH,' ' runpath="yes"' '"runpath":"yes",'
   else
    echo_message '\033[32mNo RUNPATH \033[m  ' 'No RUNPATH,' ' runpath="no"' '"runpath":"no",'
@@ -342,7 +342,7 @@ filecheck() {
   FS_cnt_checked=0
   FS_cnt_total=0
   FS_chk_func_libc=( $($readelf -s $FS_libc | grep _chk@@ | awk '{ print $8 }' | cut -c 3- | sed -e 's/_chk@.*//') )
-  FS_functions=( $($readelf -s $1 | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//') )
+  FS_functions=( $($readelf -s "$1" | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//') )
   FS_count 
 	
   for ((FS_elem_functions=0; FS_elem_functions<${#FS_functions[@]}; FS_elem_functions++))
@@ -364,9 +364,9 @@ proccheck() {
   $debug && echo -e "\n***function proccheck"
   # check for RELRO support
   $debug && echo "***function proccheck->RELRO"
-  if $readelf -l $1/exe 2>/dev/null | grep -q 'Program Headers'; then
-    if $readelf -l $1/exe 2>/dev/null | grep -q 'GNU_RELRO'; then
-      if $readelf -d $1/exe 2>/dev/null | grep -q 'BIND_NOW'; then
+  if $readelf -l "$1/exe" 2>/dev/null | grep -q 'Program Headers'; then
+    if $readelf -l "$1/exe" 2>/dev/null | grep -q 'GNU_RELRO'; then
+      if $readelf -d "$1/exe" 2>/dev/null | grep -q 'BIND_NOW'; then
 	echo_message '\033[32mFull RELRO   \033[m   ' 'Full RELRO,' ' relro="full"' '"relro":"full",'
       else
 	echo_message '\033[33mPartial RELRO\033[m   ' 'Partial RELRO,' ' relro="partial"' '"relro":"partial",'
@@ -381,8 +381,8 @@ proccheck() {
 
   # check for stack canary support
   $debug && echo -e "\n***function proccheck->canary"
-  if $readelf -s $1/exe 2>/dev/null | grep -q 'Symbol table'; then
-    if $readelf -s $1/exe 2>/dev/null | grep -q '__stack_chk_fail'; then
+  if $readelf -s "$1/exe" 2>/dev/null | grep -q 'Symbol table'; then
+    if $readelf -s "$1/exe" 2>/dev/null | grep -q '__stack_chk_fail'; then
       echo_message '\033[32mCanary found         \033[m   ' 'Canary found,' ' canary="yes"' '"canary":"yes",'
     else
       echo_message '\033[31mNo canary found      \033[m   ' 'No Canary found,' ' canary="no"' '"canary":"no",'
@@ -397,7 +397,7 @@ proccheck() {
 
   # check for Seccomp mode
   $debug && echo -e "\n***function proccheck->Seccomp"
-  seccomp=( $(cat $1/status 2> /dev/null | grep 'Seccomp:' | cut -b10) )
+  seccomp=( $(cat "$1/status" 2> /dev/null | grep 'Seccomp:' | cut -b10) )
   if [[ "$seccomp" == "1" ]] ; then
     echo_message '\033[32mSeccomp strict\033[m   ' 'Seccomp strict,' ' seccomp="strict"' '"seccomp":"strict",'
   elif [[ "$seccomp" == "2" ]] ; then
@@ -408,11 +408,11 @@ proccheck() {
 
   # first check for PaX support
   $debug && echo -e "\n***function proccheck->PAX"
-  if cat $1/status 2> /dev/null | grep -q 'PaX:'; then
-    pageexec=( $(cat $1/status 2> /dev/null | grep 'PaX:' | cut -b6) )
-    segmexec=( $(cat $1/status 2> /dev/null | grep 'PaX:' | cut -b10) )
-    mprotect=( $(cat $1/status 2> /dev/null | grep 'PaX:' | cut -b8) )
-    randmmap=( $(cat $1/status 2> /dev/null | grep 'PaX:' | cut -b9) )
+  if cat "$1/status" 2> /dev/null | grep -q 'PaX:'; then
+    pageexec=( $(cat "$1/status" 2> /dev/null | grep 'PaX:' | cut -b6) )
+    segmexec=( $(cat "$1/status" 2> /dev/null | grep 'PaX:' | cut -b10) )
+    mprotect=( $(cat "$1/status" 2> /dev/null | grep 'PaX:' | cut -b8) )
+    randmmap=( $(cat "$1/status" 2> /dev/null | grep 'PaX:' | cut -b9) )
     if [[ "$pageexec" = "P" || "$segmexec" = "S" ]] && [[ "$mprotect" = "M" && "$randmmap" = "R" ]] ; then
       echo_message '\033[32mPaX enabled\033[m   ' 'Pax enabled,' ' pax="yes"' '"pax":"yes",'
     elif [[ "$pageexec" = "p" && "$segmexec" = "s" && "$randmmap" = "R" ]] ; then
@@ -428,7 +428,7 @@ proccheck() {
     fi
   # fallback check for NX support
   $debug && echo -e "\n***function proccheck->NX"
-  elif $readelf -W -l $1/exe 2>/dev/null | grep 'GNU_STACK' | grep -q 'RWE'; then
+  elif $readelf -W -l "$1/exe" 2>/dev/null | grep 'GNU_STACK' | grep -q 'RWE'; then
     echo_message '\033[31mNX disabled\033[m   ' 'NX disabled,' ' nx="no"' '"nx":"no",'
   else
     echo_message '\033[32mNX enabled \033[m   ' 'NX enabled,' ' pax="yes"' '"nx":"yes",'
@@ -436,10 +436,10 @@ proccheck() {
 
   # check for PIE support
   $debug && echo -e "\n***function proccheck->PIE"
-  if $readelf -h $1/exe 2>/dev/null | grep -q 'Type:[[:space:]]*EXEC'; then
+  if $readelf -h "$1/exe" 2>/dev/null | grep -q 'Type:[[:space:]]*EXEC'; then
     echo_message '\033[31mNo PIE               \033[m   ' 'No PIE,' ' pie="no"' '"pie":"no",'
-  elif $readelf -h $1/exe 2>/dev/null | grep -q 'Type:[[:space:]]*DYN'; then
-    if $readelf -d $1/exe 2>/dev/null | grep -q '(DEBUG)'; then
+  elif $readelf -h "$1/exe" 2>/dev/null | grep -q 'Type:[[:space:]]*DYN'; then
+    if $readelf -d "$1/exe" 2>/dev/null | grep -q '(DEBUG)'; then
       echo_message '\033[32mPIE enabled          \033[m   ' 'PIE enabled,' ' pie="yes"' '"pie":"yes",'
     else   
       echo_message '\033[33mDynamic Shared Object\033[m   ' 'Dynamic Shared Object,' ' pie="dso"' '"pie":"dso",'
@@ -449,7 +449,7 @@ proccheck() {
   fi
 
   #check for forifty source support
-  FS_functions=( $($readelf -s $1/exe | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//') )
+  FS_functions=( $($readelf -s "$1/exe" | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//') )
   for ((FS_elem_functions=0; FS_elem_functions<${#FS_functions[@]}; FS_elem_functions++))
   do
     if [[ ${FS_functions[$FS_elem_functions]} =~ _chk ]] ; then
@@ -464,7 +464,7 @@ proccheck() {
 # check mapped libraries
 libcheck() {
   $debug && echo "***function libcheck"
-  libs=( $(awk '{ print $6 }' /proc/$1/maps | grep '/' | sort -u | xargs file | grep ELF | awk '{ print $1 }' | sed 's/:/ /') )
+  libs=( $(awk '{ print $6 }' "/proc/$1/maps" | grep '/' | sort -u | xargs file | grep ELF | awk '{ print $1 }' | sed 's/:/ /') )
  
   echo_message "\n* Loaded libraries (file information, # of mapped files: ${#libs[@]}):\n\n" "" "" ""
   
@@ -1147,7 +1147,7 @@ do
       exit 1
     fi
     # remove trailing slashes
-    tempdir=$(echo $2 | sed -e "s/\/*$//")
+    tempdir=$(echo "$2" | sed -e "s/\/*$//")
     if [ ! -d $tempdir ] ; then
       printf "\033[31mError: The directory '$tempdir' does not exist.\033[m\n\n"
       exit 1
@@ -1209,26 +1209,26 @@ do
     exit 1
     fi
     # does the file exist?
-    if [ ! -e $2 ] ; then
+    if [ ! -e "$2" ] ; then
       printf "\033[31mError: The file '$2' does not exist.\033[m\n\n"
       exit 1
     fi
     # read permissions?
-    if [ ! -r $2 ] ; then
+    if [ ! -r "$2" ] ; then
       printf "\033[31mError: No read permissions for '$2' (run as root).\033[m\n\n"
       exit 1
     fi
     # ELF executable?
-    out=$(file $2)
+    out=$(file "$2")
     if [[ ! $out =~ ELF ]] ; then
       printf "\033[31mError: Not an ELF file: "
-      file $2
+      file "$2"
       printf "\033[m\n"
       exit 1
     fi
     echo_message "RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH\tFORTIFY\tFortified Fortifiable  FILE\n" '' '' '{'
-    filecheck $2
-    if [ $(find $2 \( -perm -004000 -o -perm -002000 \) -type f -print) ] ; then
+    filecheck "$2"
+    if [ $(find "$2" \( -perm -004000 -o -perm -002000 \) -type f -print) ] ; then
       echo_message "\033[37;41m$2$N\033[m" ",$2$N" " filename='$2$N'/>\n" ",\"filename\":\"$2$N\" } }"
     else
       echo_message "$2\n" ",$2\n" " filename='$2'/>\n" ",\"filename\":\"$2\" } }"
@@ -1304,28 +1304,28 @@ do
     echo_message "* Does the CPU support NX: " '' '' ''
     nxcheck
     echo_message "         COMMAND    PID RELRO           STACK CANARY            SECCOMP          NX/PaX        PIE                     FORTIFY\n" "" "" '{'
-    for N in $(ps -Ao pid,comm | grep $2 | cut -b1-6); do
-      if [ -d $N ] ; then
+    for N in $(ps -Ao pid,comm | grep "$2" | cut -b1-6); do
+      if [ -d "$N" ] ; then
 	name=$(head -1 $N/status | cut -b 7-)
 	if [[ $format == "cli" ]]; then
-	    printf "%16s" $name
-	    printf "%7d " $N
+	    printf "%16s" "$name"
+	    printf "%7d " "$N"
 	else
 	  echo_message "" "$name," "<proc name='$name'" " \"$name\": {"
 	  echo_message "" "$N," " pid='$N'" "\"pid\":\"$N\","
 	fi
-	if [ ! -r $N/exe ] ; then
+	if [ ! -r "$N/exe" ] ; then
 	  if !(root_privs) ; then
 	    printf "\033[31mNo read permissions for '/proc/$N/exe' (run as root).\033[m\n\n"
 	    exit 1
 	  fi
-	  if [ ! $(readlink $N/exe) ] ; then
+	  if [ ! $(readlink "$N/exe") ] ; then
 	    printf "\033[31mPermission denied. Requested process ID belongs to a kernel thread.\033[m\n\n"
 	    exit 1
 	  fi
 	  exit 1
 	fi
-	proccheck $N
+	proccheck "$N"
 	echo_message "\n" "\n" "</proc>\n" ""
       fi
     done
@@ -1353,17 +1353,17 @@ do
     echo_message "* Process information:\n\n" "" "" ""
     echo_message "         COMMAND    PID RELRO           STACK CANARY            SECCOMP 	 NX/PaX        PIE		       Fortify Source\n" '' '' '' 
     N=$2
-    if [ -d $N ] ; then
-	name=$(head -1 $N/status | cut -b 7-)
+    if [ -d "$N" ] ; then
+	name=$(head -1 "$N/status" | cut -b 7-)
 	if [[ $format == "cli" ]]; then
-	    printf "%16s" $name
-	    printf "%7d " $N
+	    printf "%16s" "$name"
+	    printf "%7d " "$N"
 	else
 	  echo_message "" "$name," "<proc name='$name'" "{ \"proc\": { \"name\":\"$name\", "
 	  echo_message "" "$N," " pid='$N'" "\"pid\":\"$N\","
 	fi
       # read permissions?
-    if [ ! -r $N/exe ] ; then
+    if [ ! -r "$N/exe" ] ; then
 		if !(root_privs) ; then
 	  		printf "\033[31mNo read permissions for '/proc/$N/exe' (run as root).\033[m\n\n"
 	 		exit 1
@@ -1374,20 +1374,20 @@ do
 		fi
 		exit 1
     fi
-      proccheck $N
+      proccheck "$N"
       echo_message "\n\n\n" "\n" "\n" ""
       echo_message "    RELRO	   	STACK CANARY   NX/PaX        PIE	    RPath	RunPath   Fortify Fortified   Fortifiable\n" '' '' '' 
-      libcheck $N
+      libcheck "$N"
       echo_message "\n" "\n" "</proc>\n" "} }"
     fi
     exit 0
     ;;
 
   --kernel|-k)
-    if [ -e $2 ] && [ ! -d $2 ]; then
-	  if [ -s $(pwd -P)/$2 ]; then 
+    if [ -e "$2" ] && [ ! -d "$2" ]; then
+	  if [ -s "$(pwd -P)/$2" ]; then 
       		configfile=$(pwd -P)/$2
-	  elif [ -s $2 ]; then
+	  elif [ -s "$2" ]; then
 			configfile=$2
 	  else
 			"Error: config file specified do not exist"
@@ -1412,20 +1412,20 @@ do
     exit 1
     fi
     # does the file exist?
-    if [ ! -e $2 ] ; then
+    if [ ! -e "$2" ] ; then
       printf "\033[31mError: The file '$2' does not exist.\033[m\n\n"
       exit 1
     fi
     # read permissions?
-    if [ ! -r $2 ] ; then
+    if [ ! -r "$2" ] ; then
       printf "\033[31mError: No read permissions for '$2' (run as root).\033[m\n\n"
       exit 1
     fi
     # ELF executable?
-    out=$(file $2)
+    out=$(file "$2")
     if [[ ! $out =~ ELF ]] ; then
       printf "\033[31mError: Not an ELF file: "
-      file $2
+      file "$2"
       printf "\033[m\n"
       exit 1
     fi
@@ -1443,7 +1443,7 @@ do
     fi
 
     FS_chk_func_libc=( $($readelf -s $FS_libc | grep _chk@@ | awk '{ print $8 }' | cut -c 3- | sed -e 's/_chk@.*//') )
-    FS_functions=( $($readelf -s $2 | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//') )
+    FS_functions=( $($readelf -s "$2" | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//') )
     echo_message "" "" "<fortify-test name='$2' " "{ \"fortify-test\": { \"name\":\"$2\", "
     FS_libc_check
     FS_binary_check
@@ -1467,14 +1467,14 @@ do
     fi
     cd /proc
     N=$2
-    if [ -d $N ] ; then
+    if [ -d "$N" ] ; then
       # read permissions?
-      if [ ! -r $N/exe ] ; then
+      if [ ! -r "$N/exe" ] ; then
 	if !(root_privs) ; then
 	  printf "\033[31mNo read permissions for '/proc/$N/exe' (run as root).\033[m\n\n"
 	  exit 1
 	fi
-	if [ ! $(readlink $N/exe) ] ; then
+	if [ ! $(readlink "$N/exe") ] ; then
 	  printf "\033[31mPermission denied. Requested process ID belongs to a kernel thread.\033[m\n\n"
 	  exit 1
 	fi
@@ -1492,10 +1492,10 @@ do
 	printf "\033[31mError: libc not found.\033[m\n\n"
 	exit 1
       fi
-      name=$(head -1 $N/status | cut -b 7-)
+      name=$(head -1 "$N/status" | cut -b 7-)
       echo_message  "* Process name (PID)                         : $name ($N)\n" "" "" ""
       FS_chk_func_libc=( $($readelf -s $FS_libc | grep _chk@@ | awk '{ print $8 }' | cut -c 3- | sed -e 's/_chk@.*//') )
-      FS_functions=( $($readelf -s $2/exe | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//') )
+      FS_functions=( $($readelf -s "$2/exe" | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//') )
       echo_message "" "" "<fortify-test name='$name' pid='$N' " "{ \"fortify-test\": { \"name\":\"$name\", \"pid\":\"$pid\", "
       FS_libc_check
       FS_binary_check
