@@ -68,10 +68,10 @@ format="cli"
 SCRIPT_NAME="checksec"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
 SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename ${SCRIPT_NAME} .sh).sig"
-SCRIPT_VERSION=2016041201
+SCRIPT_VERSION=2016102701
 SCRIPT_MAJOR=1
 SCRIPT_MINOR=7
-SCRIPT_REVISION=4
+SCRIPT_REVISION=5
 pkg_release=false
 
 if [ $(id -u) != 0 ]; then
@@ -116,16 +116,16 @@ command_exists () {
 
 # Fetch the update
 fetch() {
-	if type wget > /dev/null 2>&1 ; then
+  if type wget > /dev/null 2>&1 ; then
     $debug && echo "fetching update via wget"
-		wget --no-check-certificate -O "${2}" "${1}" >/dev/null 2>&1
-	elif type curl > /dev/null 2>&1 ; then
+    wget --no-check-certificate -O "${2}" "${1}" >/dev/null 2>&1
+  elif type curl > /dev/null 2>&1 ; then
     $debug && echo "fetching update via curl"
-		curl --insecure --remote-name -o "${2}" "${1}" >/dev/null 2>&1
-	else
-		echo 'Warning: Neither wget nor curl is available. online updates unavailable' >&2
-		exit 1
-	fi
+    curl --insecure --remote-name -o "${2}" "${1}" >/dev/null 2>&1
+  else
+    echo 'Warning: Neither wget nor curl is available. online updates unavailable' >&2 
+    exit 1
+  fi
 }
 
 # version information
@@ -154,7 +154,7 @@ help() {
   echo "  --version"
   echo "  --help"
   if ! $pkg_release; then
-  	echo "  --update"
+    echo "  --update"
   fi
   echo
   echo "For more information, see:"
@@ -185,27 +185,27 @@ getsestatus() {
   $debug && echo -e "\n***fuction getsestatus"
 if (command_exists getenforce); then
   $debug && echo "***fuction getsestatus->getenforce"
-	sestatus=$(getenforce)
-	if [ "$sestatus" == "Disabled" ]; then
-		status=0
-	elif [ "$sestatus" == "Permissive" ]; then
-		status=1
-	elif [ "$sestatus" == "Enforcing" ]; then
-		status=2
-	fi
+  sestatus=$(getenforce)
+  if [ "$sestatus" == "Disabled" ]; then
+    status=0
+  elif [ "$sestatus" == "Permissive" ]; then
+    status=1
+  elif [ "$sestatus" == "Enforcing" ]; then
+    status=2
+  fi
 elif (command_exists sestatus); then
   $debug && echo "***fuction getsestatus->sestatus"
-	sestatus=$(sestatus | grep "SELinux status" | awk '{ print $3}')
-	if [ "$sestatus" == "disabled" ]; then
-		status=0
-	elif [ "$sestatus" == "enabled" ]; then
-		sestatus2=$(sestatus | grep "Current" | awk '{ print $3}')
-		if [ "$sestatus2" == "permissive" ]; then
-			status=1
-		elif [ "$sestatus2" == "enforcing" ]; then
-			status=2
-		fi
-	fi
+  sestatus=$(sestatus | grep "SELinux status" | awk '{ print $3}')
+  if [ "$sestatus" == "disabled" ]; then
+    status=0
+  elif [ "$sestatus" == "enabled" ]; then
+    sestatus2=$(sestatus | grep "Current" | awk '{ print $3}')
+    if [ "$sestatus2" == "permissive" ]; then
+      status=1
+    elif [ "$sestatus2" == "enforcing" ]; then
+      status=2
+    fi
+  fi
 fi
 
 return $status
@@ -252,13 +252,13 @@ FS_count() {
       FS_tmp_func=${FS_functions[$FS_elem_functions]}
       FS_tmp_libc=${FS_chk_func_libc[$FS_elem_libc]}
 
-      	if [[ $FS_tmp_func =~ ^$FS_tmp_libc$ ]] ; then
-		    let FS_cnt_total++
-    	    let FS_cnt_unchecked++
-      	elif [[ $FS_tmp_func =~ ^$FS_tmp_libc(_chk) ]] ; then
+      if [[ $FS_tmp_func =~ ^$FS_tmp_libc$ ]] ; then
+        let FS_cnt_total++
+          let FS_cnt_unchecked++
+        elif [[ $FS_tmp_func =~ ^$FS_tmp_libc(_chk) ]] ; then
             let FS_cnt_total++
-	        let FS_cnt_checked++
-      	fi
+          let FS_cnt_checked++
+        fi
     done
   done
 }
@@ -325,18 +325,18 @@ filecheck() {
 
   # check for FORTIFY SOURCE
   $debug && echo "***function filecheck->fortify"
-	if [ -e /lib/libc.so.6 ] ; then
-      FS_libc=/lib/libc.so.6
-    elif [ -e /lib64/libc.so.6 ] ; then
-      FS_libc=/lib64/libc.so.6
-    elif [ -e /lib/i386-linux-gnu/libc.so.6 ] ; then
-      FS_libc=/lib/i386-linux-gnu/libc.so.6
-    elif [ -e /lib/x86_64-linux-gnu/libc.so.6 ] ; then
-      FS_libc=/lib/x86_64-linux-gnu/libc.so.6
-    else
-      printf "\033[31mError: libc not found.\033[m\n\n"
-      exit 1
-    fi
+  if [ -e /lib/libc.so.6 ] ; then
+    FS_libc=/lib/libc.so.6
+  elif [ -e /lib64/libc.so.6 ] ; then
+    FS_libc=/lib64/libc.so.6
+  elif [ -e /lib/i386-linux-gnu/libc.so.6 ] ; then
+    FS_libc=/lib/i386-linux-gnu/libc.so.6
+  elif [ -e /lib/x86_64-linux-gnu/libc.so.6 ] ; then
+    FS_libc=/lib/x86_64-linux-gnu/libc.so.6
+  else
+    printf "\033[31mError: libc not found.\033[m\n\n"
+    exit 1
+  fi
 
 
   FS_cnt_checked=0
@@ -344,7 +344,7 @@ filecheck() {
   FS_chk_func_libc=( $($readelf -s $FS_libc | grep _chk@@ | awk '{ print $8 }' | cut -c 3- | sed -e 's/_chk@.*//') )
   FS_functions=( $($readelf -s "$1" | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//') )
   FS_count 
-	
+
   for ((FS_elem_functions=0; FS_elem_functions<${#FS_functions[@]}; FS_elem_functions++))
   do
     if [[ ${FS_functions[$FS_elem_functions]} =~ _chk ]] ; then
@@ -354,9 +354,9 @@ filecheck() {
       return
     fi
   done
-  	echo_message "\033[31mNo\033[m" "No," ' fortify_source="no" ' '"fortify_source":"no",'
- 	echo_message "\t$FS_cnt_checked\t" ${FS_cnt_checked},  "fortified=\"$FS_cnt_checked\" " "\"fortified\":\"${FS_cnt_checked}\","
-  	echo_message "\t${FS_cnt_total}\t" ${FS_cnt_total} "fortify-able=\"$FS_cnt_total\"" "\"fortify-able\":\"$FS_cnt_total\""
+    echo_message "\033[31mNo\033[m" "No," ' fortify_source="no" ' '"fortify_source":"no",'
+    echo_message "\t$FS_cnt_checked\t" ${FS_cnt_checked},  "fortified=\"$FS_cnt_checked\" " "\"fortified\":\"${FS_cnt_checked}\","
+    echo_message "\t${FS_cnt_total}\t" ${FS_cnt_total} "fortify-able=\"$FS_cnt_total\"" "\"fortify-able\":\"$FS_cnt_total\""
 }
 
 # check process(es)
@@ -367,9 +367,9 @@ proccheck() {
   if $readelf -l "$1/exe" 2>/dev/null | grep -q 'Program Headers'; then
     if $readelf -l "$1/exe" 2>/dev/null | grep -q 'GNU_RELRO'; then
       if $readelf -d "$1/exe" 2>/dev/null | grep -q 'BIND_NOW'; then
-	echo_message '\033[32mFull RELRO   \033[m   ' 'Full RELRO,' ' relro="full"' '"relro":"full",'
+  echo_message '\033[32mFull RELRO   \033[m   ' 'Full RELRO,' ' relro="full"' '"relro":"full",'
       else
-	echo_message '\033[33mPartial RELRO\033[m   ' 'Partial RELRO,' ' relro="partial"' '"relro":"partial",'
+  echo_message '\033[33mPartial RELRO\033[m   ' 'Partial RELRO,' ' relro="partial"' '"relro":"partial",'
       fi
     else
       echo_message '\033[31mNo RELRO     \033[m   ' 'No RELRO,' ' relro="no"' '"relro":"no",'
@@ -458,16 +458,15 @@ proccheck() {
     fi
   done
   echo_message "\033[31mNo\033[m" "No" " fortify_source='no'>" '"fortify_source":"no" }'
-
 }
 
 # check mapped libraries
 libcheck() {
   $debug && echo "***function libcheck"
   libs=( $(awk '{ print $6 }' "/proc/$1/maps" | grep '/' | sort -u | xargs file | grep ELF | awk '{ print $1 }' | sed 's/:/ /') )
- 
+
   echo_message "\n* Loaded libraries (file information, # of mapped files: ${#libs[@]}):\n\n" "" "" ""
-  
+
   for ((element=0; element<${#libs[@]}; element++))
   do
     echo_message "  ${libs[$element]}:\n" "${libs[$element]}," "" ""
@@ -486,7 +485,7 @@ aslrcheck() {
     echo_message '\033[33m insufficient privileges for PaX ASLR checks\033[m\n' '' '' ''
     echo_message '  Fallback to standard Linux ASLR check' '' '' ''
   fi
-  
+
   if cat /proc/1/status 2> /dev/null | grep -q 'PaX:'; then
     if cat /proc/1/status 2> /dev/null | grep 'PaX:' | grep -q 'R'; then
       echo_message '\033[32mPaX ASLR enabled\033[m\n\n' '' '' ''
@@ -536,7 +535,7 @@ kernelcheck() {
   echo_message "  userspace processes, this option lists the status of kernel configuration\n" '' '' ''
   echo_message "  options that harden the kernel itself against attack.\n\n" '' '' ''
   echo_message "  Kernel config:\n" '' '' '{ "kernel": '
-  
+
   if [ ! "$1" == "" ] ; then
     kconfig="cat $1"
     echo_message "  Warning: The config $1 on disk may not represent running kernel config!\n\n" "$1" "<kernel config=\"$1\"" "{ \"KernelConfig\":\"$1\","
@@ -642,7 +641,7 @@ kernelcheck() {
 #x86 only
 if [ "$arch" == "32" ] || [ "$arch" == "64" ]; then
   echo_message "\n" "\n" "" ""
-  echo_message "* X86 only: 	  			 \n" "" "" ""
+  echo_message "* X86 only:            \n" "" "" ""
 
   if ! $kconfig | grep -qi 'CONFIG_PAX_SIZE_OVERFLOW=y'; then
     echo_message "  Strict user copy checks:                " "" "" ""
@@ -664,7 +663,7 @@ fi
 #ARM only
 if [ "$arch" == "arm" ]; then
   echo_message "\n" "\n" "\n" ""
-  echo_message "* ARM only: 	  			 \n" "" "" ""
+  echo_message "* ARM only:            \n" "" "" ""
 
   echo_message "  Restrict kernel memory permissions:     " "" "" ""
   if $kconfig | grep -qi 'CONFIG_ARM_KERNMEM_PERMS=y'; then
@@ -674,21 +673,20 @@ if [ "$arch" == "arm" ]; then
    fi
 fi
 
-
   echo_message "\n" "\n" "\n" ""
-  echo_message "* Selinux: 	  			  " "" "" ""
+  echo_message "* Selinux:             " "" "" ""
   if $kconfig | grep -qi 'CONFIG_SECURITY_SELINUX=y'; then
-	getsestatus
-	sestatus=$?
-	if [ $sestatus == 0 ]; then 
-    	echo_message "\033[31mDisabled\033[m\n" "Disabled" "    <selinux enabled='no' />" '"selinux":{ "enabled":"no" },'
-    	echo_message "\n  SELinux infomation available here: \n" "" "" ""
-    	echo_message "    http://selinuxproject.org/\n" "" "" ""
-	elif [ $sestatus == 1 ]; then 
-    	echo_message "\033[33mPermissive\033[m\n" "Permissive" "    <selinux enabled='yes' mode='permissive' />" '"selinux":{ "enabled":"yes", "mode":"permissive" },'
-	elif [ $sestatus == 2 ]; then 
-    	echo_message "\033[32mEnforcing\033[m\n" "Enforcing" "    <selinux enabled='yes' mode='enforcing' />" '"selinux":{ "enabled":"yes", "mode":"enforcing" },'
-	fi
+  getsestatus
+  sestatus=$?
+  if [ $sestatus == 0 ]; then 
+      echo_message "\033[31mDisabled\033[m\n" "Disabled" "    <selinux enabled='no' />" '"selinux":{ "enabled":"no" },'
+      echo_message "\n  SELinux infomation available here: \n" "" "" ""
+      echo_message "    http://selinuxproject.org/\n" "" "" ""
+  elif [ $sestatus == 1 ]; then 
+      echo_message "\033[33mPermissive\033[m\n" "Permissive" "    <selinux enabled='yes' mode='permissive' />" '"selinux":{ "enabled":"yes", "mode":"permissive" },'
+  elif [ $sestatus == 2 ]; then 
+      echo_message "\033[32mEnforcing\033[m\n" "Enforcing" "    <selinux enabled='yes' mode='enforcing' />" '"selinux":{ "enabled":"yes", "mode":"enforcing" },'
+  fi
   else
     echo_message "\033[31mNo SELinux\033[m\n" "Disabled" "    <selinux enabled='no' />" '"selinux":{ "enabled":"no" },'
     echo_message "\n  SELinux infomation available here: \n" "" "" ""
@@ -696,7 +694,7 @@ fi
   fi
 
   echo_message "\n" "\n" "\n" ""
-  echo_message "* grsecurity / PaX: 			  " "" "" ""
+  echo_message "* grsecurity / PaX:         " "" "" ""
 
   if $kconfig | grep -qi 'CONFIG_GRKERNSEC=y'; then
     if $kconfig | grep -qi 'CONFIG_GRKERNSEC_HIGH=y'; then
@@ -768,7 +766,7 @@ fi
     else
       echo_message "\033[31mDisabled\033[m\n" "Disabled," " config_pax_randmmap='no'" '"config_pax_randmmap":"no",'
     fi
- 
+
     echo_message "  Sanitize freed memory:                  " "" "" ""
     if $kconfig | grep -qi 'CONFIG_PAX_MEMORY_SANITIZE=y'; then
       echo_message "\033[32mEnabled\033[m\n" "Enabled," " config_pax_memory_sanitize='yes'" '"config_pax_memory_sanitize":"yes",'
@@ -804,7 +802,7 @@ fi
       echo_message "\033[31mDisabled\033[m\n" "Disabled," " config_pax_usercopy='no'" '"config_pax_usercopy":"no",'
     fi
 
-    echo_message "  JIT Hardening:	 	          " "" "" ""
+    echo_message "  JIT Hardening:               " "" "" ""
     if $kconfig | grep -qi 'CONFIG_GRKERNSEC_JIT_HARDEN=y'; then
       echo_message "\033[32mEnabled\033[m\n" "Enabled," " config_grkernsec_jit_harden='yes'" '"config_grkernsec_jit_harden":"yes",'
     else
@@ -815,7 +813,7 @@ fi
       fi
     fi
 
-    echo_message "  Thread Stack Random Gaps: 	          " "" "" ""
+    echo_message "  Thread Stack Random Gaps:             " "" "" ""
     if $kconfig | grep -qi 'CONFIG_GRKERNSEC_RAND_THREADSTACK=y'; then
       echo_message "\033[32mEnabled\033[m\n" "Enabled," " config_grkernsec_rand_threadstack='yes'" '"config_grkernsec_rand_threadstack":"yes",'
     else
@@ -847,14 +845,14 @@ fi
       fi
     fi
 
-    echo_message "  Chroot Protection:          		  " "" "" ""
+    echo_message "  Chroot Protection:                " "" "" ""
     if $kconfig | grep -qi 'CONFIG_GRKERNSEC_CHROOT=y'; then
       echo_message "\033[32mEnabled\033[m\n" "Enabled," " config_grkernsec_chroot='yes'" '"config_grkernsec_chroot":"yes",'
     else
       echo_message "\033[31mDisabled\033[m\n" "Disabled," " config_grkernsec_chroot='no'" '"config_grkernsec_chroot":"no",'
     fi
 
-    echo_message "  Deter ptrace process snooping:	  " "" "" ""
+    echo_message "  Deter ptrace process snooping:    " "" "" ""
     if $kconfig | grep -qi 'CONFIG_GRKERNSEC_HARDEN_PTRACE=y'; then
       echo_message "\033[32mEnabled\033[m\n" "Enabled," " config_grkernsec_harden_ptrace='yes'" '"config_grkernsec_harden_ptrace":"yes",'
     else
@@ -898,29 +896,29 @@ fi
     fi
 
     if $kconfig | grep -qi 'CONFIG_GRKERNSEC_SYSCTL=y'; then
-    	echo_message "  Grsec sysctl options:\n" "" "" '"grsecurity_sysctl": {'
-		for command in audit_chdir audit_gid audit_group audit_mount audit_ptrace chroot_caps chroot_deny_bad_rename chroot_deny_chmod chroot_deny_chroot chroot_deny_fchdir chroot_deny_mknod chroot_deny_mount chroot_deny_pivot chroot_deny_shmat chroot_deny_sysctl chroot_deny_unix chroot_enforce_chdir chroot_execlog chroot_findtask chroot_restrict_nice consistent_setxid deny_new_usb deter_bruteforce disable_priv_io dmesg enforce_symlinksifowner exec_logging fifo_restrictions forkfail_logging grsec_lock harden_ipc harden_ptrace ip_blackhole lastack_retries linking_restrictions ptrace_readexec resource_logging romount_protect rwxmap_logging signal_logging socket_all socket_all_gid socket_client socket_client_gid socket_server socket_server_gid symlinkown_gid timechange_logging harden_tty tpe tpe_gid tpe_invert tpe_restrict_all; do 
-			if [ $(echo grsecurity.$command | wc -c) -gt 27 ]; then
-    			echo_message "    grsecurity.$command:\t " "" "" ""
-			elif [ $(echo grsecurity.$command | wc -c) -le 20 ]; then
-    			echo_message "    grsecurity.$command:\t\t\t " "" "" ""
-			else
-    			echo_message "    grsecurity.$command:\t\t " "" "" ""
-			fi
-    		grcheck=$(sysctl -b kernel.grsecurity.$command 2>/dev/null || echo $?)
-        	if [ x$grcheck != "x255" ] && [ x$grcheck != "x0" ]; then
-				echo_message "\033[32mEnabled\033[m\n" "Enabled," " grsec_sysctl_$command='yes'" "\"grsec_sysctl_$command\":\"yes\""
-    		else
-				echo_message "\033[31mDisabled\033[m\n" "Disabled," " grsec_sysctl_$command='no'" "\"grsec_sysctl_$command\":\"no\""
-    		fi
-			if [ "$command" == "tpe_restrict_all" ]; then
-				echo_message "" "" "" " } }"
-			else
-				echo_message "" "" "" ","
-			fi
-		done
-	 echo_message "" "" " />\n</kernel>\n" ""
-	fi
+      echo_message "  Grsec sysctl options:\n" "" "" '"grsecurity_sysctl": {'
+      for command in audit_chdir audit_gid audit_group audit_mount audit_ptrace chroot_caps chroot_deny_bad_rename chroot_deny_chmod chroot_deny_chroot chroot_deny_fchdir chroot_deny_mknod chroot_deny_mount chroot_deny_pivot chroot_deny_shmat chroot_deny_sysctl chroot_deny_unix chroot_enforce_chdir chroot_execlog chroot_findtask chroot_restrict_nice consistent_setxid deny_new_usb deter_bruteforce disable_priv_io dmesg enforce_symlinksifowner exec_logging fifo_restrictions forkfail_logging grsec_lock harden_ipc harden_ptrace ip_blackhole lastack_retries linking_restrictions ptrace_readexec resource_logging romount_protect rwxmap_logging signal_logging socket_all socket_all_gid socket_client socket_client_gid socket_server socket_server_gid symlinkown_gid timechange_logging harden_tty tpe tpe_gid tpe_invert tpe_restrict_all; do 
+        if [ $(echo grsecurity.$command | wc -c) -gt 27 ]; then
+          echo_message "    grsecurity.$command:\t " "" "" ""
+        elif [ $(echo grsecurity.$command | wc -c) -le 20 ]; then
+          echo_message "    grsecurity.$command:\t\t\t " "" "" ""
+        else
+          echo_message "    grsecurity.$command:\t\t " "" "" ""
+        fi
+        grcheck=$(sysctl -b kernel.grsecurity.$command 2>/dev/null || echo $?)
+        if [ x$grcheck != "x255" ] && [ x$grcheck != "x0" ]; then
+          echo_message "\033[32mEnabled\033[m\n" "Enabled," " grsec_sysctl_$command='yes'" "\"grsec_sysctl_$command\":\"yes\""
+        else
+          echo_message "\033[31mDisabled\033[m\n" "Disabled," " grsec_sysctl_$command='no'" "\"grsec_sysctl_$command\":\"no\""
+        fi
+        if [ "$command" == "tpe_restrict_all" ]; then
+          echo_message "" "" "" " } }"
+        else
+          echo_message "" "" "" ","
+        fi
+      done
+      echo_message "" "" " />\n</kernel>\n" ""
+    fi
   else
     echo_message "\033[31mNo GRKERNSEC\033[m\n\n" "No GRKERNSEC,,,,,,,," "    <grsecurity config='no' />\n</kernel>\n" '"grsecurity": { "grsecurity_config":"no" } }'
     echo_message "  The grsecurity / PaX patchset is available here:\n" "" "" ""
@@ -928,9 +926,7 @@ fi
   fi
 }
 
-
 # --- FORTIFY_SOURCE subfunctions (start) ---
-
 # is FORTIFY_SOURCE supported by libc?
 FS_libc_check() {
   $debug && echo "***function FS_libc_check"
@@ -976,32 +972,32 @@ FS_comparison() {
       FS_tmp_func=${FS_functions[$FS_elem_functions]}
       FS_tmp_libc=${FS_chk_func_libc[$FS_elem_libc]}
 
-   if [[ $FS_tmp_func =~ ^$FS_tmp_libc$ ]] ; then
-	if [[ $format == "cli" ]]; then
-	    printf " \033[31m%-30s\033[m | __%s%s\n" $FS_tmp_func $FS_tmp_libc $FS_end
-	else
-	  if [ $FS_elem_functions == 0 ]; then
-	    echo_message "" "$FS_tmp_func,$FS_tmp_libc,yes\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifiable='yes' />\n" "\"function\": { \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifiable\":\"yes\" },"
-	  elif [ $FS_elem_functions == $((${#FS_functions[@]} - 1 )) ]; then
-	    echo_message "" "$FS_tmp_func,$FS_tmp_libc,yes\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifiable='yes' />\n" "\"function\": { \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifiable\":\"yes\" },"
-	  else
-	    echo_message "" "$FS_tmp_func,$FS_tmp_libc,yes\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifiable='yes' />\n" "\"function\": { \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifiable\":\"yes\" },"
-	  fi
-	fi
+  if [[ $FS_tmp_func =~ ^$FS_tmp_libc$ ]] ; then
+    if [[ $format == "cli" ]]; then
+      printf " \033[31m%-30s\033[m | __%s%s\n" $FS_tmp_func $FS_tmp_libc $FS_end
+    else
+      if [ $FS_elem_functions == 0 ]; then
+        echo_message "" "$FS_tmp_func,$FS_tmp_libc,yes\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifiable='yes' />\n" "\"function\": { \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifiable\":\"yes\" },"
+      elif [ $FS_elem_functions == $((${#FS_functions[@]} - 1 )) ]; then
+        echo_message "" "$FS_tmp_func,$FS_tmp_libc,yes\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifiable='yes' />\n" "\"function\": { \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifiable\":\"yes\" },"
+      else
+        echo_message "" "$FS_tmp_func,$FS_tmp_libc,yes\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifiable='yes' />\n" "\"function\": { \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifiable\":\"yes\" },"
+    fi
+  fi
         let FS_cnt_total++
         let FS_cnt_unchecked++
    elif [[ $FS_tmp_func =~ ^$FS_tmp_libc(_chk) ]] ; then
-     	if [[ $format == "cli" ]]; then
-	    	printf " \033[32m%-30s\033[m | __%s%s\n" $FS_tmp_func $FS_tmp_libc $FS_end
-  	  else
-	  	if [ $FS_elem_functions == 0 ]; then
-	  		echo_message "" "$FS_tmp_func,$FS_tmp_libc,no\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifiable='no' />\n" "\"function\": { \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifiable\":\"no\" },"
-	  	elif [ $FS_elem_functions == $((${#FS_functions[@]} - 1 )) ]; then
-	  		echo_message "" "$FS_tmp_func,$FS_tmp_libc,no\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifiable='no' />\n" "\"function\": { \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifiable\":\"no\" },"
-	  	else
-	  		echo_message "" "$FS_tmp_func,$FS_tmp_libc,no\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifiable='no' />\n" "\"function\": { \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifiable\":\"no\" },"
-	  	fi
-	fi
+     if [[ $format == "cli" ]]; then
+       printf " \033[32m%-30s\033[m | __%s%s\n" $FS_tmp_func $FS_tmp_libc $FS_end
+     else
+      if [ $FS_elem_functions == 0 ]; then
+        echo_message "" "$FS_tmp_func,$FS_tmp_libc,no\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifiable='no' />\n" "\"function\": { \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifiable\":\"no\" },"
+      elif [ $FS_elem_functions == $((${#FS_functions[@]} - 1 )) ]; then
+        echo_message "" "$FS_tmp_func,$FS_tmp_libc,no\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifiable='no' />\n" "\"function\": { \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifiable\":\"no\" },"
+      else
+        echo_message "" "$FS_tmp_func,$FS_tmp_libc,no\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifiable='no' />\n" "\"function\": { \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifiable\":\"no\" },"
+      fi
+  fi
         let FS_cnt_total++
         let FS_cnt_checked++
    fi
@@ -1050,7 +1046,7 @@ done
 if [ $commandsmissing == true ]; then
     echo -e "\n\e[31mWARNING: Not all necessary commands found. Some tests might not work!\e[0m\n"
     sleep 2
-fi  
+fi
 
 if (command_exists readelf); then
      readelf=readelf
@@ -1083,40 +1079,40 @@ do
     shift 1
     ;;
   --update|--upgrade)
-	if $pkg_release; then
+  if $pkg_release; then
       printf "\033[31mError: Unknown option '$1'.\033[m\n\n"
       help
       exit 1
     fi
-	umask 027
-	TMP_FILE=$(mktemp /tmp/checksec.XXXXXXXXXX)
-	SIG_FILE=$(mktemp /tmp/checksec_sig.XXXXXXXX)
-	PUBKEY_FILE=$(mktemp /tmp/checksec_pubkey.XXXXXXXXXX)
+  umask 027
+  TMP_FILE=$(mktemp /tmp/checksec.XXXXXXXXXX)
+  SIG_FILE=$(mktemp /tmp/checksec_sig.XXXXXXXX)
+  PUBKEY_FILE=$(mktemp /tmp/checksec_pubkey.XXXXXXXXXX)
     fetch "${SCRIPT_URL}" "${TMP_FILE}"
     fetch "${SIG_URL}" "${SIG_FILE}"
-	echo ${PUBKEY} | base64 -d > ${PUBKEY_FILE}
-	if ! $(openssl dgst -sha256 -verify ${PUBKEY_FILE} -signature ${SIG_FILE} ${TMP_FILE} >/dev/null 2>&1); then
-		echo "file signature does not match. Update may be tampered"
-		rm -f ${TMP_FILE} ${SIG_FILE} ${PUBKEY_FILE} >/dev/null 2>&1
-		exit 1
-	fi
-	UPDATE_VERSION=$(grep "^SCRIPT_VERSION" ${TMP_FILE} | awk -F"=" '{ print $2 }')
-    if [ ${SCRIPT_VERSION} != ${UPDATE_VERSION} ]; then
-		PERMS=$(stat -c "%a" $0)
-		rm -f ${SIG_FILE} ${PUBKEY_FILE} >/dev/null 2>&1
-		mv ${TMP_FILE} $0 >/dev/null 2>&1
-		if [ $? == 0 ]; then
-			echo "checksec.sh updated - Rev. $UPDATE_VERSION"
-			chmod $PERMS $0
-		else
-			echo "Error: Could not update... Please check permissions"
-			rm -f $TMP_FILE >/dev/null 2>&1
-			exit 1
-		fi
-	else
-		echo "checksec.sh not updated... Already on latest version"
-		rm -f ${TMP_FILE} ${SIG_FILE} ${PUBKEY_FILE} >/dev/null 2>&1
-		exit 1
+  echo ${PUBKEY} | base64 -d > ${PUBKEY_FILE}
+  if ! $(openssl dgst -sha256 -verify ${PUBKEY_FILE} -signature ${SIG_FILE} ${TMP_FILE} >/dev/null 2>&1); then
+    echo "file signature does not match. Update may be tampered"
+    rm -f ${TMP_FILE} ${SIG_FILE} ${PUBKEY_FILE} >/dev/null 2>&1
+    exit 1
+  fi
+  UPDATE_VERSION=$(grep "^SCRIPT_VERSION" ${TMP_FILE} | awk -F"=" '{ print $2 }')
+  if [ ${SCRIPT_VERSION} != ${UPDATE_VERSION} ]; then
+    PERMS=$(stat -c "%a" $0)
+    rm -f ${SIG_FILE} ${PUBKEY_FILE} >/dev/null 2>&1
+    mv ${TMP_FILE} $0 >/dev/null 2>&1
+    if [ $? == 0 ]; then
+      echo "checksec.sh updated - Rev. $UPDATE_VERSION"
+      chmod $PERMS $0
+    else
+      echo "Error: Could not update... Please check permissions"
+      rm -f $TMP_FILE >/dev/null 2>&1
+      exit 1
+    fi
+  else
+    echo "checksec.sh not updated... Already on latest version"
+    rm -f ${TMP_FILE} ${SIG_FILE} ${PUBKEY_FILE} >/dev/null 2>&1
+    exit 1
     fi
     exit 0
     ;;
@@ -1124,17 +1120,17 @@ do
     list="cli csv xml json"
     if [ -n "$2" ]; then
       if [[ ! $list =~ "$2" ]]; then
-	  printf "\033[31mError: Please provide a valid format {cli, csv, xml, json}.\033[m\n\n"
-	  exit 1
+    printf "\033[31mError: Please provide a valid format {cli, csv, xml, json}.\033[m\n\n"
+    exit 1
       fi
     fi
     if [ "$2" == "xml" ]; then
-	echo '<?xml version="1.0" encoding="UTF-8"?>'
+      echo '<?xml version="1.0" encoding="UTF-8"?>'
     fi
     format="$2"
     shift 2
     ;;
-  
+
   --dir|-d)
     if [ "$3" = "-v" ] ; then
       verbose=true
@@ -1154,52 +1150,52 @@ do
     fi
     cd $tempdir
     echo_message "RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FORTIFY Checked         Total   Filename\n" '' "<dir name='$tempdir'>\n" "{ \"dir\": { \"name\":\"$tempdir\" },"
-	fdircount=0
-	fdirtotal=0
+    fdircount=0
+    fdirtotal=0
     for N in [A-Za-z]*; do
       if [ "$N" != "[A-Za-z]*" ]; then
-	  	out=$(file $N)
-	  	if [[  $out =~ ELF ]] ; then
-			let fdirtotal++	
-		fi
-	  fi
-	done
+        out=$(file $N)
+        if [[  $out =~ ELF ]] ; then
+          let fdirtotal++	
+        fi
+      fi
+    done
     for N in [A-Za-z]*; do
       if [ "$N" != "[A-Za-z]*" ]; then
-		# read permissions?
-		if [ ! -r $N ]; then
-	  		printf "\033[31mError: No read permissions for '$tempdir/$N' (run as root).\033[m\n"
-		else
-	  		# ELF executable?
-	  		out=$(file $N)
-	  		if [[ ! $out =~ ELF ]] ; then
-	    		if [ "$verbose" = "true" ] ; then
-	      			echo_message "\033[34m*** Not an ELF file: $tempdir/" "" "" ""
-	      			file $N
-	      			echo_message "\033[m" "" "" ""
-	    		fi
-	  		else
-	  			let fdircount++
-	    		echo_message "" "" "    " ""
-	    		filecheck $N
-	    		if [ $(find $N \( -perm -004000 -o -perm -002000 \) -type f -print) ]; then
-	      			echo_message "\033[37;41m$2$N\033[m\n" ",$2$N\n" " filename='$2$N' />\n" ",\"filename\":\"$2$N\"}"
-	    		else
-	      			echo_message "$tempdir/$N\n" ",$tempdir/$N\n" " filename='$tempdir/$N' />\n" ",\"filename\":\"$tempdir/$N\"}"
-	    		fi
-				if [ $fdircount == $fdirtotal ]; then
-					echo_message "" "" "" ""
-				else
-					echo_message "" "" "" ","
-				fi
-	  		fi
-		fi
+    # read permissions?
+    if [ ! -r $N ]; then
+        printf "\033[31mError: No read permissions for '$tempdir/$N' (run as root).\033[m\n"
+    else
+        # ELF executable?
+        out=$(file $N)
+        if [[ ! $out =~ ELF ]] ; then
+          if [ "$verbose" = "true" ] ; then
+              echo_message "\033[34m*** Not an ELF file: $tempdir/" "" "" ""
+               file $N
+              echo_message "\033[m" "" "" ""
+          fi
+        else
+           let fdircount++
+          echo_message "" "" "    " ""
+          filecheck $N
+          if [ $(find $N \( -perm -004000 -o -perm -002000 \) -type f -print) ]; then
+              echo_message "\033[37;41m$2$N\033[m\n" ",$2$N\n" " filename='$2$N' />\n" ",\"filename\":\"$2$N\"}"
+          else
+              echo_message "$tempdir/$N\n" ",$tempdir/$N\n" " filename='$tempdir/$N' />\n" ",\"filename\":\"$tempdir/$N\"}"
+          fi
+         if [ $fdircount == $fdirtotal ]; then
+          echo_message "" "" "" ""
+        else
+          echo_message "" "" "" ","
+         fi
+        fi
+    fi
       fi
     done
     echo_message "" "" "</dir>\n" "}"
     exit 0
     ;;
-  
+
   --file|-f)
     if [ $have_readelf -eq 0 ] ; then
       exit 1
@@ -1247,40 +1243,40 @@ do
     echo_message "* Does the CPU support NX: " "" "<procs>" ""
     nxcheck
     echo_message "         COMMAND    PID RELRO           STACK CANARY            SECCOMP          NX/PaX        PIE                     FORTIFY\n" "" "" '{'
-	lastpid=0
-	currpid=0
+    lastpid=0
+    currpid=0
     for N in [1-9]*; do
       if [ $N != $$ ] && readlink -q $N/exe > /dev/null; then
-	   let lastpid++
-	  fi 
+        let lastpid++
+      fi 
     done
     for N in [1-9]*; do
       if [ $N != $$ ] && readlink -q $N/exe > /dev/null; then
-		let currpid++
-		name=$(head -1 $N/status | cut -b 7-)
-		if [[ $format == "cli" ]]; then
-	    	printf "%16s" $name
-	    	printf "%7d " $N
-		else
-	  		echo_message "" "$name," "<proc name='$name'" " \"$name\": { "
-	  		echo_message "" "$N," " pid='$N'" "\"pid\":\"$N\","
-		fi
-		proccheck $N
-		if [ $lastpid == $currpid ]; then 
-			echo_message "\n" "\n" "</proc>\n" ""
-		else
-			echo_message "\n" "\n" "</proc>\n" ","
-		fi
+        let currpid++
+        name=$(head -1 $N/status | cut -b 7-)
+        if [[ $format == "cli" ]]; then
+          printf "%16s" $name
+          printf "%7d " $N
+        else
+          echo_message "" "$name," "<proc name='$name'" " \"$name\": { "
+          echo_message "" "$N," " pid='$N'" "\"pid\":\"$N\","
+        fi
+        proccheck $N
+    if [ $lastpid == $currpid ]; then 
+      echo_message "\n" "\n" "</proc>\n" ""
+    else
+      echo_message "\n" "\n" "</proc>\n" ","
+    fi
       fi
     done
-	echo_message "" "" "</procs>" " }\n"
+    echo_message "" "" "</procs>" " }\n"
     if [ ! -e /usr/bin/id ] ; then
       echo_message "\n\033[33mNote: If you are running 'checksec.sh' as an unprivileged user, you\n" "" "" ""
       echo_message "      will not see all processes. Please run the script as root.\033[m\n\n" "" "" "\n"
     else 
       if !(root_privs) ; then
-	echo_message "\n\033[33mNote: You are running 'checksec.sh' as an unprivileged user.\n" "" "" ""
-	echo_message "      Too see all processes, please run the script as root.\033[m\n\n" "" "" "\n"
+        echo_message "\n\033[33mNote: You are running 'checksec.sh' as an unprivileged user.\n" "" "" ""
+        echo_message "      Too see all processes, please run the script as root.\033[m\n\n" "" "" "\n"
       fi
     fi
     exit 0
@@ -1306,30 +1302,30 @@ do
     echo_message "         COMMAND    PID RELRO           STACK CANARY            SECCOMP          NX/PaX        PIE                     FORTIFY\n" "" "" '{'
     for N in $(ps -Ao pid,comm | grep "$2" | cut -b1-6); do
       if [ -d "$N" ] ; then
-	name=$(head -1 $N/status | cut -b 7-)
-	if [[ $format == "cli" ]]; then
-	    printf "%16s" "$name"
-	    printf "%7d " "$N"
-	else
-	  echo_message "" "$name," "<proc name='$name'" " \"$name\": {"
-	  echo_message "" "$N," " pid='$N'" "\"pid\":\"$N\","
-	fi
-	if [ ! -r "$N/exe" ] ; then
-	  if !(root_privs) ; then
-	    printf "\033[31mNo read permissions for '/proc/$N/exe' (run as root).\033[m\n\n"
-	    exit 1
-	  fi
-	  if [ ! $(readlink "$N/exe") ] ; then
-	    printf "\033[31mPermission denied. Requested process ID belongs to a kernel thread.\033[m\n\n"
-	    exit 1
-	  fi
-	  exit 1
-	fi
-	proccheck "$N"
-	echo_message "\n" "\n" "</proc>\n" ""
+      name=$(head -1 $N/status | cut -b 7-)
+      if [[ $format == "cli" ]]; then
+        printf "%16s" "$name"
+        printf "%7d " "$N"
+      else
+      echo_message "" "$name," "<proc name='$name'" " \"$name\": {"
+      echo_message "" "$N," " pid='$N'" "\"pid\":\"$N\","
+  fi
+  if [ ! -r "$N/exe" ] ; then
+    if !(root_privs) ; then
+      printf "\033[31mNo read permissions for '/proc/$N/exe' (run as root).\033[m\n\n"
+      exit 1
+    fi
+    if [ ! $(readlink "$N/exe") ] ; then
+      printf "\033[31mPermission denied. Requested process ID belongs to a kernel thread.\033[m\n\n"
+      exit 1
+    fi
+    exit 1
+  fi
+  proccheck "$N"
+  echo_message "\n" "\n" "</proc>\n" ""
       fi
     done
-	echo_message "\n" "\n" "\n" "}\n"
+  echo_message "\n" "\n" "\n" "}\n"
     exit 0
     ;;
 
@@ -1354,25 +1350,25 @@ do
     echo_message "         COMMAND    PID RELRO           STACK CANARY            SECCOMP 	 NX/PaX        PIE		       Fortify Source\n" '' '' '' 
     N=$2
     if [ -d "$N" ] ; then
-	name=$(head -1 "$N/status" | cut -b 7-)
-	if [[ $format == "cli" ]]; then
-	    printf "%16s" "$name"
-	    printf "%7d " "$N"
-	else
-	  echo_message "" "$name," "<proc name='$name'" "{ \"proc\": { \"name\":\"$name\", "
-	  echo_message "" "$N," " pid='$N'" "\"pid\":\"$N\","
-	fi
+    name=$(head -1 "$N/status" | cut -b 7-)
+    if [[ $format == "cli" ]]; then
+      printf "%16s" "$name"
+      printf "%7d " "$N"
+  else
+      echo_message "" "$name," "<proc name='$name'" "{ \"proc\": { \"name\":\"$name\", "
+      echo_message "" "$N," " pid='$N'" "\"pid\":\"$N\","
+  fi
       # read permissions?
-    if [ ! -r "$N/exe" ] ; then
-		if !(root_privs) ; then
-	  		printf "\033[31mNo read permissions for '/proc/$N/exe' (run as root).\033[m\n\n"
-	 		exit 1
-		fi
-		if [ ! $(readlink $N/exe) ] ; then
-	  		printf "\033[31mPermission denied. Requested process ID belongs to a kernel thread.\033[m\n\n"
-	  		exit 1
-		fi
-		exit 1
+  if [ ! -r "$N/exe" ] ; then
+    if !(root_privs) ; then
+      printf "\033[31mNo read permissions for '/proc/$N/exe' (run as root).\033[m\n\n"
+      exit 1
+    fi
+    if [ ! $(readlink $N/exe) ] ; then
+      printf "\033[31mPermission denied. Requested process ID belongs to a kernel thread.\033[m\n\n"
+      exit 1
+    fi
+    exit 1
     fi
       proccheck "$N"
       echo_message "\n\n\n" "\n" "\n" ""
@@ -1385,14 +1381,14 @@ do
 
   --kernel|-k)
     if [ -e "$2" ] && [ ! -d "$2" ]; then
-	  if [ -s "$(pwd -P)/$2" ]; then 
-      		configfile=$(pwd -P)/$2
-	  elif [ -s "$2" ]; then
-			configfile=$2
-	  else
-			"Error: config file specified do not exist"
-			exit 1
-	  fi 
+    if [ -s "$(pwd -P)/$2" ]; then 
+      configfile=$(pwd -P)/$2
+    elif [ -s "$2" ]; then
+      configfile=$2
+    else
+      "Error: config file specified do not exist"
+      exit 1
+    fi 
       echo_message "* Kernel protection information for : $configfile \n\n" "" "" ""
       cd /proc && kernelcheck $configfile
     else
@@ -1470,27 +1466,27 @@ do
     if [ -d "$N" ] ; then
       # read permissions?
       if [ ! -r "$N/exe" ] ; then
-	if !(root_privs) ; then
-	  printf "\033[31mNo read permissions for '/proc/$N/exe' (run as root).\033[m\n\n"
-	  exit 1
-	fi
-	if [ ! $(readlink "$N/exe") ] ; then
-	  printf "\033[31mPermission denied. Requested process ID belongs to a kernel thread.\033[m\n\n"
-	  exit 1
-	fi
-	exit 1
+  if !(root_privs) ; then
+    printf "\033[31mNo read permissions for '/proc/$N/exe' (run as root).\033[m\n\n"
+    exit 1
+  fi
+  if [ ! $(readlink "$N/exe") ] ; then
+    printf "\033[31mPermission denied. Requested process ID belongs to a kernel thread.\033[m\n\n"
+    exit 1
+  fi
+  exit 1
       fi
       if [ -e /lib/libc.so.6 ] ; then
-	FS_libc=/lib/libc.so.6
+  FS_libc=/lib/libc.so.6
       elif [ -e /lib64/libc.so.6 ] ; then
-	FS_libc=/lib64/libc.so.6
+  FS_libc=/lib64/libc.so.6
       elif [ -e /lib/i386-linux-gnu/libc.so.6 ] ; then
-	FS_libc=/lib/i386-linux-gnu/libc.so.6
+  FS_libc=/lib/i386-linux-gnu/libc.so.6
       elif [ -e /lib/x86_64-linux-gnu/libc.so.6 ] ; then
-	FS_libc=/lib/x86_64-linux-gnu/libc.so.6
+  FS_libc=/lib/x86_64-linux-gnu/libc.so.6
       else
-	printf "\033[31mError: libc not found.\033[m\n\n"
-	exit 1
+  printf "\033[31mError: libc not found.\033[m\n\n"
+  exit 1
       fi
       name=$(head -1 "$N/status" | cut -b 7-)
       echo_message  "* Process name (PID)                         : $name ($N)\n" "" "" ""

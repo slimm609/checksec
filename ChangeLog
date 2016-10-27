@@ -1,3 +1,11 @@
+Rev-2016102701  Brian Davis     <slimm609@gmail.com>
+        * checksec.sh: updated to 1.7.5
+        * checksec.sh: added OSX support
+            Thanks Ben Actis
+        * checksec.sh: added space and underscore support
+            Thanks brianmwaters
+        * checksec.sh: cleaned up code formatting
+
 Rev-2016022002  Brian Davis     <slimm609@gmail.com>
         * checksec.sh: updated to 1.7.4
         * checksec.sh: fixed man page 
@@ -32,12 +40,12 @@ Rev-2015122101  Brian Davis     <slimm609@gmail.com>
             Thanks philippedeswert 
         * checksec.sh: split off mandatory tool from optional tools. 
         * checksec.sh: Updated to 1.7.1
-		* checksec.sh: Added Seccomp tests from olivierlemoal.
+        * checksec.sh: Added Seccomp tests from olivierlemoal.
 
 Rev-2015102001  Brian Davis     <slimm609@gmail.com>
         * checksec.sh: Set static LC_ALL to resolve LANG errors. Resolves Ticket #13
         * checksec.sh: Merged in additional kernel options and arch specfic options.  Ticket #14 
-          Thanks philippedeswert
+            Thanks philippedeswert
         * checksec.sh: Updated to 1.7.0 to support revision releases.
         * checksec.sh: put in checks to not display checks that are for different architectures.
 
@@ -49,119 +57,107 @@ Rev-2015091401  Brian Davis     <slimm609@gmail.com>
 
 Rev-2015091301  Brian Davis     <slimm609@gmail.com>
         * checksec.sh: merged in changes for fedora/epel compilance 
-          Thanks Besser82
+            Thanks Besser82
         * checksec.sh: updated check binaries on run
-		  Thanks Roberto Martelloni
+            Thanks Roberto Martelloni
 
-Rev-2015060201	Brian Davis		<slimm609@gmail.com>
-		* checksec.sh: merged in fortified/fortify-able stats on --file output changed
-		  Thanks Roberto Martelloni
+Rev-2015060201	Brian Davis    <slimm609@gmail.com>
+        * checksec.sh: merged in fortified/fortify-able stats on --file output changed
+            Thanks Roberto Martelloni
 
-Rev-2015011201	Brian Davis		<slimm609@gmail.com>
-		* checksec.sh: moved checksec.sh to checksec
+Rev-2015011201	Brian Davis    <slimm609@gmail.com>
+        * checksec.sh: moved checksec.sh to checksec
 
-Rev-2014021802	Brian Davis		<slimm609@gmail.com>
-		* checksec.sh: merged in RODATA and STRICT_USER_COPY changes
-		  Thanks N8Fear
+Rev-2014021802	Brian Davis    <slimm609@gmail.com>
+        * checksec.sh: merged in RODATA and STRICT_USER_COPY changes
+            Thanks N8Fear
 
-Rev-2014021801	Brian Davis		<slimm609@gmail.com>
-		* checksec.sh: merged in JIT and MODHARDEN changes
-		  Thanks N8Fear
+Rev-2014021801	Brian Davis    <slimm609@gmail.com>
+        * checksec.sh: merged in JIT and MODHARDEN changes
+            Thanks N8Fear
 
-Rev-2014021605	Brian Davis		<slimm609@gmail.com>
-		* checksec.sh: Changed --update to verify signature of updates.
+Rev-2014021605	Brian Davis    <slimm609@gmail.com>
+        * checksec.sh: Changed --update to verify signature of updates.
+        * checksec.sig: file added
 
-		* checksec.sig: file added
+Rev-2014021601	Brian Davis    <slimm609@gmail.com>
+        * checksec.sh: Removed deprecated Kern Heap section
+            Thanks Unspawn
 
-Rev-2014021601	Brian Davis		<slimm609@gmail.com>
-		* checksec.sh: Removed deprecated Kern Heap section
-		  Thanks Unspawn
+2014-02-14	Brian Davis    <slimm609@gmail.com>
+        * checksec.sh: Updated to version 1.6
+        * checksec.sh: Implemented rev numbers and --update option
+        * checksec.sh: Added SELinux checks as additional checks for kernel security.
+        * checksec.sh: Added update option to pull the latest release
+        * checksec.sh: Added foritfy_source to proc-all output.
+        * checksec.sh: Added Json, strict XML and updated Grsecurity section.
+        * checksec.sh: Carried over Robin David's changes with XML and CSV.
 
-2014-02-14	Brian Davis		<slimm609@gmail.com>
-		* checksec.sh: Updated to version 1.6
+2013-10-06	Robin David    <dev.robin.david@gmail.com>
+        * add machine-readable outputs like CSV and XML
 
-		* checksec.sh: Implemented rev numbers and --update option
+2011-11-17	Tobias Klein    <tk@trapkit.de>
+        * 1.5
 
-		* checksec.sh: Added SELinux checks as additional checks
-		  for kernel security.
+        * New checks for rpath and runpath elements in the dynamic sections.
+          Thanks to Ollie Whitehouse.
 
-		* checksec.sh: Added update option to pull the latest
-		  release of checksec.
+        * Other bugfixes and improvements
+          - checksec.sh now takes account of the KBUILD_OUTPUT
+            environment variable when checking the Linux kernel
+            protection mechanisms (--kernel).
+            Thanks to Martin Vaeth for the hint.
+          - Some minor changes and clean-ups. Thanks to Brian Davis.
+          - Ubuntu 11.10 support for --fortify-file and --fortify-proc.
 
-		* checksec.sh: Added foritfy_source to proc-all output.
+2011-01-14	Tobias Klein     <tk@trapkit.de>
+        * 1.4
 
-		* checksec.sh: Added Json, strict XML and updated Grsecurity
-		  section.
+        * Support for FORTIFY_SOURCE (--fortify-file, --fortify-proc)
 
-		* checksec.sh: Carried over Robin David's changes with XML
-		  and CSV.
+        * Lots of other bugfixes and improvements
+          - Check if the readelf command is available
+          - readelf support for 64-bit ELF files
+          - Check if the requested files and directories do exist
+          - '--dir' is now case-sensitive and correctly deals with
+            trailing slashes
+          - Check user permissions
+          - Etc.
 
-2013-10-06	Robin David		<dev.robin.david@gmail.com>
-		* add machine-readable outputs like CSV and XML
+2010-06-15	Tobias Klein    <tk@trapkit.de>
+        * 1.3.1
 
-2011-11-17	Tobias Klein		<tk@trapkit.de>
-		* 1.5
+        * New BSD License
+          (http://www.opensource.org/licenses/bsd-license.php)
 
-		* New checks for rpath and runpath elements in the dynamic
-		  sections.
-		  Thanks to Ollie Whitehouse.
+2010-05-04	Tobias Klein    <tk@trapkit.de>
+        * 1.3
 
-		* Other bugfixes and improvements
-		  - checksec.sh now takes account of the KBUILD_OUTPUT
-		    environment variable when checking the Linux kernel
-		    protection mechanisms (--kernel).
-		    Thanks to Martin Vaeth for the hint.
-		- Some minor changes and clean-ups. Thanks to Brian Davis.
-		- Ubuntu 11.10 support for --fortify-file and --fortify-proc.
+        * Additional checks for a number of Linux kernel
+          protection mechanisms.
+          Thanks to Jon Oberheide (jon.oberheide.org).
 
-2011-01-14	Tobias Klein		<tk@trapkit.de>
-		* 1.4
+2010-01-02	Tobias Klein    <tk@trapkit.de>
+        * 1.2
 
-		* Support for FORTIFY_SOURCE (--fortify-file, --fortify-proc)
+        * Additional PaX (http://pax.grsecurity.net/) checks.
+          Thanks to Brad Spengler (grsecurity.net) for the PaX
+          support.
 
-		* Lots of other bugfixes and improvements
-		  - Check if the readelf command is available
-		  - readelf support for 64-bit ELF files
-		  - Check if the requested files and directories do exist
-		  - '--dir' is now case-sensitive and correctly deals with
-		    trailing slashes
-		  - Check user permissions
-		  - Etc.
+        * Some minor fixes (coloring adjusted, 'pidof' replacement)
 
-2010-06-15	Tobias Klein		<tk@trapkit.de>
-		* 1.3.1
+2009-12-27	Tobias Klein    <tk@trapkit.de>
+        * 1.1
+        * New '--proc-libs' option. This option instructs
+         checksec.sh to test the loaded libraries of a process.
 
-		* New BSD License
-		  (http://www.opensource.org/licenses/bsd-license.php)
+        * Additional information on ASLR results (--proc,
+          -proc-all, --proc-libs)
+          Thanks to Anthony G. Basile of the Tin Hat project
+          for the hint.
 
-2010-05-04	Tobias Klein		<tk@trapkit.de>
-		* 1.3
+        * Additional CPU NX check (--proc, --proc-all, --proc-libs)
 
-		* Additional checks for a number of Linux kernel
-		  protection mechanisms.
-		  Thanks to Jon Oberheide (jon.oberheide.org).
-
-2010-01-02	Tobias Klein		<tk@trapkit.de>
-		* 1.2
-
-		* Additional PaX (http://pax.grsecurity.net/) checks.
-		  Thanks to Brad Spengler (grsecurity.net) for the PaX
-		  support.
-
-		* Some minor fixes (coloring adjusted, 'pidof' replacement)
-
-2009-12-27	Tobias Klein		<tk@trapkit.de>
-		* 1.1
-		* New '--proc-libs' option. This option instructs
-		  checksec.sh to test the loaded libraries of a process.
-
-		* Additional information on ASLR results (--proc,
-		  --proc-all, --proc-libs)
-		  Thanks to Anthony G. Basile of the Tin Hat project
-		  for the hint.
-
-		* Additional CPU NX check (--proc, --proc-all, --proc-libs)
-
-2009-01-28	Tobias Klein		<tk@trapkit.de>
-		* 1.0
-		* Initial release
+2009-01-28	Tobias Klein    <tk@trapkit.de>
+        * 1.0
+        * Initial release
