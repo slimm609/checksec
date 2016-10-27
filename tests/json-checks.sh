@@ -13,7 +13,7 @@ fi
 #check json for proc-all
 echo "starting proc-all check - json"
 ../checksec --format json --proc-all > output.json
-jsonlint output.json > /dev/null
+jsonlint --allow duplicate-keys output.json > /dev/null
 RET=$?
 if [ $RET != 0 ]; then
  echo "proc-all json validation failed"
