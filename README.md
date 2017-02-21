@@ -140,3 +140,4 @@ Warning
 -------
 
 Due to the original structure of the script the **--output** argument should be placed first on the command line arguments. Doing differently would require really big changes in the code.
+
