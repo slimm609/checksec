@@ -327,6 +327,8 @@ filecheck() {
   $debug && echo "***function filecheck->fortify"
   if [ -e /lib/libc.so.6 ] ; then
     FS_libc=/lib/libc.so.6
+  elif [ -e /lib/libc.so ] ; then
+    FS_libc=/lib/libc.so
   elif [ -e /lib64/libc.so.6 ] ; then
     FS_libc=/lib64/libc.so.6
   elif [ -e /lib/i386-linux-gnu/libc.so.6 ] ; then
