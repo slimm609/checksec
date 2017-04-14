@@ -78,13 +78,6 @@ if [ $(id -u) != 0 ]; then
     export PATH=$PATH:/sbin/
 fi
 
-#determine architecture and bitcount
-if ((1<<32)); then
-    bitcount="64"
-else
-    bitcount="32"
-fi
-
 sysarch=$(uname -m)
 if [[ "$sysarch" == x86_64 ]]; then
     arch="64"
