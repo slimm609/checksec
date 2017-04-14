@@ -1057,16 +1057,20 @@ debug_report() {
 echo "***** Checksec debug *****"
 echo $(id)
 echo $(uname -a)
-for command in awk sysctl uname mktemp openssl grep stat file find head ps readlink basename id wget curl readelf eu-readelf; do
-      path="$(which $command)"
-      echo $(ls -l "$path")
-      if [ -L "$path" ]; then
-        absolutepath=$(readlink -f "$path")
-        echo $(ls -l "$absolutepath")
-        echo $(file "$absolutepath")
-      else
-        echo $(file "$path")
-      fi
+for command in cat awk sysctl uname mktemp openssl grep stat file find head ps readlink basename id which wget curl readelf eu-readelf; do
+  path="$(which $command)"
+  if [ -e "$path" ]; then
+    echo $(ls -l "$path")
+    if [ -L "$path" ]; then
+      absolutepath=$(readlink -f "$path")
+      echo $(ls -l "$absolutepath")
+      echo $(file "$absolutepath")
+    else
+      echo $(file "$path")
+    fi
+  else
+     echo "*** can not find command $command"
+  fi
 done
 }
 
