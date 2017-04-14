@@ -75,7 +75,7 @@ SCRIPT_REVISION=7
 pkg_release=false
 
 if [ $(id -u) != 0 ]; then
-    export PATH=$PATH:/sbin/
+    export PATH=$PATH:/sbin/:/usr/sbin/
 fi
 
 sysarch=$(uname -m)
@@ -179,16 +179,6 @@ getsestatus() {
   if (command_exists getenforce); then
     $debug && echo "***fuction getsestatus->getenforce"
     sestatus=$(getenforce)
-    if [ "$sestatus" == "Disabled" ]; then
-      status=0
-    elif [ "$sestatus" == "Permissive" ]; then
-      status=1
-    elif [ "$sestatus" == "Enforcing" ]; then
-      status=2
-    fi
-  elif (command_exists /usr/sbin/getenforce); then
-    $debug && echo "***fuction getsestatus->/usr/sbin/getenforce"
-    sestatus=$(/usr/sbin/getenforce)
     if [ "$sestatus" == "Disabled" ]; then
       status=0
     elif [ "$sestatus" == "Permissive" ]; then
