@@ -741,7 +741,7 @@ fi
     elif $kconfig | grep -qi 'CONFIG_GRKERNSEC_CONFIG_AUTO=y'; then
       echo_message "\033[33mAuto GRKERNSEC\033[m\n\n" "Auto GRKERNSEC," "    <grsecurity config='auto'" '"grsecurity": { "grsecurity_config":"auto",'
     elif $kconfig | grep -qi 'CONFIG_GRKERNSEC_CONFIG_CUSTOM=y'; then
-      echo_message "\033[31mCustom GRKERNSEC\033[m\n\n" "Custom GRKERNSEC," "    <grsecurity config='custom'" '"grsecurity": { "grsecurity_config":"custom",'
+      echo_message "\033[33mCustom GRKERNSEC\033[m\n\n" "Custom GRKERNSEC," "    <grsecurity config='custom'" '"grsecurity": { "grsecurity_config":"custom",'
     else
       echo_message "\033[33mCustom GRKERNSEC\033[m\n\n" "Custom GRKERNSEC," "    <grsecurity config='custom'" '"grsecurity": { "grsecurity_config":"custom",'
     fi
