@@ -193,6 +193,16 @@ getsestatus() {
     elif [ "$sestatus" == "Enforcing" ]; then
       status=2
     fi
+  elif (command_exists /usr/sbin/getenforce); then
+    $debug && echo "***fuction getsestatus->/usr/sbin/getenforce"
+    sestatus=$(/usr/sbin/getenforce)
+    if [ "$sestatus" == "Disabled" ]; then
+      status=0
+    elif [ "$sestatus" == "Permissive" ]; then
+      status=1
+    elif [ "$sestatus" == "Enforcing" ]; then
+      status=2
+    fi
   elif (command_exists sestatus); then
     $debug && echo "***fuction getsestatus->sestatus"
     sestatus=$(sestatus | grep "SELinux status" | awk '{ print $3}')
@@ -683,26 +693,42 @@ if [ "$arch" == "arm" ]; then
 fi
 
   echo_message "\n" "\n" "\n" ""
-  echo_message "* Selinux:             " "" "" ""
+  echo_message "* SELinux:                                " "" "" ""
   if $kconfig | grep -qi 'CONFIG_SECURITY_SELINUX=y'; then
   getsestatus
   sestatus=$?
   if [ $sestatus == 0 ]; then
-      echo_message "\033[31mDisabled\033[m\n" "Disabled" "    <selinux enabled='no' />" '"selinux":{ "enabled":"no" },'
+      echo_message "\033[31mDisabled\033[m\n" "Disabled,," "    <selinux enabled='no'" '"selinux":{ "enabled":"no"'
       echo_message "\n  SELinux infomation available here: \n" "" "" ""
       echo_message "    http://selinuxproject.org/\n" "" "" ""
   elif [ $sestatus == 1 ]; then
-      echo_message "\033[33mPermissive\033[m\n" "Permissive" "    <selinux enabled='yes' mode='permissive' />" '"selinux":{ "enabled":"yes", "mode":"permissive" },'
+      echo_message "\033[33mPermissive\033[m\n" "Permissive," "    <selinux enabled='yes' mode='permissive'" '"selinux":{ "enabled":"yes", "mode":"permissive"'
   elif [ $sestatus == 2 ]; then
-      echo_message "\033[32mEnforcing\033[m\n" "Enforcing" "    <selinux enabled='yes' mode='enforcing' />" '"selinux":{ "enabled":"yes", "mode":"enforcing" },'
+      echo_message "\033[32mEnforcing\033[m\n" "Enforcing," "    <selinux enabled='yes' mode='enforcing'" '"selinux":{ "enabled":"yes", "mode":"enforcing"'
   fi
   else
-    echo_message "\033[31mNo SELinux\033[m\n" "Disabled" "    <selinux enabled='no' />" '"selinux":{ "enabled":"no" },'
+    echo_message "\033[31mNo SELinux\033[m\n" "Disabled,," "    <selinux enabled='no'" '"selinux":{ "enabled":"no"'
     echo_message "\n  SELinux infomation available here: \n" "" "" ""
     echo_message "    http://selinuxproject.org/\n" "" "" ""
   fi
 
-  echo_message "\n" "\n" "\n" ""
+  if [ $sestatus == 1 ] || [ $sestatus == 2 ]; then
+    echo_message "  Checkreqprot:                         " "" "" ""
+    if [ $(cat /sys/fs/selinux/checkreqprot) == 0 ]; then
+      echo_message "\033[32m  Enabled\033[m\n" "Enabled," " checkreqprot='yes'" ', "checkreqprot":"yes"'
+    else
+      echo_message "\033[31m  Disabled\033[m\n" "Disabled," " checkreqprot='no'" ', "checkreqprot":"no"'
+    fi
+
+    echo_message "  Deny Unknown:                         " "" "" ""
+    if [ $(cat /sys/fs/selinux/deny_unknown) == 1 ]; then
+      echo_message "\033[32m  Enabled\033[m\n" "Enabled" " deny_unknown='yes'" ', "deny_unknown":"yes"'
+    else
+      echo_message "\033[31m  Disabled\033[m\n" "Disabled" " deny_unknown='no'" ', "deny_unknown":"no"'
+    fi
+  fi
+
+  echo_message "\n" "\n" " />\n" " },"
   echo_message "* grsecurity / PaX:         " "" "" ""
 
   if $kconfig | grep -qi 'CONFIG_GRKERNSEC=y'; then
