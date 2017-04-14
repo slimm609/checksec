@@ -672,7 +672,7 @@ if [ "$arch" == "32" ] || [ "$arch" == "64" ]; then
   fi
 
   echo_message "  Address space layout randomization:     " "" "" ""
-  if $kconfig | grep -qi 'CONFIG_RANDOMIZE_BASE=y'; then
+  if $kconfig | grep -qi 'CONFIG_RANDOMIZE_BASE=y\|CONFIG_PAX_ASLR=y'; then
     echo_message "\033[32mEnabled\033[m\n" "Enabled" " random_address_space_layout='yes'>" '"random_address_space_layout":"yes" },'
    else
     echo_message "\033[31mDisabled\033[m\n" "Disabled," " random_address_space_layout='no'>" '"random_address_space_layout":"no",'
