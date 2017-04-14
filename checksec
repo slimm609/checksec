@@ -1153,11 +1153,11 @@ do
     fi
     # remove trailing slashes
     tempdir=$(echo "$2" | sed -e "s/\/*$//")
-    if [ ! -d $tempdir ] ; then
+    if [ ! -d "$tempdir" ] ; then
       printf "\033[31mError: The directory '$tempdir' does not exist.\033[m\n\n"
       exit 1
     fi
-    cd $tempdir
+    cd "$tempdir"
     echo_message "RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FORTIFY Checked         Total   Filename\n" '' "<dir name='$tempdir'>\n" "{ \"dir\": { \"name\":\"$tempdir\" },"
     fdircount=0
     fdirtotal=0
@@ -1176,7 +1176,7 @@ do
         printf "\033[31mError: No read permissions for '$tempdir/$N' (run as root).\033[m\n"
     else
         # ELF executable?
-        out=$(file `readlink -f $N`)
+        out=$(file "`readlink -f $N`")
         if [[ ! $out =~ ELF ]] ; then
           if [ "$verbose" = "true" ] ; then
               echo_message "\033[34m*** Not an ELF file: $tempdir/" "" "" ""
@@ -1224,7 +1224,7 @@ do
       exit 1
     fi
     # ELF executable?
-    out=$(file `readlink -f "$2"`)
+    out=$(file "`readlink -f "$2"`")
     if [[ ! $out =~ ELF ]] ; then
       printf "\033[31mError: Not an ELF file: "
       file "$2"
@@ -1427,7 +1427,7 @@ do
       exit 1
     fi
     # ELF executable?
-    out=$(file `readlink -f "$2"`)
+    out=$(file "`readlink -f "$2"`")
     if [[ ! $out =~ ELF ]] ; then
       printf "\033[31mError: Not an ELF file: "
       file "$2"
