@@ -88,7 +88,7 @@ elif [[ "$sysarch" =~ arm ]]; then
 fi
 
 #openssl public key for verification of updates
-read -r -d '' PUBKEY <<'EOF'
+read -r PUBKEY <<EOF
 LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUF3Z25kcnk2WGJpNE8wR2w1T2UzSQp1eWRyMlZqR1hteDJFM0thd0wrK1F3a2FVT0RHOEVuT24weFZ1S1ZkZEphZjY3Rmxzd3pPYjh1RFRDTjdsWURnCnFKQXdmNllTOUFsdU5RRmlFQWhFRlgxL0dsMi9TSnFHYXhFVU9HTlV3NTI5a3BVR0MwNmN6SHhENEcvdWNBQlkKT05iWm9Vc1pIYmRnZUNueWs1dzZ0SWs3MEplNmZ2em5Da2JxbUZhS0UyQnhWTERLU0liSDBTak5XT3RSMmF6ZAp1V3p2RU1kVXFlZlZjYXErUDFjV0dLNy94VllSNkV3ME1aQTdWU0xkREhlRUVySW9Kc3UvM2VaeUR5ZDlaUlJvCmdpajM2R1N2SFREclU1ZVdXRlN0Q01UM29DRDhMSjVpbXBReWpWd3Z5M3Z4ZVNVYzVkdytZUDU0OU9jNHF2bzYKOXdJREFRQUIKLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg==
 EOF
 
@@ -1038,6 +1038,7 @@ FS_summary() {
 
 debug_report() {
 echo "***** Checksec debug *****"
+failed=false
 echo $(id)
 echo $(uname -a)
 for command in cat awk sysctl uname mktemp openssl grep stat file find head ps readlink basename id which wget curl readelf eu-readelf; do
@@ -1053,8 +1054,13 @@ for command in cat awk sysctl uname mktemp openssl grep stat file find head ps r
     fi
   else
      echo "*** can not find command $command"
+     failed=true
   fi
 done
+
+if [[ $failed ]]; then
+  exit 1
+fi
 }
 
 commandsmissing=false
