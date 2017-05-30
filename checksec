@@ -614,6 +614,7 @@ kernelcheck() {
     echo_message "  Enforce read-only kernel data:          " "" "" ""
     if $kconfig | grep -qi 'CONFIG_DEBUG_RODATA=y\|CONFIG_STRICT_KERNEL_RWX=y'; then
       echo_message "\033[32mEnabled\033[m\n" "Enabled," " ro_kernel_data='yes'" '"ro_kernel_data":"yes",'
+      echo_message "  Enforce read-only module data:          " "" "" ""
       if $kconfig | grep -qi 'CONFIG_STRICT_MODULE_RWX=y'; then
         echo_message "\033[32mEnabled\033[m\n" "Enabled," " ro_module_data='yes'" '"ro_module_data":"yes",'
       else
@@ -624,6 +625,12 @@ kernelcheck() {
     fi
   fi
 
+  echo_message "  HARDENED USERCOPY:                      " "" "" ""
+  if $kconfig | grep -qi 'CONFIG_HARDENED_USERCOPY=y'; then
+    echo_message "\033[32mEnabled\033[m\n" "Enabled," " restrict_dev_mem_access='yes'" '"restrict_dev_mem_access":"yes",'
+  else
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " restrict_dev_mem_access='no'" '"restrict_dev_mem_access":"no",'
+  fi
   echo_message "  Restrict /dev/mem access:               " "" "" ""
   if $kconfig | grep -qi 'CONFIG_STRICT_DEVMEM=y'; then
     echo_message "\033[32mEnabled\033[m\n" "Enabled," " restrict_dev_mem_access='yes'" '"restrict_dev_mem_access":"yes",'
