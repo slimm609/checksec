@@ -68,7 +68,7 @@ format="cli"
 SCRIPT_NAME="checksec"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
 SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename ${SCRIPT_NAME} .sh).sig"
-SCRIPT_VERSION=2017080802
+SCRIPT_VERSION=2017080803
 SCRIPT_MAJOR=1
 SCRIPT_MINOR=7
 SCRIPT_REVISION=10
@@ -548,8 +548,8 @@ kernelcheck() {
     echo_message "\033[31mNOT FOUND\033[m\n\n" "NOT FOUND,,,,,,," "<kernel config='not_found' />" '{ "KernelConfig":"not_found",'
     exit 0
   fi
-  $debug && echo "$($kconfig | grep "CONFIG_GRKERNSEC")"
-  $debug && echo "$($kconfig | grep "CONFIG_PAX")"
+  $debug && $kconfig | grep "CONFIG_GRKERNSEC"
+  $debug && $kconfig | grep "CONFIG_PAX"
 
   echo_message "  Vanilla Kernel ASLR:   		  " "" "" ""
   randomize_va=$(sysctl -b -e kernel.randomize_va_space)
@@ -1130,7 +1130,7 @@ do
     fetch "${SCRIPT_URL}" "${TMP_FILE}"
     fetch "${SIG_URL}" "${SIG_FILE}"
   echo "${PUBKEY}" | base64 -d > "${PUBKEY_FILE}"
-  if ! $(openssl dgst -sha256 -verify "${PUBKEY_FILE}" -signature "${SIG_FILE}" "${TMP_FILE}" >/dev/null 2>&1); then
+  if ! openssl dgst -sha256 -verify "${PUBKEY_FILE}" -signature "${SIG_FILE}" "${TMP_FILE}" >/dev/null 2>&1; then
     echo "file signature does not match. Update may be tampered"
     rm -f "${TMP_FILE}" "${SIG_FILE}" "${PUBKEY_FILE}" >/dev/null 2>&1
     exit 1
@@ -1531,7 +1531,7 @@ do
       echo_message  "* Process name (PID)                         : $name ($N)\n" "" "" ""
       FS_chk_func_libc=( $($readelf -s $FS_libc | grep _chk@@ | awk '{ print $8 }' | cut -c 3- | sed -e 's/_chk@.*//') )
       FS_functions=( $($readelf -s "$2/exe" | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//') )
-      echo_message "" "" "<fortify-test name='$name' pid='$N' " "{ \"fortify-test\": { \"name\":\"$name\", \"pid\":\"$pid\", "
+      echo_message "" "" "<fortify-test name='$name' pid='$N' " "{ \"fortify-test\": { \"name\":\"$name\", \"pid\":\"$N\", "
       FS_libc_check
       FS_binary_check
       FS_comparison
