@@ -36,10 +36,10 @@
 # DAMAGE.
 #
 # --- Modified Version ---
-# Name	  : checksec.sh
+# Name    : checksec.sh
 # Version : 1.7.0
 # Author  : Brian Davis
-# Date	  : Feburary 2014
+# Date    : Feburary 2014
 # Download: https://github.com/slimm609/checksec.sh
 #
 # --- Modified Version ---
@@ -128,7 +128,6 @@ version() {
   echo
 }
 
-
 # help
 help() {
   echo "Usage: checksec [--output {cli|csv|xml|json}] [OPTION]"
@@ -200,7 +199,6 @@ getsestatus() {
       fi
     fi
   fi
-
 return $status
 }
 
@@ -392,7 +390,7 @@ proccheck() {
 
   # check for Seccomp mode
   $debug && echo -e "\n***function proccheck->Seccomp"
-  seccomp=( $(cat "$1/status" 2> /dev/null | grep 'Seccomp:' | cut -b10) )
+  seccomp=$(grep 'Seccomp:' "$1/status" 2> /dev/null | cut -b10)
   if [[ "$seccomp" == "1" ]] ; then
     echo_message '\033[32mSeccomp strict\033[m   ' 'Seccomp strict,' ' seccomp="strict"' '"seccomp":"strict",'
   elif [[ "$seccomp" == "2" ]] ; then
@@ -403,11 +401,11 @@ proccheck() {
 
   # first check for PaX support
   $debug && echo -e "\n***function proccheck->PAX"
-  if cat "$1/status" 2> /dev/null | grep -q 'PaX:'; then
-    pageexec=( $(cat "$1/status" 2> /dev/null | grep 'PaX:' | cut -b6) )
-    segmexec=( $(cat "$1/status" 2> /dev/null | grep 'PaX:' | cut -b10) )
-    mprotect=( $(cat "$1/status" 2> /dev/null | grep 'PaX:' | cut -b8) )
-    randmmap=( $(cat "$1/status" 2> /dev/null | grep 'PaX:' | cut -b9) )
+  if grep -q 'PaX:' "$1/status" 2> /dev/null ; then
+    pageexec=$(grep 'PaX:' "$1/status" 2> /dev/null | cut -b6) 
+    segmexec=$(grep 'PaX:' "$1/status" 2> /dev/null | cut -b10) 
+    mprotect=$(grep 'PaX:' "$1/status" 2> /dev/null | cut -b8) 
+    randmmap=$(grep 'PaX:' "$1/status" 2> /dev/null | cut -b9) 
     if [[ "$pageexec" = "P" || "$segmexec" = "S" ]] && [[ "$mprotect" = "M" && "$randmmap" = "R" ]] ; then
       echo_message '\033[32mPaX enabled\033[m   ' 'Pax enabled,' ' pax="yes"' '"pax":"yes",'
     elif [[ "$pageexec" = "p" && "$segmexec" = "s" && "$randmmap" = "R" ]] ; then
@@ -476,13 +474,13 @@ aslrcheck() {
   $debug && echo "***function aslrcheck"
   # PaX ASLR support
   $debug && echo -e "\n***function aslrcheck->PAX ASLR"
-  if ! (cat /proc/1/status 2> /dev/null | grep -q 'Name:') ; then
+  if ! (grep -q 'Name:' /proc/1/status 2> /dev/null) ; then
     echo_message '\033[33m insufficient privileges for PaX ASLR checks\033[m\n' '' '' ''
     echo_message '  Fallback to standard Linux ASLR check' '' '' ''
   fi
 
-  if cat /proc/1/status 2> /dev/null | grep -q 'PaX:'; then
-    if cat /proc/1/status 2> /dev/null | grep 'PaX:' | grep -q 'R'; then
+  if grep -q 'PaX:' /proc/1/status 2> /dev/null; then
+    if grep -q 'PaX:' /proc/1/status 2> /dev/null | grep -q 'R'; then
       echo_message '\033[32mPaX ASLR enabled\033[m\n\n' '' '' ''
     else
       echo_message '\033[31mPaX ASLR disabled\033[m\n\n' '' '' ''
@@ -937,7 +935,7 @@ fi
           echo_message "    grsecurity.$command:\t\t  " "" "" ""
         fi
         grcheck=$(sysctl -b kernel.grsecurity.$command 2>/dev/null || echo $?)
-        if [[ "x$grcheck" != "x255" ] && [ "x$grcheck" != "x0" ]]; then
+        if [[ "x$grcheck" != "x255" ]] && [[ "x$grcheck" != "x0" ]]; then
           echo_message "\033[32mEnabled\033[m\n" "Enabled," " grsec_sysctl_$command='yes'" "\"grsec_sysctl_$command\":\"yes\""
         else
           echo_message "\033[31mDisabled\033[m\n" "Disabled," " grsec_sysctl_$command='no'" "\"grsec_sysctl_$command\":\"no\""
@@ -1052,18 +1050,18 @@ FS_summary() {
 debug_report() {
 echo "***** Checksec debug *****"
 failed=false
-echo "$(id)"
-echo "$(uname -a)"
+id
+uname -a
 for command in cat awk sysctl uname mktemp openssl grep stat file find head ps readlink basename id which wget curl readelf eu-readelf; do
   path="$(which $command)"
   if [ -e "$path" ]; then
-    echo "$(ls -l "$path")"
+    ls -l "$path"
     if [ -L "$path" ]; then
       absolutepath=$(readlink -f "$path")
-      echo "$(ls -l "$absolutepath")"
-      echo "$(file "$absolutepath")"
+      ls -l "$absolutepath"
+      file "$absolutepath"
     else
-      echo "$(file "$path")"
+      file "$path"
     fi
   else
      echo "*** can not find command $command"
@@ -1121,7 +1119,7 @@ do
     ;;
   --update|--upgrade)
   if $pkg_release; then
-      printf "\033[31mError: Unknown option '$1'.\033[m\n\n"
+      printf "\033[31mError: Unknown option '%s'.\033[m\n\n" "$1"
       help
       exit 1
     fi
@@ -1160,7 +1158,7 @@ do
   --format|--output|-o)
     list="cli csv xml json"
     if [[ -n "$2" ]]; then
-      if [[ ! $list =~ "$2" ]]; then
+      if [[ ! $list =~ $2 ]]; then
     printf "\033[31mError: Please provide a valid format {cli, csv, xml, json}.\033[m\n\n"
     exit 1
       fi
@@ -1186,10 +1184,10 @@ do
     # remove trailing slashes
     tempdir=$(echo "$2" | sed -e "s/\/*$//")
     if [[ ! -d "$tempdir" ]] ; then
-      printf "\033[31mError: The directory '$tempdir' does not exist.\033[m\n\n"
+      printf "\033[31mError: The directory '%s' does not exist.\033[m\n\n" "$tempdir"
       exit 1
     fi
-    cd "$tempdir"
+    cd "$tempdir" || exit
     echo_message "RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FORTIFY Checked         Total   Filename\n" '' "<dir name='$tempdir'>\n" "{ \"dir\": { \"name\":\"$tempdir\" },"
     fdircount=0
     fdirtotal=0
@@ -1205,7 +1203,7 @@ do
       if [[ "$N" != "[A-Za-z]*" ]]; then
     # read permissions?
     if [[ ! -r "$N" ]]; then
-        printf "\033[31mError: No read permissions for '$tempdir/$N' (run as root).\033[m\n"
+        printf "\033[31mError: No read permissions for '%s/%s' (run as root).\033[m\n" "$tempdir" "$N"
     else
         # ELF executable?
         out=$(file "$(readlink -f "$N")")
@@ -1224,7 +1222,7 @@ do
           else
               echo_message "$tempdir/$N\n" ",$tempdir/$N\n" " filename='$tempdir/$N' />\n" ",\"filename\":\"$tempdir/$N\"}"
           fi
-         if [[ $fdircount == $fdirtotal ]]; then
+         if [[ "$fdircount" == "$fdirtotal" ]]; then
           echo_message "" "" "" ""
         else
           echo_message "" "" "" ","
@@ -1247,12 +1245,12 @@ do
     fi
     # does the file exist?
     if [[ ! -e "$2" ]] ; then
-      printf "\033[31mError: The file '$2' does not exist.\033[m\n\n"
+      printf "\033[31mError: The file '%s' does not exist.\033[m\n\n" "$2"
       exit 1
     fi
     # read permissions?
     if [[ ! -r "$2" ]] ; then
-      printf "\033[31mError: No read permissions for '$2' (run as root).\033[m\n\n"
+      printf "\033[31mError: No read permissions for '%s' (run as root).\033[m\n\n" "$2"
       exit 1
     fi
     # ELF executable?
@@ -1278,7 +1276,7 @@ do
     if [[ $have_readelf -eq 0 ]] ; then
       exit 1
     fi
-    cd /proc
+    cd /proc || exit
     echo_message "* System-wide ASLR" "" "" ""
     aslrcheck
     echo_message "* Does the CPU support NX: " "" "<procs>" ""
@@ -1287,12 +1285,12 @@ do
     lastpid=0
     currpid=0
     for N in [1-9]*; do
-      if [[ $N != $$ ]] && readlink -q "$N"/exe > /dev/null; then
+      if [[ "$N" != "$$" ]] && readlink -q "$N"/exe > /dev/null; then
         let lastpid++
       fi
     done
     for N in [1-9]*; do
-      if [[ $N != $$ ]] && readlink -q "$N"/exe > /dev/null; then
+      if [[ "$N" != "$$" ]] && readlink -q "$N"/exe > /dev/null; then
         let currpid++
         name=$(head -1 "$N"/status | cut -b 7-)
         if [[ $format == "cli" ]]; then
@@ -1303,7 +1301,7 @@ do
           echo_message "" "$N," " pid='$N'" "\"pid\":\"$N\","
         fi
         proccheck "$N"
-    if [[ $lastpid == $currpid ]]; then
+    if [[ "$lastpid" == "$currpid" ]]; then
       echo_message "\n" "\n" "</proc>\n" ""
     else
       echo_message "\n" "\n" "</proc>\n" ","
@@ -1335,7 +1333,7 @@ do
       printf "\033[31mError: Please provide a valid process name.\033[m\n\n"
       exit 1
     fi
-    cd /proc
+    cd /proc || exit
     echo_message "* System-wide ASLR" '' '' ''
     aslrcheck
     echo_message "* Does the CPU support NX: " '' '' ''
@@ -1353,7 +1351,7 @@ do
   fi
   if [[ ! -r "$N/exe" ]] ; then
     if ! (root_privs) ; then
-      printf "\033[31mNo read permissions for '/proc/$N/exe' (run as root).\033[m\n\n"
+      printf "\033[31mNo read permissions for '/proc/%s/exe' (run as root).\033[m\n\n" "$N"
       exit 1
     fi
     if [[ ! "$(readlink "$N/exe")" ]] ; then
@@ -1382,7 +1380,7 @@ do
       printf "\033[31mError: Please provide a valid process ID.\033[m\n\n"
       exit 1
     fi
-    cd /proc
+    cd /proc || exit
     echo_message "* System-wide ASLR" '' '' ''
     aslrcheck
     echo_message "* Does the CPU support NX: " '' '' ''
@@ -1402,7 +1400,7 @@ do
       # read permissions?
   if [[ ! -r "$N/exe" ]] ; then
     if ! (root_privs) ; then
-      printf "\033[31mNo read permissions for '/proc/$N/exe' (run as root).\033[m\n\n"
+      printf "\033[31mNo read permissions for '/proc/%s/exe' (run as root).\033[m\n\n" "$N"
       exit 1
     fi
     if [[ ! "$(readlink "$N"/exe)" ]] ; then
@@ -1431,9 +1429,9 @@ do
       exit 1
     fi
       echo_message "* Kernel protection information for : $configfile \n\n" "" "" ""
-      cd /proc && kernelcheck "$configfile"
+      cd /proc && kernelcheck "$configfile" || exit
     else
-      cd /proc
+      cd /proc || exit
       echo_message "* Kernel protection information:\n\n" "" "" ""
       kernelcheck
     fi
@@ -1450,12 +1448,12 @@ do
     fi
     # does the file exist?
     if [[ ! -e "$2" ]] ; then
-      printf "\033[31mError: The file '$2' does not exist.\033[m\n\n"
+      printf "\033[31mError: The file '%s' does not exist.\033[m\n\n" "$2"
       exit 1
     fi
     # read permissions?
     if [[ ! -r "$2" ]] ; then
-      printf "\033[31mError: No read permissions for '$2' (run as root).\033[m\n\n"
+      printf "\033[31mError: No read permissions for '%s' (run as root).\033[m\n\n" "$2"
       exit 1
     fi
     # ELF executable?
@@ -1502,13 +1500,13 @@ do
       printf "\033[31mError: Please provide a valid process ID.\033[m\n\n"
       exit 1
     fi
-    cd /proc
+    cd /proc || exit
     N=$2
     if [[ -d "$N" ]] ; then
       # read permissions?
       if [[ ! -r "$N/exe" ]] ; then
   if ! (root_privs) ; then
-    printf "\033[31mNo read permissions for '/proc/$N/exe' (run as root).\033[m\n\n"
+    printf "\033[31mNo read permissions for '/proc/%s/exe' (run as root).\033[m\n\n" "$N"
     exit 1
   fi
   if [[ ! "$(readlink "$N/exe")" ]] ; then
@@ -1545,7 +1543,7 @@ do
 
   *)
     if [[ "$#" != "0" ]] ; then
-      printf "\033[31mError: Unknown option '$1'.\033[m\n\n"
+      printf "\033[31mError: Unknown option %s.\033[m\n\n" "$1"
     fi
     help
     exit 1
