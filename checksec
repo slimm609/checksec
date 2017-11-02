@@ -328,7 +328,7 @@ filecheck() {
   if $readelf --symbols "$1" 2>/dev/null | grep -q '.symtab'; then
    echo_message "\033[31m$SYM_cnt Symbols\t" ${SYM_cnt},  "\033[m  ' 'SYMTABLES,' ' symtables="yes"' '"symtables":"yes","
   else
-   echo_message '\033[32mNo Symbols	\033[m  ' 'SYMTABLES,' ' symtables="no"' '"symtables":"no",'
+   echo_message '\033[32mNo Symbols     \033[m  ' 'SYMTABLES,' ' symtables="no"' '"symtables":"no",'
   fi
 
   # check for FORTIFY SOURCE
@@ -419,10 +419,10 @@ proccheck() {
   # first check for PaX support
   $debug && echo -e "\n***function proccheck->PAX"
   if grep -q 'PaX:' "$1/status" 2> /dev/null ; then
-    pageexec=$(grep 'PaX:' "$1/status" 2> /dev/null | cut -b6) 
-    segmexec=$(grep 'PaX:' "$1/status" 2> /dev/null | cut -b10) 
-    mprotect=$(grep 'PaX:' "$1/status" 2> /dev/null | cut -b8) 
-    randmmap=$(grep 'PaX:' "$1/status" 2> /dev/null | cut -b9) 
+    pageexec=$(grep 'PaX:' "$1/status" 2> /dev/null | cut -b6)
+    segmexec=$(grep 'PaX:' "$1/status" 2> /dev/null | cut -b10)
+    mprotect=$(grep 'PaX:' "$1/status" 2> /dev/null | cut -b8)
+    randmmap=$(grep 'PaX:' "$1/status" 2> /dev/null | cut -b9)
     if [[ "$pageexec" = "P" || "$segmexec" = "S" ]] && [[ "$mprotect" = "M" && "$randmmap" = "R" ]] ; then
       echo_message '\033[32mPaX enabled\033[m   ' 'Pax enabled,' ' pax="yes"' '"pax":"yes",'
     elif [[ "$pageexec" = "p" && "$segmexec" = "s" && "$randmmap" = "R" ]] ; then
@@ -537,6 +537,18 @@ nxcheck() {
   fi
 }
 
+#Check core dumps restricted?
+coredumpcheck() {
+        $debug && echo -e "\n***function coredumpcheck"
+        coreValue=$( grep -ic "hard core 0" /etc/security/limits.conf )
+        dumpableValue=$( grep -ic "fs.suid_dumpable = 0" /etc/sysctl.conf )
+        if [ $coreValue == 1 ] && [ $dumpableValue == 1 ]; then
+                echo_message '\033[32mRestricted\033[m\n\n' '' '' ''
+        else
+                echo_message '\033[31mNot Restricted\033[m\n\n' '' '' ''
+        fi
+}
+
 # check for kernel protection mechanisms
 kernelcheck() {
   $debug && echo "***function kernelcheck"
@@ -568,7 +580,7 @@ kernelcheck() {
   $debug && echo "$($kconfig | grep "CONFIG_GRKERNSEC")"
   $debug && echo "$($kconfig | grep "CONFIG_PAX")"
 
-  echo_message "  Vanilla Kernel ASLR:   		  " "" "" ""
+  echo_message "  Vanilla Kernel ASLR:                    " "" "" ""
   randomize_va=$(sysctl -b -e kernel.randomize_va_space)
   if [[ "x$randomize_va" == "x2" ]]; then
     echo_message "\033[32mFull\033[m\n" "Full," " randomize_va_space='full'" '"randomize_va_space":"full",'
@@ -578,7 +590,7 @@ kernelcheck() {
     echo_message "\033[31mNone\033[m\n" "None," " randomize_va_space='none'" '"randomize_va_space":"none",'
   fi
 
-  echo_message "  Protected symlinks:   		  " "" "" ""
+  echo_message "  Protected symlinks:                     " "" "" ""
   symlink=$(sysctl -b -e fs.protected_symlinks)
   if [[ "x$symlink" == "x1" ]]; then
     echo_message "\033[32mEnabled\033[m\n" "Enabled," " protect_symlinks='yes'" '"protect_symlinks":"yes",'
@@ -586,7 +598,7 @@ kernelcheck() {
     echo_message "\033[31mDisabled\033[m\n" "Disabled," " protect_symlinks='no'" '"protect_symlinks":"no",'
   fi
 
-  echo_message "  Protected hardlinks:   		  " "" "" ""
+  echo_message "  Protected hardlinks:                    " "" "" ""
   hardlink=$(sysctl -b -e fs.protected_hardlinks)
   if [[ "x$hardlink" == "x1" ]]; then
     echo_message "\033[32mEnabled\033[m\n" "Enabled," " protect_hardlinks='yes'" '"protect_hardlinks":"yes",'
@@ -594,7 +606,7 @@ kernelcheck() {
     echo_message "\033[31mDisabled\033[m\n" "Disabled," " protect_hardlinks='no'" '"protect_hardlinks":"no",'
   fi
 
-  echo_message "  Ipv4 reverse path filtering: 		  " "" "" ""
+  echo_message "  Ipv4 reverse path filtering:            " "" "" ""
   ipv4_rpath=$(sysctl -b -e net.ipv4.conf.all.rp_filter)
   if [[ "x$ipv4_rpath" == "x1" ]]; then
     echo_message "\033[32mEnabled\033[m\n" "Enabled," " ipv4_rpath='yes'" '"ipv4_rpath":"yes",'
@@ -602,7 +614,7 @@ kernelcheck() {
     echo_message "\033[31mDisabled\033[m\n" "Disabled," " ipv4_rpath='no'" '"ipv4_rpath":"no",'
   fi
 
-  echo_message "  Ipv6 reverse path filtering: 		  " "" "" ""
+  echo_message "  Ipv6 reverse path filtering:            " "" "" ""
   ipv6_rpath=$(sysctl -b -e net.ipv6.conf.all.rp_filter)
   if [[ "x$ipv6_rpath" == "x1" ]]; then
     echo_message "\033[32mEnabled\033[m\n" "Enabled," " ipv6_rpath='yes'" '"ipv6_rpath":"yes",'
@@ -640,6 +652,13 @@ kernelcheck() {
     fi
   fi
 
+echo_message "  Exec Shield:                            " """" ""
+        if grep -qi 'kernel.exec-shield = 1' /etc/sysctl.conf ; then
+                echo_message '\033[32mEnabled\033[m\n\n' '' '' ''
+        else
+                echo_message '\033[31mDisabled\033[m\n\n' '' '' ''
+        fi
+
   echo_message "  Hardened Usercopy:                      " "" "" ""
   if $kconfig | grep -qi 'CONFIG_HARDENED_USERCOPY=y'; then
     echo_message "\033[32mEnabled\033[m\n" "Enabled," " hardened_usercopy='yes'" '"hardened_usercopy":"yes",'
@@ -648,7 +667,7 @@ kernelcheck() {
       echo_message "\033[32mEnabled\033[m\n" "Enabled," " hardened_usercopy_pagespan='yes'" '"hardened_usercopy_pagespan":"yes",'
     else
       echo_message "\033[31mDisabled\033[m\n" "Disabled," " hardened_usercopy_pagespan='no'" '"hardened_usercopy_pagespan":"no",'
-    fi 
+    fi
   else
     echo_message "\033[31mDisabled\033[m\n" "Disabled," " hardened_usercopy='no'" '"hardened_usercopy":"no",'
   fi
@@ -1205,7 +1224,7 @@ do
       exit 1
     fi
     cd "$tempdir" || exit
-    echo_message "RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH	Symbols      \tFORTIFY\tFortified\tFortifiable   Filename\n" '' "<dir name='$tempdir'>\n" "{ \"dir\": { \"name\":\"$tempdir\" },"
+    echo_message "RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH    Symbols      \tFORTIFY\tFortified\tFortifiable   Filename\n" '' "<dir name='$tempdir'>\n" "{ \"dir\": { \"name\":\"$tempdir\" },"
     fdircount=0
     fdirtotal=0
     for N in [A-Za-z]*; do
@@ -1298,6 +1317,8 @@ do
     aslrcheck
     echo_message "* Does the CPU support NX: " "" "<procs>" ""
     nxcheck
+    echo_message "* Core-Dumps access to all users: " "" "<procs>" ""
+    coredumpcheck
     echo_message "         COMMAND    PID RELRO           STACK CANARY            SECCOMP          NX/PaX        PIE                     FORTIFY\n" "" "" '{'
     lastpid=0
     currpid=0
@@ -1403,7 +1424,7 @@ do
     echo_message "* Does the CPU support NX: " '' '' ''
     nxcheck
     echo_message "* Process information:\n\n" "" "" ""
-    echo_message "         COMMAND    PID RELRO           STACK CANARY            SECCOMP 	 NX/PaX        PIE		       Fortify Source\n" '' '' ''
+    echo_message "         COMMAND    PID RELRO           STACK CANARY            SECCOMP        NX/PaX        PIE                     Fortify Source\n" '' '' ''
     N=$2
     if [[ -d "$N" ]] ; then
     name=$(head -1 "$N/status" | cut -b 7-)
@@ -1428,7 +1449,7 @@ do
     fi
       proccheck "$N"
       echo_message "\n\n\n" "\n" "\n" ""
-      echo_message "    RELRO	   	STACK CANARY   NX/PaX        PIE	    RPath	RunPath   Fortify Fortified   Fortifiable\n" '' '' ''
+      echo_message "    RELRO           STACK CANARY   NX/PaX        PIE            RPath       RunPath   Fortify Fortified   Fortifiable\n" '' '' ''
       libcheck "$N"
       echo_message "\n" "\n" "</proc>\n" "} }"
     fi
