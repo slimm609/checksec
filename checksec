@@ -610,6 +610,12 @@ kernelcheck() {
     echo_message "\033[31mDisabled\033[m\n" "Disabled," " gcc_stack_protector='no'" '"gcc_stack_protector":"no",'
   fi
 
+  echo_message "  SLAB freelist randomization             " "" "" ""
+  if $kconfig | grep -qi 'CONFIG_SLAB_FREELIST_RANDOM=y'; then
+    echo_message "\033[32mEnabled\033[m\n" "Enabled," " slab_freelist_randomization'yes'" '"slab_freelist_randomization":"yes",'
+  else
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " slab_freelist_randomization='no'" '"slab_freelist_randomization":"no",'
+  fi
   if ! $kconfig | grep -qi 'CONFIG_PAX'; then
     echo_message "  Enforce read-only kernel data:          " "" "" ""
     if $kconfig | grep -qi 'CONFIG_DEBUG_RODATA=y\|CONFIG_STRICT_KERNEL_RWX=y'; then
