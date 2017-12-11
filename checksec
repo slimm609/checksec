@@ -610,6 +610,14 @@ kernelcheck() {
     echo_message "\033[31mDisabled\033[m\n" "Disabled," " gcc_stack_protector='no'" '"gcc_stack_protector":"no",'
   fi
 
+  echo_message "  GCC structleak plugin:                  " "" "" ""
+  if $kconfig | grep -qi 'CONFIG_GCC_PLUGIN_STRUCTLEAK=y'; then
+    echo_message "\033[32mEnabled\033[m\n" "Enabled," " gcc_structleak='yes'" '"gcc_structleak":"yes",'
+  else
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " gcc_structleak='no'" '"gcc_structleak":"no",'
+  fi
+
+
   echo_message "  SLAB freelist randomization:            " "" "" ""
   if $kconfig | grep -qi 'CONFIG_SLAB_FREELIST_RANDOM=y'; then
     echo_message "\033[32mEnabled\033[m\n" "Enabled," " slab_freelist_randomization'yes'" '"slab_freelist_randomization":"yes",'
