@@ -616,6 +616,14 @@ kernelcheck() {
   else
     echo_message "\033[31mDisabled\033[m\n" "Disabled," " slab_freelist_randomization='no'" '"slab_freelist_randomization":"no",'
   fi
+
+  echo_message "  Virtually-mapped kernel stack:          " "" "" ""
+  if $kconfig | grep -qi 'CONFIG_VMAP_STACK=y'; then
+    echo_message "\033[32mEnabled\033[m\n" "Enabled," " virtually_mapped_stack='yes'" '"virtually_mapped_stack":"yes",'
+  else
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " virtually_mapped_stack='no'" '"virtually_mapped_stack":"no",'
+  fi
+
   if ! $kconfig | grep -qi 'CONFIG_PAX'; then
     echo_message "  Enforce read-only kernel data:          " "" "" ""
     if $kconfig | grep -qi 'CONFIG_DEBUG_RODATA=y\|CONFIG_STRICT_KERNEL_RWX=y'; then
