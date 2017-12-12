@@ -665,6 +665,14 @@ kernelcheck() {
   else
     echo_message "\033[31mDisabled\033[m\n" "Disabled," " hardened_usercopy='no'" '"hardened_usercopy":"no",'
   fi
+
+  echo_message "  Harden str/mem functions:               " "" "" ""
+  if $kconfig | grep -qi 'CONFIG_FORTIFY_SOURCE=y'; then
+    echo_message "\033[32mEnabled\033[m\n" "Enabled," " fortify_source='yes'" '"fortify_source":"yes",'
+  else
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " fortify_source='no'" '"fortify_source":"no",'
+  fi
+
   echo_message "  Restrict /dev/mem access:               " "" "" ""
   if $kconfig | grep -qi 'CONFIG_STRICT_DEVMEM=y'; then
     echo_message "\033[32mEnabled\033[m\n" "Enabled," " restrict_dev_mem_access='yes'" '"restrict_dev_mem_access":"yes",'
