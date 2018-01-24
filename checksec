@@ -290,7 +290,7 @@ filecheck() {
   if $readelf -h "$1" 2>/dev/null | grep -q 'Type:[[:space:]]*EXEC'; then
     echo_message '\033[31mNo PIE       \033[m   ' 'No PIE,' ' pie="no"' '"pie":"no",'
   elif $readelf -h "$1" 2>/dev/null | grep -q 'Type:[[:space:]]*DYN'; then
-    if $readelf -d "$1" 2>/dev/null | grep -q '(DEBUG)'; then
+    if $readelf -d "$1" 2>/dev/null | grep -q 'DEBUG'; then
       echo_message '\033[32mPIE enabled  \033[m   ' 'PIE enabled,' ' pie="yes"' '"pie":"yes",'
     else
       echo_message '\033[33mDSO          \033[m   ' 'DSO,' ' pie="dso"' '"pie":"dso",'
@@ -432,7 +432,7 @@ proccheck() {
   if $readelf -h "$1/exe" 2>/dev/null | grep -q 'Type:[[:space:]]*EXEC'; then
     echo_message '\033[31mNo PIE               \033[m   ' 'No PIE,' ' pie="no"' '"pie":"no",'
   elif $readelf -h "$1/exe" 2>/dev/null | grep -q 'Type:[[:space:]]*DYN'; then
-    if $readelf -d "$1/exe" 2>/dev/null | grep -q '(DEBUG)'; then
+    if $readelf -d "$1/exe" 2>/dev/null | grep -q 'DEBUG'; then
       echo_message '\033[32mPIE enabled          \033[m   ' 'PIE enabled,' ' pie="yes"' '"pie":"yes",'
     else
       echo_message '\033[33mDynamic Shared Object\033[m   ' 'Dynamic Shared Object,' ' pie="dso"' '"pie":"dso",'
