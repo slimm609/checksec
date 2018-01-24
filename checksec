@@ -68,10 +68,10 @@ format="cli"
 SCRIPT_NAME="checksec"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
 SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename ${SCRIPT_NAME} .sh).sig"
-SCRIPT_VERSION=2017080803
+SCRIPT_VERSION=2018012401
 SCRIPT_MAJOR=1
-SCRIPT_MINOR=7
-SCRIPT_REVISION=10
+SCRIPT_MINOR=8
+SCRIPT_REVISION=0
 pkg_release=false
 
 if [[ $(id -u) != 0 ]]; then
@@ -244,11 +244,11 @@ FS_count() {
       FS_tmp_libc=${FS_chk_func_libc[$FS_elem_libc]}
 
       if [[ $FS_tmp_func =~ ^$FS_tmp_libc$ ]] ; then
-        let FS_cnt_total++
-          let FS_cnt_unchecked++
+         (( FS_cnt_total++ ))
+          (( FS_cnt_unchecked++ ))
         elif [[ $FS_tmp_func =~ ^$FS_tmp_libc(_chk) ]] ; then
-            let FS_cnt_total++
-          let FS_cnt_checked++
+            (( FS_cnt_total++ ))
+          (( FS_cnt_checked++ ))
         fi
     done
   done
@@ -1013,8 +1013,8 @@ FS_comparison() {
         echo_message "" "$FS_tmp_func,$FS_tmp_libc,yes\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifiable='yes' />\n" "\"function\": { \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifiable\":\"yes\" },"
     fi
   fi
-        let FS_cnt_total++
-        let FS_cnt_unchecked++
+        (( FS_cnt_total++ ))
+        (( FS_cnt_unchecked++ ))
    elif [[ $FS_tmp_func =~ ^$FS_tmp_libc(_chk) ]] ; then
      if [[ $format == "cli" ]]; then
        printf " \033[32m%-30s\033[m | __%s%s\n" $FS_tmp_func $FS_tmp_libc $FS_end
@@ -1027,8 +1027,8 @@ FS_comparison() {
         echo_message "" "$FS_tmp_func,$FS_tmp_libc,no\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifiable='no' />\n" "\"function\": { \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifiable\":\"no\" },"
       fi
   fi
-        let FS_cnt_total++
-        let FS_cnt_checked++
+        (( FS_cnt_total++ ))
+        (( FS_cnt_checked++ ))
    fi
 
     done
@@ -1195,7 +1195,7 @@ do
       if [[ "$N" != "[A-Za-z]*" ]]; then
         out=$(file "$N")
         if [[  $out =~ ELF ]] ; then
-          let fdirtotal++
+          (( fdirtotal++ ))
         fi
       fi
     done
@@ -1214,7 +1214,7 @@ do
               echo_message "\033[m" "" "" ""
           fi
         else
-           let fdircount++
+           (( fdircount++ ))
           echo_message "" "" "    " ""
           filecheck "$N"
           if [[ "$(find "$N" \( -perm -004000 -o -perm -002000 \) -type f -print)" ]]; then
@@ -1286,12 +1286,12 @@ do
     currpid=0
     for N in [1-9]*; do
       if [[ "$N" != "$$" ]] && readlink -q "$N"/exe > /dev/null; then
-        let lastpid++
+        (( lastpid++ ))
       fi
     done
     for N in [1-9]*; do
       if [[ "$N" != "$$" ]] && readlink -q "$N"/exe > /dev/null; then
-        let currpid++
+        (( currpid++ ))
         name=$(head -1 "$N"/status | cut -b 7-)
         if [[ $format == "cli" ]]; then
           printf "%16s" "$name"

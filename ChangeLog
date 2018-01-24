@@ -1,3 +1,8 @@
+Rev-2018012401  Brian Davis     <slimm609@gmail.com>
+        * checksec.sh: Updated to 1.8.0
+        * checksec.sh: resolved issue with eu-readelf debug
+        * checksec.sh: shellcheck cleanup
+
 Rev-2017080801  Brian Davis     <slimm609@gmail.com>
         * checksec.sh: Cleaned up if statements for proper bash expressions
 
