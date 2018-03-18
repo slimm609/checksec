@@ -540,7 +540,7 @@ kernelcheck() {
     kern=$(uname -r)
     echo_message "\033[33m/boot/config-$kern\033[m\n\n" "/boot/config-$kern," "<kernel config='/boot/config-$kern'" "{ \"KernelConfig\":\"/boot/config-$kern\","
     echo_message "  Warning: The config on disk may not represent running kernel config!\n\n" "" "" ""
-  elif [ -f "${KBUILD_OUTPUT:-/usr/src/linux}"/.config ] ; then
+  elif [[ -f "${KBUILD_OUTPUT:-/usr/src/linux}"/.config ]] ; then
     kconfig="cat ${KBUILD_OUTPUT:-/usr/src/linux}/.config"
     echo_message "\033[33m${KBUILD_OUTPUT:-/usr/src/linux}/.config\033[m\n\n" "${KBUILD_OUTPUT:-/usr/src/linux}/.config," "<kernel config='${KBUILD_OUTPUT:-/usr/src/linux}/.config'" "{ \"KernelConfig\":\"${KBUILD_OUTPUT:-/usr/src/linux}/.config\","
     echo_message "  Warning: The config on disk may not represent running kernel config!\n\n" "" "" ""
@@ -1054,9 +1054,9 @@ id
 uname -a
 for command in cat awk sysctl uname mktemp openssl grep stat file find head ps readlink basename id which wget curl readelf eu-readelf; do
   path="$(which $command)"
-  if [ -e "$path" ]; then
+  if [[ -e "$path" ]]; then
     ls -l "$path"
-    if [ -L "$path" ]; then
+    if [[ -L "$path" ]]; then
       absolutepath=$(readlink -f "$path")
       ls -l "$absolutepath"
       file "$absolutepath"
@@ -1191,16 +1191,16 @@ do
     echo_message "RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FORTIFY Checked         Total   Filename\n" '' "<dir name='$tempdir'>\n" "{ \"dir\": { \"name\":\"$tempdir\" },"
     fdircount=0
     fdirtotal=0
-    for N in [A-Za-z]*; do
-      if [[ "$N" != "[A-Za-z]*" ]]; then
+    for N in $(find $tempdir -type f); do
+      if [[ "$N" != "[A-Za-z1-0]*" ]]; then
         out=$(file "$N")
         if [[  $out =~ ELF ]] ; then
           (( fdirtotal++ ))
         fi
       fi
     done
-    for N in [A-Za-z]*; do
-      if [[ "$N" != "[A-Za-z]*" ]]; then
+    for N in $(find $tempdir -type f); do
+      if [[ "$N" != "[A-Za-z1-0]*" ]]; then
     # read permissions?
     if [[ ! -r "$N" ]]; then
         printf "\033[31mError: No read permissions for '%s/%s' (run as root).\033[m\n" "$tempdir" "$N"
