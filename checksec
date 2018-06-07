@@ -610,12 +610,40 @@ kernelcheck() {
     echo_message "\033[31mDisabled\033[m\n" "Disabled," " gcc_stack_protector='no'" '"gcc_stack_protector":"no",'
   fi
 
+  echo_message "  GCC structleak plugin:                  " "" "" ""
+  if $kconfig | grep -qi 'CONFIG_GCC_PLUGIN_STRUCTLEAK=y'; then
+    echo_message "\033[32mEnabled\033[m\n" "Enabled," " gcc_structleak='yes'" '"gcc_structleak":"yes",'
+    echo_message "  GCC structleak by ref plugin:           " "" "" ""
+    if $kconfig | grep -qi 'CONFIG_GCC_PLUGIN_STRUCTLEAK_BYREF_ALL=y'; then
+      echo_message "\033[32mEnabled\033[m\n" "Enabled," " gcc_structleak_byref='yes'" '"gcc_structleak_byref":"yes",'
+    else
+      echo_message "\033[32mEnabled\033[m\n" "Enabled," " gcc_structleak_byref='no'" '"gcc_structleak_byref":"no",'
+    fi
+  else
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " gcc_structleak='no'" '"gcc_structleak":"no",'
+  fi
+
+
+  echo_message "  SLAB freelist randomization:            " "" "" ""
+  if $kconfig | grep -qi 'CONFIG_SLAB_FREELIST_RANDOM=y'; then
+    echo_message "\033[32mEnabled\033[m\n" "Enabled," " slab_freelist_randomization'yes'" '"slab_freelist_randomization":"yes",'
+  else
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " slab_freelist_randomization='no'" '"slab_freelist_randomization":"no",'
+  fi
+
+  echo_message "  Virtually-mapped kernel stack:          " "" "" ""
+  if $kconfig | grep -qi 'CONFIG_VMAP_STACK=y'; then
+    echo_message "\033[32mEnabled\033[m\n" "Enabled," " virtually_mapped_stack='yes'" '"virtually_mapped_stack":"yes",'
+  else
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " virtually_mapped_stack='no'" '"virtually_mapped_stack":"no",'
+  fi
+
   if ! $kconfig | grep -qi 'CONFIG_PAX'; then
     echo_message "  Enforce read-only kernel data:          " "" "" ""
     if $kconfig | grep -qi 'CONFIG_DEBUG_RODATA=y\|CONFIG_STRICT_KERNEL_RWX=y'; then
       echo_message "\033[32mEnabled\033[m\n" "Enabled," " ro_kernel_data='yes'" '"ro_kernel_data":"yes",'
       echo_message "  Enforce read-only module data:          " "" "" ""
-      if $kconfig | grep -qi 'CONFIG_STRICT_MODULE_RWX=y'; then
+      if $kconfig | grep -qi 'CONFIG_STRICT_MODULE_RWX=y\|CONFIG_DEBUG_SET_MODULE_RONX'; then
         echo_message "\033[32mEnabled\033[m\n" "Enabled," " ro_module_data='yes'" '"ro_module_data":"yes",'
       else
         echo_message "\033[31mDisabled\033[m\n" "Disabled," " ro_module_data='no'" '"ro_module_data":"no",'
@@ -628,7 +656,7 @@ kernelcheck() {
   echo_message "  Hardened Usercopy:                      " "" "" ""
   if $kconfig | grep -qi 'CONFIG_HARDENED_USERCOPY=y'; then
     echo_message "\033[32mEnabled\033[m\n" "Enabled," " hardened_usercopy='yes'" '"hardened_usercopy":"yes",'
-    echo_message "  Hardened Usercopy Pagespan:           " "" "" ""
+    echo_message "  Hardened Usercopy Pagespan:             " "" "" ""
     if $kconfig | grep -qi 'CONFIG_HARDENED_USERCOPY_PAGESPAN=y'; then
       echo_message "\033[32mEnabled\033[m\n" "Enabled," " hardened_usercopy_pagespan='yes'" '"hardened_usercopy_pagespan":"yes",'
     else
@@ -637,6 +665,14 @@ kernelcheck() {
   else
     echo_message "\033[31mDisabled\033[m\n" "Disabled," " hardened_usercopy='no'" '"hardened_usercopy":"no",'
   fi
+
+  echo_message "  Harden str/mem functions:               " "" "" ""
+  if $kconfig | grep -qi 'CONFIG_FORTIFY_SOURCE=y'; then
+    echo_message "\033[32mEnabled\033[m\n" "Enabled," " fortify_source='yes'" '"fortify_source":"yes",'
+  else
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " fortify_source='no'" '"fortify_source":"no",'
+  fi
+
   echo_message "  Restrict /dev/mem access:               " "" "" ""
   if $kconfig | grep -qi 'CONFIG_STRICT_DEVMEM=y'; then
     echo_message "\033[32mEnabled\033[m\n" "Enabled," " restrict_dev_mem_access='yes'" '"restrict_dev_mem_access":"yes",'
