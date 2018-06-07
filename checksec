@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # The BSD License (http://www.opensource.org/licenses/bsd-license.php)
 # specifies the terms and conditions of use for checksec.sh:
@@ -68,10 +68,10 @@ format="cli"
 SCRIPT_NAME="checksec"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
 SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename ${SCRIPT_NAME} .sh).sig"
-SCRIPT_VERSION=2017080802
+SCRIPT_VERSION=2018012401
 SCRIPT_MAJOR=1
-SCRIPT_MINOR=7
-SCRIPT_REVISION=10
+SCRIPT_MINOR=8
+SCRIPT_REVISION=0
 pkg_release=false
 
 if [[ $(id -u) != 0 ]]; then
@@ -244,11 +244,11 @@ FS_count() {
       FS_tmp_libc=${FS_chk_func_libc[$FS_elem_libc]}
 
       if [[ $FS_tmp_func =~ ^$FS_tmp_libc$ ]] ; then
-        let FS_cnt_total++
-          let FS_cnt_unchecked++
+         (( FS_cnt_total++ ))
+          (( FS_cnt_unchecked++ ))
         elif [[ $FS_tmp_func =~ ^$FS_tmp_libc(_chk) ]] ; then
-            let FS_cnt_total++
-          let FS_cnt_checked++
+            (( FS_cnt_total++ ))
+          (( FS_cnt_checked++ ))
         fi
     done
   done
@@ -290,7 +290,7 @@ filecheck() {
   if $readelf -h "$1" 2>/dev/null | grep -q 'Type:[[:space:]]*EXEC'; then
     echo_message '\033[31mNo PIE       \033[m   ' 'No PIE,' ' pie="no"' '"pie":"no",'
   elif $readelf -h "$1" 2>/dev/null | grep -q 'Type:[[:space:]]*DYN'; then
-    if $readelf -d "$1" 2>/dev/null | grep -q '(DEBUG)'; then
+    if $readelf -d "$1" 2>/dev/null | grep -q 'DEBUG'; then
       echo_message '\033[32mPIE enabled  \033[m   ' 'PIE enabled,' ' pie="yes"' '"pie":"yes",'
     else
       echo_message '\033[33mDSO          \033[m   ' 'DSO,' ' pie="dso"' '"pie":"dso",'
@@ -335,6 +335,8 @@ filecheck() {
   $debug && echo "***function filecheck->fortify"
   if [[ -e /lib/libc.so.6 ]] ; then
     FS_libc=/lib/libc.so.6
+  elif [[ -e /lib/libc.so.7 ]] ; then
+    FS_libc=/lib/libc.so.7
   elif [[ -e /lib/libc.so ]] ; then
     FS_libc=/lib/libc.so
   elif [[ -e /lib64/libc.so.6 ]] ; then
@@ -449,7 +451,7 @@ proccheck() {
   if $readelf -h "$1/exe" 2>/dev/null | grep -q 'Type:[[:space:]]*EXEC'; then
     echo_message '\033[31mNo PIE               \033[m   ' 'No PIE,' ' pie="no"' '"pie":"no",'
   elif $readelf -h "$1/exe" 2>/dev/null | grep -q 'Type:[[:space:]]*DYN'; then
-    if $readelf -d "$1/exe" 2>/dev/null | grep -q '(DEBUG)'; then
+    if $readelf -d "$1/exe" 2>/dev/null | grep -q 'DEBUG'; then
       echo_message '\033[32mPIE enabled          \033[m   ' 'PIE enabled,' ' pie="yes"' '"pie":"yes",'
     else
       echo_message '\033[33mDynamic Shared Object\033[m   ' 'Dynamic Shared Object,' ' pie="dso"' '"pie":"dso",'
@@ -542,7 +544,7 @@ coredumpcheck() {
         $debug && echo -e "\n***function coredumpcheck"
         coreValue=$( grep -ic "hard core 0" /etc/security/limits.conf )
         dumpableValue=$( grep -ic "fs.suid_dumpable = 0" /etc/sysctl.conf )
-        if [ $coreValue == 1 ] && [ $dumpableValue == 1 ]; then
+        if [[ "$coreValue" == 1 ]] && [[ "$dumpableValue" == 1 ]]; then
                 echo_message '\033[32mRestricted\033[m\n\n' '' '' ''
         else
                 echo_message '\033[31mNot Restricted\033[m\n\n' '' '' ''
@@ -569,7 +571,7 @@ kernelcheck() {
     kern=$(uname -r)
     echo_message "\033[33m/boot/config-$kern\033[m\n\n" "/boot/config-$kern," "<kernel config='/boot/config-$kern'" "{ \"KernelConfig\":\"/boot/config-$kern\","
     echo_message "  Warning: The config on disk may not represent running kernel config!\n\n" "" "" ""
-  elif [ -f "${KBUILD_OUTPUT:-/usr/src/linux}"/.config ] ; then
+  elif [[ -f "${KBUILD_OUTPUT:-/usr/src/linux}"/.config ]] ; then
     kconfig="cat ${KBUILD_OUTPUT:-/usr/src/linux}/.config"
     echo_message "\033[33m${KBUILD_OUTPUT:-/usr/src/linux}/.config\033[m\n\n" "${KBUILD_OUTPUT:-/usr/src/linux}/.config," "<kernel config='${KBUILD_OUTPUT:-/usr/src/linux}/.config'" "{ \"KernelConfig\":\"${KBUILD_OUTPUT:-/usr/src/linux}/.config\","
     echo_message "  Warning: The config on disk may not represent running kernel config!\n\n" "" "" ""
@@ -577,8 +579,8 @@ kernelcheck() {
     echo_message "\033[31mNOT FOUND\033[m\n\n" "NOT FOUND,,,,,,," "<kernel config='not_found' />" '{ "KernelConfig":"not_found",'
     exit 0
   fi
-  $debug && echo "$($kconfig | grep "CONFIG_GRKERNSEC")"
-  $debug && echo "$($kconfig | grep "CONFIG_PAX")"
+  $debug && $kconfig | grep "CONFIG_GRKERNSEC"
+  $debug && $kconfig | grep "CONFIG_PAX"
 
   echo_message "  Vanilla Kernel ASLR:                    " "" "" ""
   randomize_va=$(sysctl -b -e kernel.randomize_va_space)
@@ -637,12 +639,40 @@ kernelcheck() {
     echo_message "\033[31mDisabled\033[m\n" "Disabled," " gcc_stack_protector='no'" '"gcc_stack_protector":"no",'
   fi
 
+  echo_message "  GCC structleak plugin:                  " "" "" ""
+  if $kconfig | grep -qi 'CONFIG_GCC_PLUGIN_STRUCTLEAK=y'; then
+    echo_message "\033[32mEnabled\033[m\n" "Enabled," " gcc_structleak='yes'" '"gcc_structleak":"yes",'
+    echo_message "  GCC structleak by ref plugin:           " "" "" ""
+    if $kconfig | grep -qi 'CONFIG_GCC_PLUGIN_STRUCTLEAK_BYREF_ALL=y'; then
+      echo_message "\033[32mEnabled\033[m\n" "Enabled," " gcc_structleak_byref='yes'" '"gcc_structleak_byref":"yes",'
+    else
+      echo_message "\033[32mEnabled\033[m\n" "Enabled," " gcc_structleak_byref='no'" '"gcc_structleak_byref":"no",'
+    fi
+  else
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " gcc_structleak='no'" '"gcc_structleak":"no",'
+  fi
+
+
+  echo_message "  SLAB freelist randomization:            " "" "" ""
+  if $kconfig | grep -qi 'CONFIG_SLAB_FREELIST_RANDOM=y'; then
+    echo_message "\033[32mEnabled\033[m\n" "Enabled," " slab_freelist_randomization'yes'" '"slab_freelist_randomization":"yes",'
+  else
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " slab_freelist_randomization='no'" '"slab_freelist_randomization":"no",'
+  fi
+
+  echo_message "  Virtually-mapped kernel stack:          " "" "" ""
+  if $kconfig | grep -qi 'CONFIG_VMAP_STACK=y'; then
+    echo_message "\033[32mEnabled\033[m\n" "Enabled," " virtually_mapped_stack='yes'" '"virtually_mapped_stack":"yes",'
+  else
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " virtually_mapped_stack='no'" '"virtually_mapped_stack":"no",'
+  fi
+
   if ! $kconfig | grep -qi 'CONFIG_PAX'; then
     echo_message "  Enforce read-only kernel data:          " "" "" ""
     if $kconfig | grep -qi 'CONFIG_DEBUG_RODATA=y\|CONFIG_STRICT_KERNEL_RWX=y'; then
       echo_message "\033[32mEnabled\033[m\n" "Enabled," " ro_kernel_data='yes'" '"ro_kernel_data":"yes",'
       echo_message "  Enforce read-only module data:          " "" "" ""
-      if $kconfig | grep -qi 'CONFIG_STRICT_MODULE_RWX=y'; then
+      if $kconfig | grep -qi 'CONFIG_STRICT_MODULE_RWX=y\|CONFIG_DEBUG_SET_MODULE_RONX'; then
         echo_message "\033[32mEnabled\033[m\n" "Enabled," " ro_module_data='yes'" '"ro_module_data":"yes",'
       else
         echo_message "\033[31mDisabled\033[m\n" "Disabled," " ro_module_data='no'" '"ro_module_data":"no",'
@@ -662,7 +692,7 @@ echo_message "  Exec Shield:                            " """" ""
   echo_message "  Hardened Usercopy:                      " "" "" ""
   if $kconfig | grep -qi 'CONFIG_HARDENED_USERCOPY=y'; then
     echo_message "\033[32mEnabled\033[m\n" "Enabled," " hardened_usercopy='yes'" '"hardened_usercopy":"yes",'
-    echo_message "  Hardened Usercopy Pagespan:           " "" "" ""
+    echo_message "  Hardened Usercopy Pagespan:             " "" "" ""
     if $kconfig | grep -qi 'CONFIG_HARDENED_USERCOPY_PAGESPAN=y'; then
       echo_message "\033[32mEnabled\033[m\n" "Enabled," " hardened_usercopy_pagespan='yes'" '"hardened_usercopy_pagespan":"yes",'
     else
@@ -671,6 +701,14 @@ echo_message "  Exec Shield:                            " """" ""
   else
     echo_message "\033[31mDisabled\033[m\n" "Disabled," " hardened_usercopy='no'" '"hardened_usercopy":"no",'
   fi
+
+  echo_message "  Harden str/mem functions:               " "" "" ""
+  if $kconfig | grep -qi 'CONFIG_FORTIFY_SOURCE=y'; then
+    echo_message "\033[32mEnabled\033[m\n" "Enabled," " fortify_source='yes'" '"fortify_source":"yes",'
+  else
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " fortify_source='no'" '"fortify_source":"no",'
+  fi
+
   echo_message "  Restrict /dev/mem access:               " "" "" ""
   if $kconfig | grep -qi 'CONFIG_STRICT_DEVMEM=y'; then
     echo_message "\033[32mEnabled\033[m\n" "Enabled," " restrict_dev_mem_access='yes'" '"restrict_dev_mem_access":"yes",'
@@ -1049,8 +1087,8 @@ FS_comparison() {
         echo_message "" "$FS_tmp_func,$FS_tmp_libc,yes\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifiable='yes' />\n" "\"function\": { \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifiable\":\"yes\" },"
     fi
   fi
-        let FS_cnt_total++
-        let FS_cnt_unchecked++
+        (( FS_cnt_total++ ))
+        (( FS_cnt_unchecked++ ))
    elif [[ $FS_tmp_func =~ ^$FS_tmp_libc(_chk) ]] ; then
      if [[ $format == "cli" ]]; then
        printf " \033[32m%-30s\033[m | __%s%s\n" $FS_tmp_func $FS_tmp_libc $FS_end
@@ -1063,8 +1101,8 @@ FS_comparison() {
         echo_message "" "$FS_tmp_func,$FS_tmp_libc,no\n" "    <function name='$FS_tmp_func' libc='$FS_tmp_libc' fortifiable='no' />\n" "\"function\": { \"name\":\"$FS_tmp_func\", \"libc\":\"$FS_tmp_libc\", \"fortifiable\":\"no\" },"
       fi
   fi
-        let FS_cnt_total++
-        let FS_cnt_checked++
+        (( FS_cnt_total++ ))
+        (( FS_cnt_checked++ ))
    fi
 
     done
@@ -1090,9 +1128,9 @@ id
 uname -a
 for command in cat awk sysctl uname mktemp openssl grep stat file find head ps readlink basename id which wget curl readelf eu-readelf; do
   path="$(which $command)"
-  if [ -e "$path" ]; then
+  if [[ -e "$path" ]]; then
     ls -l "$path"
-    if [ -L "$path" ]; then
+    if [[ -L "$path" ]]; then
       absolutepath=$(readlink -f "$path")
       ls -l "$absolutepath"
       file "$absolutepath"
@@ -1166,7 +1204,7 @@ do
     fetch "${SCRIPT_URL}" "${TMP_FILE}"
     fetch "${SIG_URL}" "${SIG_FILE}"
   echo "${PUBKEY}" | base64 -d > "${PUBKEY_FILE}"
-  if ! $(openssl dgst -sha256 -verify "${PUBKEY_FILE}" -signature "${SIG_FILE}" "${TMP_FILE}" >/dev/null 2>&1); then
+  if ! openssl dgst -sha256 -verify "${PUBKEY_FILE}" -signature "${SIG_FILE}" "${TMP_FILE}" >/dev/null 2>&1; then
     echo "file signature does not match. Update may be tampered"
     rm -f "${TMP_FILE}" "${SIG_FILE}" "${PUBKEY_FILE}" >/dev/null 2>&1
     exit 1
@@ -1227,16 +1265,17 @@ do
     echo_message "RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH    Symbols      \tFORTIFY\tFortified\tFortifiable   Filename\n" '' "<dir name='$tempdir'>\n" "{ \"dir\": { \"name\":\"$tempdir\" },"
     fdircount=0
     fdirtotal=0
-    for N in [A-Za-z]*; do
-      if [[ "$N" != "[A-Za-z]*" ]]; then
+
+    for N in $(find $tempdir -type f); do
+      if [[ "$N" != "[A-Za-z1-0]*" ]]; then
         out=$(file "$N" 2>/dev/null)
         if [[  $out =~ ELF ]] ; then
-          let fdirtotal++
+          (( fdirtotal++ ))
         fi
       fi
     done
-    for N in [A-Za-z]*; do
-      if [[ "$N" != "[A-Za-z]*" ]]; then
+    for N in $(find $tempdir -type f); do
+      if [[ "$N" != "[A-Za-z1-0]*" ]]; then
     # read permissions?
     if [[ ! -r "$N" ]]; then
         printf "\033[31mError: No read permissions for '%s/%s' (run as root).\033[m\n" "$tempdir" "$N"
@@ -1250,7 +1289,7 @@ do
               echo_message "\033[m" "" "" ""
           fi
         else
-           let fdircount++
+           (( fdircount++ ))
           echo_message "" "" "    " ""
           filecheck "$N"
           if [[ "$(find "$N" \( -perm -004000 -o -perm -002000 \) -type f -print)" ]]; then
@@ -1324,12 +1363,12 @@ do
     currpid=0
     for N in [1-9]*; do
       if [[ "$N" != "$$" ]] && readlink -q "$N"/exe > /dev/null; then
-        let lastpid++
+        (( lastpid++ ))
       fi
     done
     for N in [1-9]*; do
       if [[ "$N" != "$$" ]] && readlink -q "$N"/exe > /dev/null; then
-        let currpid++
+        (( currpid++ ))
         name=$(head -1 "$N"/status | cut -b 7-)
         if [[ $format == "cli" ]]; then
           printf "%16s" "$name"
@@ -1569,7 +1608,7 @@ do
       echo_message  "* Process name (PID)                         : $name ($N)\n" "" "" ""
       FS_chk_func_libc=( $($readelf -s $FS_libc | grep _chk@@ | awk '{ print $8 }' | cut -c 3- | sed -e 's/_chk@.*//') )
       FS_functions=( $($readelf -s "$2/exe" | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//') )
-      echo_message "" "" "<fortify-test name='$name' pid='$N' " "{ \"fortify-test\": { \"name\":\"$name\", \"pid\":\"$pid\", "
+      echo_message "" "" "<fortify-test name='$name' pid='$N' " "{ \"fortify-test\": { \"name\":\"$name\", \"pid\":\"$N\", "
       FS_libc_check
       FS_binary_check
       FS_comparison
