@@ -643,7 +643,7 @@ kernelcheck() {
     if $kconfig | grep -qi 'CONFIG_DEBUG_RODATA=y\|CONFIG_STRICT_KERNEL_RWX=y'; then
       echo_message "\033[32mEnabled\033[m\n" "Enabled," " ro_kernel_data='yes'" '"ro_kernel_data":"yes",'
       echo_message "  Enforce read-only module data:          " "" "" ""
-      if $kconfig | grep -qi 'CONFIG_STRICT_MODULE_RWX=y'; then
+      if $kconfig | grep -qi 'CONFIG_STRICT_MODULE_RWX=y\|CONFIG_DEBUG_SET_MODULE_RONX'; then
         echo_message "\033[32mEnabled\033[m\n" "Enabled," " ro_module_data='yes'" '"ro_module_data":"yes",'
       else
         echo_message "\033[31mDisabled\033[m\n" "Disabled," " ro_module_data='no'" '"ro_module_data":"no",'
