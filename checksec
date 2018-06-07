@@ -680,6 +680,13 @@ kernelcheck() {
     echo_message "\033[31mDisabled\033[m\n" "Disabled," " restrict_dev_mem_access='no'" '"restrict_dev_mem_access":"no",'
   fi
 
+  echo_message "  Restrict I/O access to /dev/mem:        " "" "" ""
+  if $kconfig | grep -qi 'CONFIG_IO_STRICT_DEVMEM=y'; then
+    echo_message "\033[32mEnabled\033[m\n" "Enabled," " restrict_io_dev_mem_access='yes'" '"restrict_io_dev_mem_access":"yes",'
+  else
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " restrict_io_dev_mem_access='no'" '"restrict_io_dev_mem_access":"no",'
+  fi
+
   echo_message "  Restrict /dev/kmem access:              " "" "" ""
   if $kconfig | grep -qi 'CONFIG_DEVKMEM=y'; then
     echo_message "\033[31mDisabled\033[m\n" "Disabled" " restrict_dev_kmem_access='no'" '"restrict_dev_kmem_access":"no" },'
