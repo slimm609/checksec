@@ -640,13 +640,6 @@ kernelcheck() {
     echo_message "\033[31mDisabled\033[m\n" "Disabled," " slab_freelist_randomization='no'" '"slab_freelist_randomization":"no",'
   fi
 
-  echo_message "  Virtually-mapped kernel stack:          " "" "" ""
-  if $kconfig | grep -qi 'CONFIG_VMAP_STACK=y'; then
-    echo_message "\033[32mEnabled\033[m\n" "Enabled," " virtually_mapped_stack='yes'" '"virtually_mapped_stack":"yes",'
-  else
-    echo_message "\033[31mDisabled\033[m\n" "Disabled," " virtually_mapped_stack='no'" '"virtually_mapped_stack":"no",'
-  fi
-
   if ! $kconfig | grep -qi 'CONFIG_PAX'; then
     echo_message "  Enforce read-only kernel data:          " "" "" ""
     if $kconfig | grep -qi 'CONFIG_DEBUG_RODATA=y\|CONFIG_STRICT_KERNEL_RWX=y'; then
@@ -719,6 +712,13 @@ if [[ "$arch" == "32" ]] || [[ "$arch" == "64" ]]; then
     fi
   fi
 
+  echo_message "  Virtually-mapped kernel stack:          " "" "" ""
+  if $kconfig | grep -qi 'CONFIG_VMAP_STACK=y'; then
+    echo_message "\033[32mEnabled\033[m\n" "Enabled," " virtually_mapped_stack='yes'" '"virtually_mapped_stack":"yes",'
+  else
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " virtually_mapped_stack='no'" '"virtually_mapped_stack":"no",'
+  fi
+
   echo_message "  Address space layout randomization:     " "" "" ""
   if $kconfig | grep -qi 'CONFIG_RANDOMIZE_BASE=y\|CONFIG_PAX_ASLR=y'; then
     echo_message "\033[32mEnabled\033[m\n" "Enabled" " random_address_space_layout='yes'>" '"random_address_space_layout":"yes" },'
@@ -732,7 +732,7 @@ if [[ "$arch" == "arm" ]]; then
   echo_message "\n" "\n" "\n" ""
   echo_message "* ARM only:            \n" "" "" ""
 
-  echo_message "  Restrict kernel memory permissions (DEPRECATED: replaced by CONFIG_STRICT_KERNEL_RWX):     " "" "" ""
+  echo_message "  Restrict kernel memory permissions (DEPRECATED: replaced by Enforce read-only kernel data):     " "" "" ""
   if $kconfig | grep -qi 'CONFIG_ARM_KERNMEM_PERMS=y'; then
     echo_message "\033[32mEnabled\033[m\n" "Enabled" " arm_kernmem_perms='yes'>" '"arm_kernmem_perms":"yes" },'
    else
