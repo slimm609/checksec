@@ -738,6 +738,14 @@ if [[ "$arch" == "arm" ]]; then
    else
     echo_message "\033[31mDisabled\033[m\n" "Disabled," " arm_kernmem_perms='no'>" '"arm_kernmem_perms":"no",'
    fi
+
+  echo_message "  Make rodata strictly non-excutable:     " "" "" ""
+  if $kconfig | grep -qi 'CONFIG_DEBUG_ALIGN_RODATA=y'; then
+    echo_message "\033[32mEnabled\033[m\n" "Enabled" " arm_strict_rodata='yes'>" '"arm_strict_rodata":"yes" },'
+   else
+    echo_message "\033[31mDisabled\033[m\n" "Disabled," " arm_strict_rodata='no'>" '"arm_strict_rodata":"no",'
+   fi
+
 fi
 
   echo_message "\n" "\n" "\n" ""
