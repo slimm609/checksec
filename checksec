@@ -533,6 +533,15 @@ kernelcheck() {
 
   if [[ ! "$1" == "" ]] ; then
     kconfig="cat $1"
+    if $kconfig | grep -qi 'CONFIG_ARM=y\|CONFIG_ARM=y'; then
+	arch="arm"
+    fi
+    if $kconfig | grep -qi 'CONFIG_X86_64=y'; then
+	arch="64"
+    fi
+    if $kconfig | grep -qi 'CONFIG_X86_32=y'; then
+	arch="32"
+    fi
     echo_message "  Warning: The config $1 on disk may not represent running kernel config!\n\n" "$1" "<kernel config=\"$1\"" "{ \"KernelConfig\":\"$1\","
   elif [[ -f /proc/config.gz ]] ; then
     kconfig="zcat /proc/config.gz"
