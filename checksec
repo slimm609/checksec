@@ -732,7 +732,7 @@ if [[ "$arch" == "arm" ]]; then
   echo_message "\n" "\n" "\n" ""
   echo_message "* ARM only:            \n" "" "" ""
 
-  echo_message "  Restrict kernel memory permissions:     " "" "" ""
+  echo_message "  Restrict kernel memory permissions (DEPRECATED: replaced by CONFIG_STRICT_KERNEL_RWX):     " "" "" ""
   if $kconfig | grep -qi 'CONFIG_ARM_KERNMEM_PERMS=y'; then
     echo_message "\033[32mEnabled\033[m\n" "Enabled" " arm_kernmem_perms='yes'>" '"arm_kernmem_perms":"yes" },'
    else
