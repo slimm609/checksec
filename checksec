@@ -1266,7 +1266,7 @@ do
     fdircount=0
     fdirtotal=0
 
-    for N in $(find $tempdir -type f); do
+    for N in $(find -L $tempdir -type f); do
       if [[ "$N" != "[A-Za-z1-0]*" ]]; then
         out=$(file "$N" 2>/dev/null)
         if [[  $out =~ ELF ]] ; then
@@ -1274,11 +1274,11 @@ do
         fi
       fi
     done
-    for N in $(find $tempdir -type f); do
+    for N in $(find -L $tempdir -type f); do
       if [[ "$N" != "[A-Za-z1-0]*" ]]; then
     # read permissions?
     if [[ ! -r "$N" ]]; then
-        printf "\033[31mError: No read permissions for '%s/%s' (run as root).\033[m\n" "$tempdir" "$N"
+        printf "\033[31mError: No read permissions for '%s' (run as root).\033[m\n" "$N"
     else
         # ELF executable?
         out=$(file "$(readlink -f "$N")")
@@ -1293,9 +1293,9 @@ do
           echo_message "" "" "    " ""
           filecheck "$N"
           if [[ "$(find "$N" \( -perm -004000 -o -perm -002000 \) -type f -print)" ]]; then
-              echo_message "\033[37;41m$2$N\033[m\n" ",$2$N\n" " filename='$2$N' />\n" ",\"filename\":\"$2$N\"}"
+              echo_message "\033[37;41m$N\033[m\n" ",$N\n" " filename='$N' />\n" ",\"filename\":\"$N\"}"
           else
-              echo_message "$tempdir/$N\n" ",$tempdir/$N\n" " filename='$tempdir/$N' />\n" ",\"filename\":\"$tempdir/$N\"}"
+              echo_message "$N\n" ",$N\n" " filename='$N' />\n" ",\"filename\":\"$N\"}"
           fi
          if [[ "$fdircount" == "$fdirtotal" ]]; then
           echo_message "" "" "" ""
