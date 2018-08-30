@@ -1,0 +1,12 @@
+version: '2.1'
+
+services:
+
+  config_builder:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    image: checksec/config_builder
+    volumes:
+      - "./configs:/root/configs"
+    command: ["/root/build_kernel_configs.sh"]
