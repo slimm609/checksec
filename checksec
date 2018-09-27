@@ -353,7 +353,7 @@ filecheck() {
     if ($readelf -d "$1" 2>/dev/null | head -20 | grep -q RUNPATH | cut -d'[' -f 2 | sed 's/.$//' | cut -d':' -f 1 | stat -c %a 2>/dev/null) > 755; then
       echo_message '\033[31mRW-RUNPATH    \033[m  ' 'RUNPATH,' ' runpath="yes"' '"runpath":"yes",'
     else
-      echo_message '\033[31mRUNPATH    \033[m  ' 'RUNPATH,' ' rpath="yes"' '"rpath":"yes",'
+      echo_message '\033[31mRUNPATH    \033[m  ' 'RUNPATH,' ' runpath="yes"' '"runpath":"yes",'
     fi
   else
    echo_message '\033[32mNo RUNPATH \033[m  ' 'No RUNPATH,' ' runpath="no"' '"runpath":"no",'
