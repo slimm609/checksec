@@ -1317,7 +1317,7 @@ do
       printf "\033[31mError: The directory '%s' does not exist.\033[m\n\n" "$tempdir"
       exit 1
     fi
-    cd "$tempdir" || exit
+
     echo_message "RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH    Symbols      \tFORTIFY\tFortified\tFortifiable   Filename\n" '' "<dir name='$tempdir'>\n" "{ \"dir\": { \"name\":\"$tempdir\" },"
     fdircount=0
     fdirtotal=0
