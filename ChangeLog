@@ -1,4 +1,18 @@
 Rev-2018012401  Brian Davis     <slimm609@gmail.com>
+        * checksec.sh: Updated to 1.9.0
+        * checksec.sh: made all kernel checks dependant on kernel version
+        * checksec.sh: moved man page to section 1
+        * checksec.sh: fixed debug flag
+        * checksec.sh: resolved issue with -d
+        * checksec.sh: fixed stack protector on 4.18+ kernels
+            Thanks cheese
+        * checksec.sh: fixed runpath name in output
+            Thanks philipturnbull
+        * checksec.sh: updated readme for offline testing
+            Thanks matthew-l-weber
+
+
+Rev-2018012401  Brian Davis     <slimm609@gmail.com>
         * checksec.sh: Updated to 1.8.0
         * checksec.sh: resolved issue with eu-readelf debug
         * checksec.sh: shellcheck cleanup

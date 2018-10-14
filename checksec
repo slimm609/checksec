@@ -68,9 +68,9 @@ format="cli"
 SCRIPT_NAME="checksec"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
 SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename ${SCRIPT_NAME} .sh).sig"
-SCRIPT_VERSION=2018012401
+SCRIPT_VERSION=2018101401
 SCRIPT_MAJOR=1
-SCRIPT_MINOR=8
+SCRIPT_MINOR=9
 SCRIPT_REVISION=0
 pkg_release=false
 
@@ -339,7 +339,7 @@ filecheck() {
   # check for rpath / run path
   $debug && echo -e "\n***function filecheck->rpath"
   if $readelf -d "$1" 2>/dev/null | grep -q 'rpath'; then
-    if ($readelf -d "$1" 2>/dev/null | head -20 | grep -q RPATH | cut -d'[' -f 2 | sed 's/.$//' |  cut -d':' -f 1 | stat -c %a 2>/dev/null) > 755; then
+    if [[ "($readelf -d "$1" 2>/dev/null | head -20 | grep -q RPATH | cut -d'[' -f 2 | sed 's/.$//' |  cut -d':' -f 1 | stat -c %a 2>/dev/null)" -lt "755" ]]; then
       echo_message '\033[31mRW-RPATH    \033[m  ' 'RPATH,' ' rpath="yes"' '"rpath":"yes",'
     else
       echo_message '\033[31mRPATH    \033[m  ' 'RPATH,' ' rpath="yes"' '"rpath":"yes",'
@@ -350,7 +350,7 @@ filecheck() {
 
   $debug && echo -e "\n***function filecheck->runpath"
   if $readelf -d "$1" 2>/dev/null | grep -q 'runpath'; then
-    if ($readelf -d "$1" 2>/dev/null | head -20 | grep -q RUNPATH | cut -d'[' -f 2 | sed 's/.$//' | cut -d':' -f 1 | stat -c %a 2>/dev/null) > 755; then
+    if [[ "($readelf -d "$1" 2>/dev/null | head -20 | grep -q RUNPATH | cut -d'[' -f 2 | sed 's/.$//' | cut -d':' -f 1 | stat -c %a 2>/dev/null)" -lt "755" ]]; then
       echo_message '\033[31mRW-RUNPATH    \033[m  ' 'RUNPATH,' ' runpath="yes"' '"runpath":"yes",'
     else
       echo_message '\033[31mRUNPATH    \033[m  ' 'RUNPATH,' ' runpath="yes"' '"runpath":"yes",'
@@ -679,53 +679,62 @@ kernelcheck() {
     echo_message "\033[32mEnabled\033[m\n" "Enabled," " kernel_heap_randomization='yes'" '"kernel_heap_randomization":"yes",'
   fi
 
-  echo_message "  GCC stack protector support:            " "" "" ""
-  if $kconfig | grep -qi 'CONFIG_CC_STACKPROTECTOR=y' || $kconfig | grep -qi 'CONFIG_STACKPROTECTOR=y' ; then
-    echo_message "\033[32mEnabled\033[m\n" "Enabled," " gcc_stack_protector='yes'" '"gcc_stack_protector":"yes",'
-  else
-    echo_message "\033[31mDisabled\033[m\n" "Disabled," " gcc_stack_protector='no'" '"gcc_stack_protector":"no",'
-  fi
-
-  echo_message "  GCC structleak plugin:                  " "" "" ""
-  if $kconfig | grep -qi 'CONFIG_GCC_PLUGIN_STRUCTLEAK=y'; then
-    echo_message "\033[32mEnabled\033[m\n" "Enabled," " gcc_structleak='yes'" '"gcc_structleak":"yes",'
-    echo_message "  GCC structleak by ref plugin:           " "" "" ""
-    if $kconfig | grep -qi 'CONFIG_GCC_PLUGIN_STRUCTLEAK_BYREF_ALL=y'; then
-      echo_message "\033[32mEnabled\033[m\n" "Enabled," " gcc_structleak_byref='yes'" '"gcc_structleak_byref":"yes",'
+  if $kconfig | grep -qi 'CONFIG_CC_STACKPROTECTOR' || $kconfig | grep -qa 'CONFIG_STACKPROTECTOR'; then
+    echo_message "  GCC stack protector support:            " "" "" ""
+    if $kconfig | grep -qi 'CONFIG_CC_STACKPROTECTOR=y' || $kconfig | grep -qi 'CONFIG_STACKPROTECTOR=y' ; then
+      echo_message "\033[32mEnabled\033[m\n" "Enabled," " gcc_stack_protector='yes'" '"gcc_stack_protector":"yes",'
     else
-      echo_message "\033[32mEnabled\033[m\n" "Enabled," " gcc_structleak_byref='no'" '"gcc_structleak_byref":"no",'
+      echo_message "\033[31mDisabled\033[m\n" "Disabled," " gcc_stack_protector='no'" '"gcc_stack_protector":"no",'
     fi
-  else
-    echo_message "\033[31mDisabled\033[m\n" "Disabled," " gcc_structleak='no'" '"gcc_structleak":"no",'
   fi
 
-
-  echo_message "  SLAB freelist randomization:            " "" "" ""
-  if $kconfig | grep -qi 'CONFIG_SLAB_FREELIST_RANDOM=y'; then
-    echo_message "\033[32mEnabled\033[m\n" "Enabled," " slab_freelist_randomization'yes'" '"slab_freelist_randomization":"yes",'
-  else
-    echo_message "\033[31mDisabled\033[m\n" "Disabled," " slab_freelist_randomization='no'" '"slab_freelist_randomization":"no",'
+  if $kconfig | grep -qi 'CONFIG_GCC_PLUGIN_STRUCTLEAK'; then
+    echo_message "  GCC structleak plugin:                  " "" "" ""
+    if $kconfig | grep -qi 'CONFIG_GCC_PLUGIN_STRUCTLEAK=y'; then
+      echo_message "\033[32mEnabled\033[m\n" "Enabled," " gcc_structleak='yes'" '"gcc_structleak":"yes",'
+      echo_message "  GCC structleak by ref plugin:           " "" "" ""
+      if $kconfig | grep -qi 'CONFIG_GCC_PLUGIN_STRUCTLEAK_BYREF_ALL=y'; then
+        echo_message "\033[32mEnabled\033[m\n" "Enabled," " gcc_structleak_byref='yes'" '"gcc_structleak_byref":"yes",'
+      else
+        echo_message "\033[32mEnabled\033[m\n" "Enabled," " gcc_structleak_byref='no'" '"gcc_structleak_byref":"no",'
+      fi
+    else
+      echo_message "\033[31mDisabled\033[m\n" "Disabled," " gcc_structleak='no'" '"gcc_structleak":"no",'
+    fi
   fi
 
-  echo_message "  Virtually-mapped kernel stack:          " "" "" ""
-  if $kconfig | grep -qi 'CONFIG_VMAP_STACK=y'; then
-    echo_message "\033[32mEnabled\033[m\n" "Enabled," " virtually_mapped_stack='yes'" '"virtually_mapped_stack":"yes",'
-  else
-    echo_message "\033[31mDisabled\033[m\n" "Disabled," " virtually_mapped_stack='no'" '"virtually_mapped_stack":"no",'
+  if $kconfig | grep -qi 'CONFIG_SLAB_FREELIST_RANDOM'; then
+    echo_message "  SLAB freelist randomization:            " "" "" ""
+    if $kconfig | grep -qi 'CONFIG_SLAB_FREELIST_RANDOM=y'; then
+      echo_message "\033[32mEnabled\033[m\n" "Enabled," " slab_freelist_randomization'yes'" '"slab_freelist_randomization":"yes",'
+    else
+      echo_message "\033[31mDisabled\033[m\n" "Disabled," " slab_freelist_randomization='no'" '"slab_freelist_randomization":"no",'
+    fi
+  fi
+
+  if $kconfig | grep -qi 'CONFIG_VMAP_STACK'; then
+    echo_message "  Virtually-mapped kernel stack:          " "" "" ""
+    if $kconfig | grep -qi 'CONFIG_VMAP_STACK=y'; then
+      echo_message "\033[32mEnabled\033[m\n" "Enabled," " virtually_mapped_stack='yes'" '"virtually_mapped_stack":"yes",'
+    else
+      echo_message "\033[31mDisabled\033[m\n" "Disabled," " virtually_mapped_stack='no'" '"virtually_mapped_stack":"no",'
+    fi
   fi
 
   if ! $kconfig | grep -qi 'CONFIG_PAX'; then
-    echo_message "  Enforce read-only kernel data:          " "" "" ""
-    if $kconfig | grep -qi 'CONFIG_DEBUG_RODATA=y\|CONFIG_STRICT_KERNEL_RWX=y'; then
-      echo_message "\033[32mEnabled\033[m\n" "Enabled," " ro_kernel_data='yes'" '"ro_kernel_data":"yes",'
-      echo_message "  Enforce read-only module data:          " "" "" ""
-      if $kconfig | grep -qi 'CONFIG_STRICT_MODULE_RWX=y\|CONFIG_DEBUG_SET_MODULE_RONX'; then
-        echo_message "\033[32mEnabled\033[m\n" "Enabled," " ro_module_data='yes'" '"ro_module_data":"yes",'
+    if $kconfig | grep -qi 'CONFIG_DEBUG_RODATA' || $kconfig | grep -qi '|CONFIG_STRICT_KERNEL_RWX'; then
+      echo_message "  Enforce read-only kernel data:          " "" "" ""
+      if $kconfig | grep -qi 'CONFIG_DEBUG_RODATA=y\|CONFIG_STRICT_KERNEL_RWX=y'; then
+        echo_message "\033[32mEnabled\033[m\n" "Enabled," " ro_kernel_data='yes'" '"ro_kernel_data":"yes",'
+        echo_message "  Enforce read-only module data:          " "" "" ""
+        if $kconfig | grep -qi 'CONFIG_STRICT_MODULE_RWX=y\|CONFIG_DEBUG_SET_MODULE_RONX'; then
+          echo_message "\033[32mEnabled\033[m\n" "Enabled," " ro_module_data='yes'" '"ro_module_data":"yes",'
+        else
+          echo_message "\033[31mDisabled\033[m\n" "Disabled," " ro_module_data='no'" '"ro_module_data":"no",'
+        fi
       else
-        echo_message "\033[31mDisabled\033[m\n" "Disabled," " ro_module_data='no'" '"ro_module_data":"no",'
+        echo_message "\033[31mDisabled\033[m\n" "Disabled," " ro_kernel_data='no'" '"ro_kernel_data":"no",'
       fi
-    else
-      echo_message "\033[31mDisabled\033[m\n" "Disabled," " ro_kernel_data='no'" '"ro_kernel_data":"no",'
     fi
   fi
 
@@ -736,47 +745,55 @@ kernelcheck() {
     echo_message '\033[31mDisabled\033[m\n\n' '' '' ''
   fi
 
-  echo_message "  Hardened Usercopy:                      " "" "" ""
-  if $kconfig | grep -qi 'CONFIG_HARDENED_USERCOPY=y'; then
-    echo_message "\033[32mEnabled\033[m\n" "Enabled," " hardened_usercopy='yes'" '"hardened_usercopy":"yes",'
-    echo_message "  Hardened Usercopy Pagespan:             " "" "" ""
-    if $kconfig | grep -qi 'CONFIG_HARDENED_USERCOPY_PAGESPAN=y'; then
-      echo_message "\033[32mEnabled\033[m\n" "Enabled," " hardened_usercopy_pagespan='yes'" '"hardened_usercopy_pagespan":"yes",'
+  if $kconfig | grep -qi 'CONFIG_HARDENED_USERCOPY'; then
+    echo_message "  Hardened Usercopy:                      " "" "" ""
+    if $kconfig | grep -qi 'CONFIG_HARDENED_USERCOPY=y'; then
+      echo_message "\033[32mEnabled\033[m\n" "Enabled," " hardened_usercopy='yes'" '"hardened_usercopy":"yes",'
+      echo_message "  Hardened Usercopy Pagespan:             " "" "" ""
+      if $kconfig | grep -qi 'CONFIG_HARDENED_USERCOPY_PAGESPAN=y'; then
+        echo_message "\033[32mEnabled\033[m\n" "Enabled," " hardened_usercopy_pagespan='yes'" '"hardened_usercopy_pagespan":"yes",'
+      else
+        echo_message "\033[31mDisabled\033[m\n" "Disabled," " hardened_usercopy_pagespan='no'" '"hardened_usercopy_pagespan":"no",'
+      fi
     else
-      echo_message "\033[31mDisabled\033[m\n" "Disabled," " hardened_usercopy_pagespan='no'" '"hardened_usercopy_pagespan":"no",'
-    fi
-  else
-    echo_message "\033[31mDisabled\033[m\n" "Disabled," " hardened_usercopy='no'" '"hardened_usercopy":"no",'
-  fi
-
-  echo_message "  Harden str/mem functions:               " "" "" ""
-  if $kconfig | grep -qi 'CONFIG_FORTIFY_SOURCE=y'; then
-    echo_message "\033[32mEnabled\033[m\n" "Enabled," " fortify_source='yes'" '"fortify_source":"yes",'
-  else
-    echo_message "\033[31mDisabled\033[m\n" "Disabled," " fortify_source='no'" '"fortify_source":"no",'
-  fi
-
-  if $kconfig | grep -qi 'CONFIG__DEVMEM=y'; then
-    echo_message "  Restrict /dev/mem access:               " "" "" ""
-    if $kconfig | grep -qi 'CONFIG_STRICT_DEVMEM=y'; then
-      echo_message "\033[32mEnabled\033[m\n" "Enabled," " restrict_dev_mem_access='yes'" '"restrict_dev_mem_access":"yes",'
-    else
-      echo_message "\033[31mDisabled\033[m\n" "Disabled," " restrict_dev_mem_access='no'" '"restrict_dev_mem_access":"no",'
-    fi
-
-    echo_message "  Restrict I/O access to /dev/mem:        " "" "" ""
-    if $kconfig | grep -qi 'CONFIG_IO_STRICT_DEVMEM=y'; then
-      echo_message "\033[32mEnabled\033[m\n" "Enabled," " restrict_io_dev_mem_access='yes'" '"restrict_io_dev_mem_access":"yes",'
-    else
-      echo_message "\033[31mDisabled\033[m\n" "Disabled," " restrict_io_dev_mem_access='no'" '"restrict_io_dev_mem_access":"no",'
+      echo_message "\033[31mDisabled\033[m\n" "Disabled," " hardened_usercopy='no'" '"hardened_usercopy":"no",'
     fi
   fi
 
-  echo_message "  Restrict /dev/kmem access:              " "" "" ""
-  if $kconfig | grep -qi 'CONFIG_DEVKMEM=y'; then
-    echo_message "\033[31mDisabled\033[m\n" "Disabled" " restrict_dev_kmem_access='no'" '"restrict_dev_kmem_access":"no" },'
-  else
-    echo_message "\033[32mEnabled\033[m\n" "Enabled" " restrict_dev_kmem_access='yes'" '"restrict_dev_kmem_access":"yes" },'
+  if $kconfig | grep -qi 'CONFIG_FORTIFY_SOURCE'; then
+    echo_message "  Harden str/mem functions:               " "" "" ""
+    if $kconfig | grep -qi 'CONFIG_FORTIFY_SOURCE=y'; then
+      echo_message "\033[32mEnabled\033[m\n" "Enabled," " fortify_source='yes'" '"fortify_source":"yes",'
+    else
+      echo_message "\033[31mDisabled\033[m\n" "Disabled," " fortify_source='no'" '"fortify_source":"no",'
+    fi
+  fi
+
+  if $kconfig | grep -qi 'CONFIG_DEVMEM'; then
+    if $kconfig | grep -qi 'CONFIG_DEVMEM=y'; then
+      echo_message "  Restrict /dev/mem access:               " "" "" ""
+      if $kconfig | grep -qi 'CONFIG_STRICT_DEVMEM=y'; then
+        echo_message "\033[32mEnabled\033[m\n" "Enabled," " restrict_dev_mem_access='yes'" '"restrict_dev_mem_access":"yes",'
+      else
+        echo_message "\033[31mDisabled\033[m\n" "Disabled," " restrict_dev_mem_access='no'" '"restrict_dev_mem_access":"no",'
+      fi
+
+      echo_message "  Restrict I/O access to /dev/mem:        " "" "" ""
+      if $kconfig | grep -qi 'CONFIG_IO_STRICT_DEVMEM=y'; then
+        echo_message "\033[32mEnabled\033[m\n" "Enabled," " restrict_io_dev_mem_access='yes'" '"restrict_io_dev_mem_access":"yes",'
+      else
+        echo_message "\033[31mDisabled\033[m\n" "Disabled," " restrict_io_dev_mem_access='no'" '"restrict_io_dev_mem_access":"no",'
+      fi
+    fi
+  fi
+
+  if $kconfig | grep -qi 'CONFIG_DEVKMEM'; then
+    echo_message "  Restrict /dev/kmem access:              " "" "" ""
+    if $kconfig | grep -qi 'CONFIG_DEVKMEM=y'; then
+      echo_message "\033[31mDisabled\033[m\n" "Disabled" " restrict_dev_kmem_access='no'" '"restrict_dev_kmem_access":"no" },'
+    else
+      echo_message "\033[32mEnabled\033[m\n" "Enabled" " restrict_dev_kmem_access='yes'" '"restrict_dev_kmem_access":"yes" },'
+    fi
   fi
 
 #x86 only
@@ -795,12 +812,14 @@ if [[ "$arch" == "32" ]] || [[ "$arch" == "64" ]]; then
     fi
   fi
 
-  echo_message "  Address space layout randomization:     " "" "" ""
-  if $kconfig | grep -qi 'CONFIG_RANDOMIZE_BASE=y\|CONFIG_PAX_ASLR=y'; then
-    echo_message "\033[32mEnabled\033[m\n" "Enabled" " random_address_space_layout='yes'>" '"random_address_space_layout":"yes" },'
-   else
-    echo_message "\033[31mDisabled\033[m\n" "Disabled," " random_address_space_layout='no'>" '"random_address_space_layout":"no",'
-   fi
+  if $kconfig | grep -qi 'CONFIG_RANDOMIZE_BASE' || $kconfig | grep -qi 'CONFIG_PAX_ASLR'; then
+    echo_message "  Address space layout randomization:     " "" "" ""
+    if $kconfig | grep -qi 'CONFIG_RANDOMIZE_BASE=y' || $kconfig | grep -qi 'CONFIG_PAX_ASLR=y'; then
+      echo_message "\033[32mEnabled\033[m\n" "Enabled" " random_address_space_layout='yes'>" '"random_address_space_layout":"yes" },'
+     else
+      echo_message "\033[31mDisabled\033[m\n" "Disabled," " random_address_space_layout='no'>" '"random_address_space_layout":"no",'
+    fi
+  fi
 fi
 
 #ARM only
@@ -1244,8 +1263,10 @@ do
     ;;
   --debug)
     debug=true
-    debug_report
     shift 1
+    ;;
+  --debug_report)
+    debug_report
     ;;
   --update|--upgrade)
   if $pkg_release; then
@@ -1322,7 +1343,7 @@ do
     fdircount=0
     fdirtotal=0
 
-    for N in $(find -L $tempdir -type f); do
+    for N in $(find -L $tempdir -type f 2>/dev/null); do
       if [[ "$N" != "[A-Za-z1-0]*" ]]; then
         out=$(file "$N" 2>/dev/null)
         if [[  $out =~ ELF ]] ; then
@@ -1330,7 +1351,7 @@ do
         fi
       fi
     done
-    for N in $(find -L $tempdir -type f); do
+    for N in $(find -L $tempdir -type f 2>/dev/null); do
       if [[ "$N" != "[A-Za-z1-0]*" ]]; then
     # read permissions?
     if [[ ! -r "$N" ]]; then

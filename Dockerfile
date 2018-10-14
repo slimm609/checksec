@@ -8,4 +8,5 @@ RUN apt-get update  && apt-get -y -q upgrade && DEBIAN_FRONTEND=noninteractive a
   xz-utils vim xfce4 \
  && apt-get clean
 
-COPY checksec /root
+COPY .  /root
+WORKDIR /root
