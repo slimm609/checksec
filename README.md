@@ -135,6 +135,15 @@ Examples
 	$ checksec.sh --output json --kernel
  	{ "kernel": { "KernelConfig":"/boot/config-3.11-2-amd64","gcc_stack_protector":"yes","strict_user_copy_check":"no","ro_kernel_data":"yes","restrict_dev_mem_access":"yes","restrict_dev_kmem_access":"no" },{ "grsecurity_config":"no" },{ "kernheap_config":"no" } }
 
+Using with Cross-compiled Systems
+---------------------------------------
+The checksec tool can be used against cross-compiled target file-systems offline.  Key limitations to note:
+* Kernel tests - require you to execute the script on the running system you'd like to check as they directly access kernel resources to identify system configuration/state.
+* File check -  the offline testing works for all the checks but the Fortify feature.  Fortify, uses the running system's libraries vs those in the offline file-system. There are ways to workaround this (chroot) but at the moment, the ideal configuration would have this script executing on the running system when checking the files.
+
+The checksec tool's normal use case is for runtime checking of the systems configruation.  If the system is an embedded target, the native binutils tools like readelf may not be present.  This would restrict which parts of the script will work.
+
+Even with those limitations, the amount of valuable information this script provides, still makes it a valuable tool for checking offline file-systems.
 
 Warning
 -------
