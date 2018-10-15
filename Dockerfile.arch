@@ -1,0 +1,7 @@
+FROM base/archlinux:latest
+
+# Install dependencies
+RUN pacman -Sy && pacman -S gnome base-devel --noconfirm
+
+COPY .  /root
+WORKDIR /root

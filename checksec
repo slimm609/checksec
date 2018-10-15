@@ -68,7 +68,7 @@ format="cli"
 SCRIPT_NAME="checksec"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
 SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename ${SCRIPT_NAME} .sh).sig"
-SCRIPT_VERSION=2018101401
+SCRIPT_VERSION=2018101501
 SCRIPT_MAJOR=1
 SCRIPT_MINOR=9
 SCRIPT_REVISION=0
@@ -339,10 +339,10 @@ filecheck() {
   # check for rpath / run path
   $debug && echo -e "\n***function filecheck->rpath"
   if $readelf -d "$1" 2>/dev/null | grep -q 'rpath'; then
-    if [[ "($readelf -d "$1" 2>/dev/null | head -20 | grep -q RPATH | cut -d'[' -f 2 | sed 's/.$//' |  cut -d':' -f 1 | stat -c %a 2>/dev/null)" -lt "755" ]]; then
-      echo_message '\033[31mRW-RPATH    \033[m  ' 'RPATH,' ' rpath="yes"' '"rpath":"yes",'
+    if [[ "$($readelf -d "$1" 2>/dev/null | head -20 | grep -q RPATH | cut -d'[' -f 2 | sed 's/.$//' |  cut -d':' -f 1 | stat -c %a 2>/dev/null)" -lt "755" ]]; then
+      echo_message '\033[31mRW-RPATH \033[m  ' 'RPATH,' ' rpath="yes"' '"rpath":"yes",'
     else
-      echo_message '\033[31mRPATH    \033[m  ' 'RPATH,' ' rpath="yes"' '"rpath":"yes",'
+      echo_message '\033[31mRPATH   \033[m  ' 'RPATH,' ' rpath="yes"' '"rpath":"yes",'
     fi
   else
     echo_message '\033[32mNo RPATH \033[m  ' 'No RPATH,' ' rpath="no"' '"rpath":"no",'
@@ -350,10 +350,10 @@ filecheck() {
 
   $debug && echo -e "\n***function filecheck->runpath"
   if $readelf -d "$1" 2>/dev/null | grep -q 'runpath'; then
-    if [[ "($readelf -d "$1" 2>/dev/null | head -20 | grep -q RUNPATH | cut -d'[' -f 2 | sed 's/.$//' | cut -d':' -f 1 | stat -c %a 2>/dev/null)" -lt "755" ]]; then
-      echo_message '\033[31mRW-RUNPATH    \033[m  ' 'RUNPATH,' ' runpath="yes"' '"runpath":"yes",'
+    if [[ "$($readelf -d "$1" 2>/dev/null | head -20 | grep -q RUNPATH | cut -d'[' -f 2 | sed 's/.$//' | cut -d':' -f 1 | stat -c %a 2>/dev/null)" -lt "755" ]]; then
+      echo_message '\033[31mRW-RUNPATH \033[m  ' 'RUNPATH,' ' runpath="yes"' '"runpath":"yes",'
     else
-      echo_message '\033[31mRUNPATH    \033[m  ' 'RUNPATH,' ' runpath="yes"' '"runpath":"yes",'
+      echo_message '\033[31mRUNPATH   \033[m  ' 'RUNPATH,' ' runpath="yes"' '"runpath":"yes",'
     fi
   else
    echo_message '\033[32mNo RUNPATH \033[m  ' 'No RUNPATH,' ' runpath="no"' '"runpath":"no",'
@@ -361,7 +361,7 @@ filecheck() {
 
   # check for stripped symbols in the binary
   SYM_cnt=' '
-  SYM_cnt=( $($readelf --symbols "$1" 2>/dev/null | grep '.symtab' | cut -d' ' -f5))
+  SYM_cnt=( $($readelf --symbols "$1" 2>/dev/null | grep '.symtab' | cut -d' ' -f5 | cut -d: -f1))
   if $readelf --symbols "$1" 2>/dev/null | grep -q '.symtab'; then
    echo_message "\033[31m$SYM_cnt Symbols\t" ${SYM_cnt},  "\033[m  ' 'SYMTABLES,' ' symtables="yes"' '"symtables":"yes","
   else
@@ -1201,6 +1201,44 @@ echo "***** Checksec debug *****"
 failed=false
 id
 uname -a
+
+echo "checksec version: ${SCRIPT_MAJOR}.${SCRIPT_MINOR}.${SCRIPT_REVISION} -- ${SCRIPT_VERSION}"
+
+if [[ -f /etc/os-release ]]; then
+    # freedesktop.org and systemd
+    . /etc/os-release
+    OS=$NAME
+    VER=$VERSION_ID
+elif type lsb_release >/dev/null 2>&1; then
+    # linuxbase.org
+    OS=$(lsb_release -si)
+    VER=$(lsb_release -sr)
+elif [[ -f /etc/lsb-release ]]; then
+    # For some versions of Debian/Ubuntu without lsb_release command
+    . /etc/lsb-release
+    OS=$DISTRIB_ID
+    VER=$DISTRIB_RELEASE
+elif [[ -f /etc/debian_version ]]; then
+    # Older Debian/Ubuntu/etc.
+    OS=Debian
+    VER=$(cat /etc/debian_version)
+elif [[ -f /etc/SuSe-release ]]; then
+    # Older SuSE/etc.
+    OS=$(cat /etc/SuSe-release)
+    VER=$(uname -r)
+elif [[ -f /etc/redhat-release ]]; then
+    # Older Red Hat, CentOS, etc.
+    OS=$(cat /etc/redhat-release)
+    VER=$(uname -r)
+else
+    # Fall back to uname, e.g. "Linux <version>", also works for BSD, etc.
+    OS=$(uname -s)
+    VER=$(uname -r)
+fi
+
+echo "OS=$OS"
+echo "VER=$VER"
+
 for command in cat awk sysctl uname mktemp openssl grep stat file find head ps readlink basename id which wget curl readelf eu-readelf; do
   path="$(which $command)"
   if [[ -e "$path" ]]; then
