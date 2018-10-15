@@ -1,7 +1,7 @@
 FROM base/archlinux:latest
 
 # Install dependencies
-RUN pacman -Sy && pacman -S gnome base-devel --noconfirm
+RUN pacman -Sy && pacman -S vim base-devel --noconfirm && ln -s $(command -v vim) /bin/vi
 
 COPY .  /root
 WORKDIR /root

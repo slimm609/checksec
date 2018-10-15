@@ -68,7 +68,7 @@ format="cli"
 SCRIPT_NAME="checksec"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
 SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename ${SCRIPT_NAME} .sh).sig"
-SCRIPT_VERSION=2018101501
+SCRIPT_VERSION=2018101502
 SCRIPT_MAJOR=1
 SCRIPT_MINOR=9
 SCRIPT_REVISION=0
@@ -123,12 +123,12 @@ fetch() {
 
 # Version compare
 vercomp () {
-    if [[ $1 == $2 ]]
+    if [[ "$1" == "$2" ]]
     then
         return 0
     fi
     local IFS=.
-    local i ver1=($1) ver2=($2)
+    local i ver1="$1" ver2="$2"
     # fill empty fields in ver1 with zeros
     for ((i=${#ver1[@]}; i<${#ver2[@]}; i++))
     do
@@ -580,7 +580,7 @@ nxcheck() {
 coredumpcheck() {
         $debug && echo -e "\n***function coredumpcheck"
         coreValue=$( grep -ic "hard core 0" /etc/security/limits.conf )
-        dumpableValue=$( grep -ic "fs.suid_dumpable = 0" /etc/sysctl.conf )
+        dumpableValue=$( grep -ic "fs.suid_dumpable = 0" /etc/sysctl.conf 2>/dev/null )
         if [[ "$coreValue" == 1 ]] && [[ "$dumpableValue" == 1 ]]; then
                 echo_message '\033[32mRestricted\033[m\n\n' '' '' ''
         else
@@ -739,7 +739,7 @@ kernelcheck() {
   fi
 
   echo_message "  Exec Shield:                            " """" ""
-  if grep -qi 'kernel.exec-shield = 1' /etc/sysctl.conf ; then
+  if grep -qi 'kernel.exec-shield = 1' /etc/sysctl.conf 2>/dev/null ; then
     echo_message '\033[32mEnabled\033[m\n\n' '' '' ''
   else
     echo_message '\033[31mDisabled\033[m\n\n' '' '' ''
@@ -1206,7 +1206,7 @@ echo "checksec version: ${SCRIPT_MAJOR}.${SCRIPT_MINOR}.${SCRIPT_REVISION} -- ${
 
 if [[ -f /etc/os-release ]]; then
     # freedesktop.org and systemd
-    . /etc/os-release
+    source /etc/os-release
     OS=$NAME
     VER=$VERSION_ID
 elif type lsb_release >/dev/null 2>&1; then
@@ -1215,7 +1215,7 @@ elif type lsb_release >/dev/null 2>&1; then
     VER=$(lsb_release -sr)
 elif [[ -f /etc/lsb-release ]]; then
     # For some versions of Debian/Ubuntu without lsb_release command
-    . /etc/lsb-release
+    source /etc/lsb-release
     OS=$DISTRIB_ID
     VER=$DISTRIB_RELEASE
 elif [[ -f /etc/debian_version ]]; then
@@ -1240,7 +1240,7 @@ echo "OS=$OS"
 echo "VER=$VER"
 
 for command in cat awk sysctl uname mktemp openssl grep stat file find head ps readlink basename id which wget curl readelf eu-readelf; do
-  path="$(which $command)"
+  path="$(command -v $command)"
   if [[ -e "$path" ]]; then
     ls -l "$path"
     if [[ -L "$path" ]]; then
@@ -1329,7 +1329,8 @@ do
     PERMS=$(stat -c "%a" "$0")
     rm -f "${SIG_FILE}" "${PUBKEY_FILE}" >/dev/null 2>&1
     mv "${TMP_FILE}" "$0" >/dev/null 2>&1
-    if [[ $? == 0 ]]; then
+    exit_status=$?
+    if [[ "$exit_status" -eq "0" ]]; then
       echo "checksec.sh updated - Rev. $UPDATE_VERSION"
       chmod "$PERMS" "$0"
     else
@@ -1381,7 +1382,7 @@ do
     fdircount=0
     fdirtotal=0
 
-    for N in $(find -L $tempdir -type f 2>/dev/null); do
+    for N in $(find -L "$tempdir" -type f 2>/dev/null); do
       if [[ "$N" != "[A-Za-z1-0]*" ]]; then
         out=$(file "$N" 2>/dev/null)
         if [[  $out =~ ELF ]] ; then
@@ -1389,7 +1390,7 @@ do
         fi
       fi
     done
-    for N in $(find -L $tempdir -type f 2>/dev/null); do
+    for N in $(find -L "$tempdir" -type f 2>/dev/null); do
       if [[ "$N" != "[A-Za-z1-0]*" ]]; then
     # read permissions?
     if [[ ! -r "$N" ]]; then
