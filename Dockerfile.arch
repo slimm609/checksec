@@ -1,7 +1,7 @@
-FROM base/archlinux:latest
+FROM archlinux/base:latest
 
 # Install dependencies
-RUN pacman -Sy && pacman -S vim base-devel --noconfirm && ln -s $(command -v vim) /bin/vi
+RUN pacman -Syu --noconfirm vim base-devel && ln -s $(command -v vim) /bin/vi
 
 COPY .  /root
 WORKDIR /root
