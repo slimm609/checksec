@@ -17,29 +17,29 @@ Examples
 
 **normal (or --format cli)**
 
-    $checksec.sh --file /bin/ls
+    $checksec --file /bin/ls
     RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FILE
     Partial RELRO   Canary found      NX enabled    No PIE          No RPATH   No RUNPATH   /bin/ls
 
 **csv**
 
-    $ checksec.sh --output csv --file /bin/ls
+    $ checksec --output csv --file /bin/ls
     Partial RELRO,Canary found,NX enabled,No PIE,No RPATH,No RUNPATH,/bin/ls
 
 **xml**
     
-    $ checksec.sh --output xml --file /bin/ls
+    $ checksec --output xml --file /bin/ls
     <?xml version="1.0" encoding="UTF-8"?>
     <file relro="partial" canary="yes" nx="yes" pie="no" rpath="no" runpath="no" filename='/bin/ls'/>
 
 **json**
 
-	$ checksec.sh --output json --file /bin/ls	
+	$ checksec --output json --file /bin/ls	
 	{ "file": { "relro":"partial","canary":"yes","nx":"yes","pie":"no","rpath":"no","runpath":"no","filename":"/bin/ls" } }
 
 **Fortify test in cli**
 
-    $ checksec.sh --fortify-proc 1
+    $ checksec --fortify-proc 1
     * Process name (PID)                         : init (1)
     * FORTIFY_SOURCE support available (libc)    : Yes
     * Binary compiled with FORTIFY_SOURCE support: Yes
@@ -72,7 +72,7 @@ Examples
 
 **Kernel test in Cli**
 
-	$ checksec.sh --kernel
+	$ checksec --kernel
 	* Kernel protection information:
 
 	Description - List the status of kernel protection mechanisms. Rather than
@@ -123,7 +123,7 @@ Examples
 
 **Kernel Test in XML**
 
-	$ checksec.sh --output xml --kernel
+	$ checksec --output xml --kernel
 	<?xml version="1.0" encoding="UTF-8"?>
 	<kernel config='/boot/config-3.11-2-amd64' gcc_stack_protector='yes' strict_user_copy_check='no' ro_kernel_data='yes' restrict_dev_mem_access='yes' restrict_dev_kmem_access='no'>
 		<grsecurity config='no' />
@@ -132,7 +132,7 @@ Examples
 
 **Kernel Test in Json**
 
-	$ checksec.sh --output json --kernel
+	$ checksec --output json --kernel
  	{ "kernel": { "KernelConfig":"/boot/config-3.11-2-amd64","gcc_stack_protector":"yes","strict_user_copy_check":"no","ro_kernel_data":"yes","restrict_dev_mem_access":"yes","restrict_dev_kmem_access":"no" },{ "grsecurity_config":"no" },{ "kernheap_config":"no" } }
 
 Using with Cross-compiled Systems
