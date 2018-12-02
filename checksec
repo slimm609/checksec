@@ -343,9 +343,9 @@ filecheck() {
   SYM_cnt=' '
   SYM_cnt=( $($readelf --symbols "$1" 2>/dev/null | grep '.symtab' | cut -d' ' -f5 | cut -d: -f1))
   if $readelf --symbols "$1" 2>/dev/null | grep -q '.symtab'; then
-   echo_message "\033[31m$SYM_cnt Symbols\t" ${SYM_cnt},  "\033[m  ' 'SYMTABLES,' ' symtables="yes"' '"symtables":"yes","
+    echo_message "\033[31m${SYM_cnt[0]} Symbols\t\033[m  " 'SYMTABLES,' ' symtables="yes"' '"symtables":"yes",'
   else
-   echo_message '\033[32mNo Symbols     \033[m  ' 'SYMTABLES,' ' symtables="no"' '"symtables":"no",'
+    echo_message '\033[32mNo Symbols    \033[m  ' 'No SYMTABLES,' ' symtables="no"' '"symtables":"no",'
   fi
 
   # check for FORTIFY SOURCE
