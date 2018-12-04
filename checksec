@@ -318,8 +318,11 @@ filecheck() {
 
   # check for rpath / run path
   $debug && echo -e "\n***function filecheck->rpath"
-  if $readelf -d "$1" 2>/dev/null | grep -q 'rpath'; then
-    if [[ "$($readelf -d "$1" 2>/dev/null | head -20 | grep -q RPATH | cut -d'[' -f 2 | sed 's/.$//' |  cut -d':' -f 1 | stat -c %a 2>/dev/null)" -lt "755" ]]; then
+  # search for a line that matches RPATH and extract the colon-separated path list within brackets
+  # example input: "0x000000000000000f (RPATH) Library rpath: [/lib/systemd:/lib/apparmor]"
+  IFS=: read -a rpath_array <<< $($readelf -d "$1" 2>/dev/null | awk -F'[][]' '/RPATH/ {print $2}')
+  if [[ "${#rpath_array[@]}" -gt 0 ]]; then
+    if xargs stat -c %A <<< ${rpath_array[*]} | grep -q 'rw'; then
       echo_message '\033[31mRW-RPATH \033[m  ' 'RPATH,' ' rpath="yes"' '"rpath":"yes",'
     else
       echo_message '\033[31mRPATH   \033[m  ' 'RPATH,' ' rpath="yes"' '"rpath":"yes",'
@@ -329,8 +332,10 @@ filecheck() {
   fi
 
   $debug && echo -e "\n***function filecheck->runpath"
-  if $readelf -d "$1" 2>/dev/null | grep -q 'runpath'; then
-    if [[ "$($readelf -d "$1" 2>/dev/null | head -20 | grep -q RUNPATH | cut -d'[' -f 2 | sed 's/.$//' | cut -d':' -f 1 | stat -c %a 2>/dev/null)" -lt "755" ]]; then
+  # search for a line that matches RUNPATH and extract the colon-separated path list within brackets
+  IFS=: read -a runpath_array <<< $($readelf -d "$1" 2>/dev/null | awk -F'[][]' '/RUNPATH/ {print $2}')
+  if [[ "${#runpath_array[@]}" -gt 0 ]]; then
+    if xargs stat -c %A <<< ${runpath_array[*]} | grep -q 'rw'; then
       echo_message '\033[31mRW-RUNPATH \033[m  ' 'RUNPATH,' ' runpath="yes"' '"runpath":"yes",'
     else
       echo_message '\033[31mRUNPATH   \033[m  ' 'RUNPATH,' ' runpath="yes"' '"runpath":"yes",'
@@ -1237,7 +1242,7 @@ fi
 }
 
 commandsmissing=false
-for command in cat awk sysctl uname mktemp openssl grep stat file find sort fgrep head ps readlink basename id which; do
+for command in cat awk sysctl uname mktemp openssl grep stat file find sort fgrep head ps readlink basename id which xargs; do
     if ! (command_exists $command); then
        echo -e "\e[31mWARNING: '$command' not found! It's required for most checks.\e[0m"
        commandsmissing=true
