@@ -362,6 +362,10 @@ filecheck() {
     FS_libc=/lib/i386-linux-gnu/libc.so.6
   elif [[ -e /lib/x86_64-linux-gnu/libc.so.6 ]] ; then
     FS_libc=/lib/x86_64-linux-gnu/libc.so.6
+  elif [[ -e /lib/arm-linux-gnueabihf/libc.so.6 ]] ; then
+    FS_libc=/lib/arm-linux-gnueabihf/libc.so.6
+  elif [[ -e /lib/aarch64-linux-gnu/libc.so.6 ]] ; then
+    FS_libc=/lib/aarch64-linux-gnu/libc.so.6
   else
     printf "\033[31mError: libc not found.\033[m\n\n"
     exit 1
@@ -1632,6 +1636,7 @@ do
       printf "\033[m\n"
       exit 1
     fi
+    
     if [[ -e /lib/libc.so.6 ]] ; then
       FS_libc=/lib/libc.so.6
     elif [[ -e /lib64/libc.so.6 ]] ; then
@@ -1642,6 +1647,8 @@ do
       FS_libc=/lib/x86_64-linux-gnu/libc.so.6
     elif [[ -e /lib/arm-linux-gnueabihf/libc.so.6 ]] ; then
       FS_libc=/lib/arm-linux-gnueabihf/libc.so.6
+    elif [[ -e /lib/aarch64-linux-gnu/libc.so.6 ]] ; then
+      FS_libc=/lib/aarch64-linux-gnu/libc.so.6
     else
       printf "\033[31mError: libc not found.\033[m\n\n"
       exit 1
