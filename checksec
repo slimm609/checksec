@@ -68,9 +68,9 @@ format="cli"
 SCRIPT_NAME="checksec"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
 SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename ${SCRIPT_NAME} .sh).sig"
-SCRIPT_VERSION=2018101502
+SCRIPT_VERSION=2018120601
 SCRIPT_MAJOR=1
-SCRIPT_MINOR=9
+SCRIPT_MINOR=10
 SCRIPT_REVISION=0
 pkg_release=false
 
@@ -346,9 +346,9 @@ filecheck() {
 
   # check for stripped symbols in the binary
   SYM_cnt=' '
-  SYM_cnt=( $($readelf --symbols "$1" 2>/dev/null | grep '.symtab' | cut -d' ' -f5 | cut -d: -f1))
-  if $readelf --symbols "$1" 2>/dev/null | grep -q '.symtab'; then
-    echo_message "\033[31m${SYM_cnt[0]} Symbols\t\033[m  " 'SYMTABLES,' ' symtables="yes"' '"symtables":"yes",'
+  SYM_cnt=( $($readelf --symbols "$1" 2>/dev/null | grep '\.symtab' | cut -d' ' -f5 | cut -d: -f1))
+  if $readelf --symbols "$1" 2>/dev/null | grep -q '\.symtab'; then
+    echo_message "\033[31m${SYM_cnt[0]} Symbols   \033[m  " 'SYMTABLES,' ' symtables="yes"' '"symtables":"yes",'
   else
     echo_message '\033[32mNo Symbols    \033[m  ' 'No SYMTABLES,' ' symtables="no"' '"symtables":"no",'
   fi
@@ -696,6 +696,16 @@ kernelcheck() {
     fi
   fi
 
+  if $kconfig | grep -qi 'CPU_SW_DOMAIN_PAN=y'; then
+    echo_message "  Use CPU domains:                        " "" "" ""
+    if $kconfig | grep -qi 'CPU_SW_DOMAIN_PAN=y'; then
+      echo_message "\033[32mEnabled\033[m\n" "Enabled," " cpu_sw_domain'yes'" '"cpu_sw_domain":"yes",'
+    else
+      echo_message "\033[31mDisabled\033[m\n" "Disabled," " cpu_sw_domain='no'" '"cpu_sw_domain":"no",'
+    fi
+  fi
+
+
   if $kconfig | grep -qi 'CONFIG_VMAP_STACK'; then
     echo_message "  Virtually-mapped kernel stack:          " "" "" ""
     if $kconfig | grep -qi 'CONFIG_VMAP_STACK=y'; then
@@ -704,6 +714,24 @@ kernelcheck() {
       echo_message "\033[31mDisabled\033[m\n" "Disabled," " virtually_mapped_stack='no'" '"virtually_mapped_stack":"no",'
     fi
   fi
+
+
+  if $kconfig | grep -qi 'CONFIG_DEVMEM'; then
+    echo_message "  Restrict /dev/mem access:               " "" "" ""
+    if $kconfig | grep -qi 'CONFIG_STRICT_DEVMEM=y'; then
+      echo_message "\033[32mEnabled\033[m\n" "Enabled," " restrict_dev_mem_access='yes'" '"restrict_dev_mem_access":"yes",'
+    else
+      echo_message "\033[31mDisabled\033[m\n" "Disabled," " restrict_dev_mem_access='no'" '"restrict_dev_mem_access":"no",'
+    fi
+
+    echo_message "  Restrict I/O access to /dev/mem:        " "" "" ""
+    if $kconfig | grep -qi 'CONFIG_IO_STRICT_DEVMEM=y'; then
+      echo_message "\033[32mEnabled\033[m\n" "Enabled," " restrict_io_dev_mem_access='yes'" '"restrict_io_dev_mem_access":"yes",'
+    else
+      echo_message "\033[31mDisabled\033[m\n" "Disabled," " restrict_io_dev_mem_access='no'" '"restrict_io_dev_mem_access":"no",'
+    fi
+  fi
+
 
   if ! $kconfig | grep -qi 'CONFIG_PAX'; then
     if $kconfig | grep -qi 'CONFIG_DEBUG_RODATA' || $kconfig | grep -qi '|CONFIG_STRICT_KERNEL_RWX'; then
@@ -811,12 +839,24 @@ if [[ "$arch" == "arm" ]]; then
   echo_message "\n" "\n" "\n" ""
   echo_message "* ARM only:            \n" "" "" ""
 
-  echo_message "  Restrict kernel memory permissions:     " "" "" ""
-  if $kconfig | grep -qi 'CONFIG_ARM_KERNMEM_PERMS=y'; then
-    echo_message "\033[32mEnabled\033[m\n" "Enabled" " arm_kernmem_perms='yes'>" '"arm_kernmem_perms":"yes" },'
-   else
-    echo_message "\033[31mDisabled\033[m\n" "Disabled," " arm_kernmem_perms='no'>" '"arm_kernmem_perms":"no",'
-   fi
+  if $kconfig | grep -qi 'CONFIG_ARM_KERNMEM_PERMS'; then
+    echo_message "  Restrict kernel memory permissions:     " "" "" ""
+    if $kconfig | grep -qi 'CONFIG_ARM_KERNMEM_PERMS=y'; then
+      echo_message "\033[32mEnabled\033[m\n" "Enabled" " arm_kernmem_perms='yes'>" '"arm_kernmem_perms":"yes" },'
+    else
+      echo_message "\033[31mDisabled\033[m\n" "Disabled," " arm_kernmem_perms='no'>" '"arm_kernmem_perms":"no",'
+    fi
+  fi
+
+  if $kconfig | grep -qi 'CONFIG_DEBUG_ALIGN_RODATA'; then
+    echo_message "  Make rodata strictly non-excutable:     " "" "" ""
+    if $kconfig | grep -qi 'CONFIG_DEBUG_ALIGN_RODATA=y'; then
+      echo_message "\033[32mEnabled\033[m\n" "Enabled" " arm_strict_rodata='yes'>" '"arm_strict_rodata":"yes" },'
+    else
+      echo_message "\033[31mDisabled\033[m\n" "Disabled," " arm_strict_rodata='no'>" '"arm_strict_rodata":"no",'
+    fi
+  fi
+
 fi
 
   echo_message "\n" "\n" "\n" ""
