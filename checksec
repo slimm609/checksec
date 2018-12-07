@@ -322,7 +322,7 @@ filecheck() {
   # example input: "0x000000000000000f (RPATH) Library rpath: [/lib/systemd:/lib/apparmor]"
   IFS=: read -a rpath_array <<< $($readelf -d "$1" 2>/dev/null | awk -F'[][]' '/RPATH/ {print $2}')
   if [[ "${#rpath_array[@]}" -gt 0 ]]; then
-    if xargs stat -c %A <<< ${rpath_array[*]} | grep -q 'rw'; then
+    if xargs stat -c %A <<< ${rpath_array[*]} 2>/dev/null | grep -q 'rw'; then
       echo_message '\033[31mRW-RPATH \033[m  ' 'RPATH,' ' rpath="yes"' '"rpath":"yes",'
     else
       echo_message '\033[31mRPATH   \033[m  ' 'RPATH,' ' rpath="yes"' '"rpath":"yes",'
@@ -335,7 +335,7 @@ filecheck() {
   # search for a line that matches RUNPATH and extract the colon-separated path list within brackets
   IFS=: read -a runpath_array <<< $($readelf -d "$1" 2>/dev/null | awk -F'[][]' '/RUNPATH/ {print $2}')
   if [[ "${#runpath_array[@]}" -gt 0 ]]; then
-    if xargs stat -c %A <<< ${runpath_array[*]} | grep -q 'rw'; then
+    if xargs stat -c %A <<< ${runpath_array[*]} 2>/dev/null | grep -q 'rw'; then
       echo_message '\033[31mRW-RUNPATH \033[m  ' 'RUNPATH,' ' runpath="yes"' '"runpath":"yes",'
     else
       echo_message '\033[31mRUNPATH   \033[m  ' 'RUNPATH,' ' runpath="yes"' '"runpath":"yes",'
