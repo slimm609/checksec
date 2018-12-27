@@ -68,9 +68,9 @@ format="cli"
 SCRIPT_NAME="checksec"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
 SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename ${SCRIPT_NAME} .sh).sig"
-SCRIPT_VERSION=2018120601
+SCRIPT_VERSION=2018122701
 SCRIPT_MAJOR=1
-SCRIPT_MINOR=10
+SCRIPT_MINOR=11
 SCRIPT_REVISION=0
 pkg_release=false
 
@@ -717,18 +717,20 @@ kernelcheck() {
 
 
   if $kconfig | grep -qi 'CONFIG_DEVMEM'; then
-    echo_message "  Restrict /dev/mem access:               " "" "" ""
-    if $kconfig | grep -qi 'CONFIG_STRICT_DEVMEM=y'; then
-      echo_message "\033[32mEnabled\033[m\n" "Enabled," " restrict_dev_mem_access='yes'" '"restrict_dev_mem_access":"yes",'
-    else
-      echo_message "\033[31mDisabled\033[m\n" "Disabled," " restrict_dev_mem_access='no'" '"restrict_dev_mem_access":"no",'
-    fi
+    if $kconfig | grep -qi 'CONFIG_DEVMEM=y'; then
+      echo_message "  Restrict /dev/mem access:               " "" "" ""
+      if $kconfig | grep -qi 'CONFIG_STRICT_DEVMEM=y'; then
+        echo_message "\033[32mEnabled\033[m\n" "Enabled," " restrict_dev_mem_access='yes'" '"restrict_dev_mem_access":"yes",'
+      else
+        echo_message "\033[31mDisabled\033[m\n" "Disabled," " restrict_dev_mem_access='no'" '"restrict_dev_mem_access":"no",'
+      fi
 
-    echo_message "  Restrict I/O access to /dev/mem:        " "" "" ""
-    if $kconfig | grep -qi 'CONFIG_IO_STRICT_DEVMEM=y'; then
-      echo_message "\033[32mEnabled\033[m\n" "Enabled," " restrict_io_dev_mem_access='yes'" '"restrict_io_dev_mem_access":"yes",'
-    else
-      echo_message "\033[31mDisabled\033[m\n" "Disabled," " restrict_io_dev_mem_access='no'" '"restrict_io_dev_mem_access":"no",'
+      echo_message "  Restrict I/O access to /dev/mem:        " "" "" ""
+      if $kconfig | grep -qi 'CONFIG_IO_STRICT_DEVMEM=y'; then
+        echo_message "\033[32mEnabled\033[m\n" "Enabled," " restrict_io_dev_mem_access='yes'" '"restrict_io_dev_mem_access":"yes",'
+      else
+        echo_message "\033[31mDisabled\033[m\n" "Disabled," " restrict_io_dev_mem_access='no'" '"restrict_io_dev_mem_access":"no",'
+      fi
     fi
   fi
 
@@ -781,30 +783,12 @@ kernelcheck() {
     fi
   fi
 
-  if $kconfig | grep -qi 'CONFIG_DEVMEM'; then
-    if $kconfig | grep -qi 'CONFIG_DEVMEM=y'; then
-      echo_message "  Restrict /dev/mem access:               " "" "" ""
-      if $kconfig | grep -qi 'CONFIG_STRICT_DEVMEM=y'; then
-        echo_message "\033[32mEnabled\033[m\n" "Enabled," " restrict_dev_mem_access='yes'" '"restrict_dev_mem_access":"yes",'
-      else
-        echo_message "\033[31mDisabled\033[m\n" "Disabled," " restrict_dev_mem_access='no'" '"restrict_dev_mem_access":"no",'
-      fi
-
-      echo_message "  Restrict I/O access to /dev/mem:        " "" "" ""
-      if $kconfig | grep -qi 'CONFIG_IO_STRICT_DEVMEM=y'; then
-        echo_message "\033[32mEnabled\033[m\n" "Enabled," " restrict_io_dev_mem_access='yes'" '"restrict_io_dev_mem_access":"yes",'
-      else
-        echo_message "\033[31mDisabled\033[m\n" "Disabled," " restrict_io_dev_mem_access='no'" '"restrict_io_dev_mem_access":"no",'
-      fi
-    fi
-  fi
-
   if $kconfig | grep -qi 'CONFIG_DEVKMEM'; then
     echo_message "  Restrict /dev/kmem access:              " "" "" ""
     if $kconfig | grep -qi 'CONFIG_DEVKMEM=y'; then
-      echo_message "\033[31mDisabled\033[m\n" "Disabled" " restrict_dev_kmem_access='no'" '"restrict_dev_kmem_access":"no" },'
+      echo_message "\033[31mDisabled\033[m\n" "Disabled" " restrict_dev_kmem_access='no'" '"restrict_dev_kmem_access":"no",'
     else
-      echo_message "\033[32mEnabled\033[m\n" "Enabled" " restrict_dev_kmem_access='yes'" '"restrict_dev_kmem_access":"yes" },'
+      echo_message "\033[32mEnabled\033[m\n" "Enabled" " restrict_dev_kmem_access='yes'" '"restrict_dev_kmem_access":"yes",'
     fi
   fi
 
@@ -827,9 +811,9 @@ if [[ "$arch" == "32" ]] || [[ "$arch" == "64" ]]; then
   if $kconfig | grep -qi 'CONFIG_RANDOMIZE_BASE' || $kconfig | grep -qi 'CONFIG_PAX_ASLR'; then
     echo_message "  Address space layout randomization:     " "" "" ""
     if $kconfig | grep -qi 'CONFIG_RANDOMIZE_BASE=y' || $kconfig | grep -qi 'CONFIG_PAX_ASLR=y'; then
-      echo_message "\033[32mEnabled\033[m\n" "Enabled" " random_address_space_layout='yes'>" '"random_address_space_layout":"yes" },'
+      echo_message "\033[32mEnabled\033[m\n" "Enabled" " random_address_space_layout='yes'>" '"random_address_space_layout":"yes"'
      else
-      echo_message "\033[31mDisabled\033[m\n" "Disabled," " random_address_space_layout='no'>" '"random_address_space_layout":"no",'
+      echo_message "\033[31mDisabled\033[m\n" "Disabled," " random_address_space_layout='no'>" '"random_address_space_layout":"no"'
     fi
   fi
 fi
@@ -842,7 +826,7 @@ if [[ "$arch" == "arm" ]]; then
   if $kconfig | grep -qi 'CONFIG_ARM_KERNMEM_PERMS'; then
     echo_message "  Restrict kernel memory permissions:     " "" "" ""
     if $kconfig | grep -qi 'CONFIG_ARM_KERNMEM_PERMS=y'; then
-      echo_message "\033[32mEnabled\033[m\n" "Enabled" " arm_kernmem_perms='yes'>" '"arm_kernmem_perms":"yes" },'
+      echo_message "\033[32mEnabled\033[m\n" "Enabled" " arm_kernmem_perms='yes'>" '"arm_kernmem_perms":"yes",'
     else
       echo_message "\033[31mDisabled\033[m\n" "Disabled," " arm_kernmem_perms='no'>" '"arm_kernmem_perms":"no",'
     fi
@@ -851,13 +835,15 @@ if [[ "$arch" == "arm" ]]; then
   if $kconfig | grep -qi 'CONFIG_DEBUG_ALIGN_RODATA'; then
     echo_message "  Make rodata strictly non-excutable:     " "" "" ""
     if $kconfig | grep -qi 'CONFIG_DEBUG_ALIGN_RODATA=y'; then
-      echo_message "\033[32mEnabled\033[m\n" "Enabled" " arm_strict_rodata='yes'>" '"arm_strict_rodata":"yes" },'
+      echo_message "\033[32mEnabled\033[m\n" "Enabled" " arm_strict_rodata='yes'>" '"arm_strict_rodata":"yes",'
     else
       echo_message "\033[31mDisabled\033[m\n" "Disabled," " arm_strict_rodata='no'>" '"arm_strict_rodata":"no",'
     fi
   fi
 
 fi
+
+  echo_message "" "" "" "},"
 
   echo_message "\n" "\n" "\n" ""
   echo_message "* SELinux:                                " "" "" ""
