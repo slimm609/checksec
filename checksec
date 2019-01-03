@@ -1392,7 +1392,7 @@ do
     fdircount=0
     fdirtotal=0
 
-    for N in $(find -L "$tempdir" -type f 2>/dev/null); do
+    find -L "$tempdir" -type f 2>/dev/null | while read N; do
       if [[ "$N" != "[A-Za-z1-0]*" ]]; then
         out=$(file "$N" 2>/dev/null)
         if [[  $out =~ ELF ]] ; then
@@ -1400,7 +1400,7 @@ do
         fi
       fi
     done
-    for N in $(find -L "$tempdir" -type f 2>/dev/null); do
+    find -L "$tempdir" -type f 2>/dev/null | while read N; do
       if [[ "$N" != "[A-Za-z1-0]*" ]]; then
     # read permissions?
     if [[ ! -r "$N" ]]; then
