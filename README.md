@@ -6,7 +6,7 @@ It has been originally written by Tobias Klein and the original source is availa
 
 Updates
 -------
-   Last Update: 2018-12-27
+   Last Update: 2019-01-19
 
 For OSX
 -------

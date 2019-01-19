@@ -68,10 +68,10 @@ format="cli"
 SCRIPT_NAME="checksec"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
 SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename ${SCRIPT_NAME} .sh).sig"
-SCRIPT_VERSION=2018122701
+SCRIPT_VERSION=2019011901
 SCRIPT_MAJOR=1
 SCRIPT_MINOR=11
-SCRIPT_REVISION=0
+SCRIPT_REVISION=1
 pkg_release=false
 
 if [[ $(id -u) != 0 ]]; then
@@ -668,11 +668,13 @@ kernelcheck() {
     if $kconfig | grep -qi 'CONFIG_CC_STACKPROTECTOR=y' || $kconfig | grep -qi 'CONFIG_STACKPROTECTOR=y' ; then
       echo_message "\033[32mEnabled\033[m\n" "Enabled," " gcc_stack_protector='yes'" '"gcc_stack_protector":"yes",'
 
-      echo_message "  GCC stack protector strong:             " "" "" ""
-      if $kconfig | grep -qi 'CONFIG_CC_STACKPROTECTOR_STRONG=y' || $kconfig | grep -qi 'CONFIG_STACKPROTECTOR_STRONG=y'; then
-        echo_message "\033[32mEnabled\033[m\n" "Enabled," " gcc_stack_protector_strong='yes'" '"gcc_stack_protector_strong":"yes",'
-      else
-        echo_message "\033[31mDisabled\033[m\n" "Disabled," " gcc_stack_protector_strong='no'" '"gcc_stack_protector_strong":"no",'
+      if $kconfig | grep -qi 'CONFIG_CC_STACKPROTECTOR_STRONG' || $kconfig | grep -qi 'CONFIG_STACKPROTECTOR_STRONG'; then
+        echo_message "  GCC stack protector strong:             " "" "" ""
+        if $kconfig | grep -qi 'CONFIG_CC_STACKPROTECTOR_STRONG=y' || $kconfig | grep -qi 'CONFIG_STACKPROTECTOR_STRONG=y'; then
+          echo_message "\033[32mEnabled\033[m\n" "Enabled," " gcc_stack_protector_strong='yes'" '"gcc_stack_protector_strong":"yes",'
+        else
+          echo_message "\033[31mDisabled\033[m\n" "Disabled," " gcc_stack_protector_strong='no'" '"gcc_stack_protector_strong":"no",'
+        fi
       fi
     else
       echo_message "\033[31mDisabled\033[m\n" "Disabled," " gcc_stack_protector='no'" '"gcc_stack_protector":"no",'
