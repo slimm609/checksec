@@ -667,6 +667,13 @@ kernelcheck() {
     echo_message "  GCC stack protector support:            " "" "" ""
     if $kconfig | grep -qi 'CONFIG_CC_STACKPROTECTOR=y' || $kconfig | grep -qi 'CONFIG_STACKPROTECTOR=y' ; then
       echo_message "\033[32mEnabled\033[m\n" "Enabled," " gcc_stack_protector='yes'" '"gcc_stack_protector":"yes",'
+
+      echo_message "  GCC stack protector strong:             " "" "" ""
+      if $kconfig | grep -qi 'CONFIG_CC_STACKPROTECTOR_STRONG=y' || $kconfig | grep -qi 'CONFIG_STACKPROTECTOR_STRONG=y'; then
+        echo_message "\033[32mEnabled\033[m\n" "Enabled," " gcc_stack_protector_strong='yes'" '"gcc_stack_protector_strong":"yes",'
+      else
+        echo_message "\033[31mDisabled\033[m\n" "Disabled," " gcc_stack_protector_strong='no'" '"gcc_stack_protector_strong":"no",'
+      fi
     else
       echo_message "\033[31mDisabled\033[m\n" "Disabled," " gcc_stack_protector='no'" '"gcc_stack_protector":"no",'
     fi
