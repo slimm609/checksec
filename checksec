@@ -85,6 +85,8 @@ elif [[ "$sysarch" == "i?86" ]]; then
     arch="32"
 elif [[ "$sysarch" =~ "arm" ]]; then
     arch="arm"
+elif [[ "$sysarch" =~ "aarch64" ]]; then
+    arch="aarch64"
 fi
 
 #openssl public key for verification of updates
@@ -588,6 +590,9 @@ kernelcheck() {
     if $kconfig | grep -qi 'CONFIG_ARM=y\|CONFIG_ARM=y'; then
       arch="arm"
     fi
+    if $kconfig | grep -qi 'CONFIG_ARM64=y'; then
+      arch="aarch64"
+    fi
     if $kconfig | grep -qi 'CONFIG_X86_64=y'; then
       arch="64"
     fi
@@ -850,6 +855,75 @@ if [[ "$arch" == "arm" ]]; then
     fi
   fi
 
+fi
+
+#ARM64 only
+if [[ "$arch" == "aarch64" ]]; then
+  echo_message "\n" "\n" "\n" ""
+  echo_message "* ARM64 only:            \n" "" "" ""
+
+  if $kconfig | grep -qi 'CONFIG_UNMAP_KERNEL_AT_EL0'; then
+    echo_message "  Unmap kernel in userspace (KAISER):     " "" "" ""
+    if $kconfig | grep -qi 'CONFIG_UNMAP_KERNEL_AT_EL0=y'; then
+      echo_message "\033[32mEnabled\033[m\n" "Enabled" " unmap_kernel_in_userspace='yes'>" '"unmap_kernel_in_userspace":"yes",'
+    else
+      echo_message "\033[31mDisabled\033[m\n" "Disabled," " unmap_kernel_in_userspace='no'>" '"unmap_kernel_in_userspace":"no",'
+    fi
+  fi
+
+  if $kconfig | grep -qi 'CONFIG_HARDEN_BRANCH_PREDICTOR'; then
+    echo_message "  Harden branch predictor:                " "" "" ""
+    if $kconfig | grep -qi 'CONFIG_HARDEN_BRANCH_PREDICTOR=y'; then
+      echo_message "\033[32mEnabled\033[m\n" "Enabled" " harden_branch_predictor='yes'>" '"harden_branch_predictor":"yes",'
+    else
+      echo_message "\033[31mDisabled\033[m\n" "Disabled," " harden_branch_predictor='no'>" '"harden_branch_predictor":"no",'
+    fi
+  fi
+
+  if $kconfig | grep -qi 'CONFIG_HARDEN_EL2_VECTORS'; then
+    echo_message "  Harden EL2 vector mapping:              " "" "" ""
+    if $kconfig | grep -qi 'CONFIG_HARDEN_EL2_VECTORS=y'; then
+      echo_message "\033[32mEnabled\033[m\n" "Enabled" " harden_el2_vector_mapping='yes'>" '"harden_el2_vector_mapping":"yes",'
+    else
+      echo_message "\033[31mDisabled\033[m\n" "Disabled," " harden_el2_vector_mapping='no'>" '"harden_el2_vector_mapping":"no",'
+    fi
+  fi
+
+  if $kconfig | grep -qi 'CONFIG_ARM64_SSBD'; then
+    echo_message "  Speculative store bypass disable:       " "" "" ""
+    if $kconfig | grep -qi 'CONFIG_ARM64_SSBD=y'; then
+      echo_message "\033[32mEnabled\033[m\n" "Enabled" " speculative_store_bypass_disable='yes'>" '"speculative_store_bypass_disable":"yes",'
+    else
+      echo_message "\033[31mDisabled\033[m\n" "Disabled," " speculative_store_bypass_disable='no'>" '"speculative_store_bypass_disable":"no",'
+    fi
+  fi
+
+  if $kconfig | grep -qi 'CONFIG_ARM64_SW_TTBR0_PAN'; then
+    echo_message "  Emulate privileged access never:        " "" "" ""
+    if $kconfig | grep -qi 'CONFIG_ARM64_SW_TTBR0_PAN=y'; then
+      echo_message "\033[32mEnabled\033[m\n" "Enabled" " emulate_privileged_access_never='yes'>" '"emulate_privileged_access_never":"yes",'
+    else
+      echo_message "\033[31mDisabled\033[m\n" "Disabled," " emulate_privileged_access_never='no'>" '"emulate_privileged_access_never":"no",'
+    fi
+  fi
+
+  if $kconfig | grep -qi 'CONFIG_RANDOMIZE_BASE'; then
+    echo_message "  Randomize address of kernel image:      " "" "" ""
+    if $kconfig | grep -qi 'CONFIG_RANDOMIZE_BASE=y'; then
+      echo_message "\033[32mEnabled\033[m\n" "Enabled" " randomize_kernel_address='yes'>" '"randomize_kernel_address":"yes",'
+    else
+      echo_message "\033[31mDisabled\033[m\n" "Disabled," " randomize_kernel_address='no'>" '"randomize_kernel_address":"no",'
+    fi
+  fi
+
+  if $kconfig | grep -qi 'CONFIG_RANDOMIZE_MODULE_REGION_FULL'; then
+    echo_message "  Randomize module region over 4GB:       " "" "" ""
+    if $kconfig | grep -qi 'CONFIG_RANDOMIZE_MODULE_REGION_FULL=y'; then
+      echo_message "\033[32mEnabled\033[m\n" "Enabled" " randomize_module_region_full='yes'>" '"randomize_module_region_full":"yes",'
+    else
+      echo_message "\033[31mDisabled\033[m\n" "Disabled," " randomize_module_region_full='no'>" '"randomize_module_region_full":"no",'
+    fi
+  fi
 fi
 
   echo_message "" "" "" "},"
