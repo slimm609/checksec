@@ -766,6 +766,15 @@ kernelcheck() {
     fi
   fi
 
+  if $kconfig | grep -qi 'CONFIG_REFCOUNT_FULL'; then
+    echo_message "  Full reference count validation:        " "" "" ""
+    if $kconfig | grep -qi 'CONFIG_REFCOUNT_FULL=y'; then
+      echo_message "\033[32mEnabled\033[m\n" "Enabled," " full_refcount_validation='yes'" '"full_refcount_validation":"yes",'
+    else
+      echo_message "\033[31mDisabled\033[m\n" "Disabled," " full_refcount_validation='no'" '"full_refcount_validation":"no",'
+    fi
+  fi
+
   echo_message "  Exec Shield:                            " """" ""
   if grep -qi 'kernel.exec-shield = 1' /etc/sysctl.conf 2>/dev/null ; then
     echo_message '\033[32mEnabled\033[m\n\n' '' '' ''
