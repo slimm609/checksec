@@ -10,7 +10,7 @@ Updates
 
 For OSX
 -------
-Install the binutils via brew `brew install binutils`
+ Most of the tools do not work on mach-O binaries or the OSX kernel, so it is not supported
 
 Examples
 --------
