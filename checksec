@@ -1592,8 +1592,8 @@ do
           printf "%16s" "$name"
           printf "%7d " "$N"
         else
-          echo_message "" "$name," "<proc name='$name'" " \"$name\": { "
-          echo_message "" "$N," " pid='$N'" "\"pid\":\"$N\","
+          echo_message "" "$N," "<proc pid='$N'" " \$N\": { "
+          echo_message "" "$name," " name='$name'" " \"name\":\"$name\","
         fi
         proccheck "$N"
     if [[ "$lastpid" == "$currpid" ]]; then
