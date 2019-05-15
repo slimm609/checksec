@@ -378,9 +378,9 @@ filecheck() {
     exit 1
   fi
 
-  FS_chk_func_libc="$($readelf -s $FS_libc | sed -ne 's/.*__\(.*_chk\)@@.*/\1/p')"
+  FS_chk_func_libc="$($readelf -s $FS_libc 2>/dev/null | sed -ne 's/.*__\(.*_chk\)@@.*/\1/p')"
   FS_func_libc="$(echo "${FS_chk_func_libc}" | sed 's/_chk$//')"
-  FS_functions="$($readelf -s "$1" | awk '{ print $8 }' | sed -e 's/_*//' -e 's/@.*//' -e '/^$/d')"
+  FS_functions="$($readelf -s "$1" 2>/dev/null | awk '{ print $8 }' | sed -e 's/_*//' -e 's/@.*//' -e '/^$/d')"
   FS_cnt_checked=$(fgrep -xf <(sort <<< "${FS_chk_func_libc}") <(sort <<< "${FS_functions}") | wc -l)
   FS_cnt_unchecked=$(fgrep -xf <(sort <<< "${FS_func_libc}") <(sort <<< "${FS_functions}") | wc -l)
   FS_cnt_total=$((FS_cnt_unchecked+FS_cnt_checked))
@@ -484,7 +484,7 @@ proccheck() {
   fi
 
   #check for forifty source support
-  FS_functions=( $($readelf -s "$1/exe" | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//') )
+  FS_functions=( $($readelf -s "$1/exe" 2>/dev/null | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//') )
   for ((FS_elem_functions=0; FS_elem_functions<${#FS_functions[@]}; FS_elem_functions++))
   do
     if [[ ${FS_functions[$FS_elem_functions]} =~ _chk ]] ; then
@@ -1777,8 +1777,8 @@ do
       exit 1
     fi
 
-    FS_chk_func_libc=( $($readelf -s $FS_libc | grep _chk@@ | awk '{ print $8 }' | cut -c 3- | sed -e 's/_chk@.*//') )
-    FS_functions=( $($readelf -s "$2" | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//') )
+    FS_chk_func_libc=( $($readelf -s $FS_libc 2>/dev/null | grep _chk@@ | awk '{ print $8 }' | cut -c 3- | sed -e 's/_chk@.*//') )
+    FS_functions=( $($readelf -s "$2" 2>/dev/null | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//') )
     echo_message "" "" "<fortify-test name='$2' " "{ \"fortify-test\": { \"name\":\"$2\", "
     FS_libc_check
     FS_binary_check
@@ -1829,8 +1829,8 @@ do
       fi
       name=$(head -1 "$N/status" | cut -b 7-)
       echo_message  "* Process name (PID)                         : $name ($N)\n" "" "" ""
-      FS_chk_func_libc=( $($readelf -s $FS_libc | grep _chk@@ | awk '{ print $8 }' | cut -c 3- | sed -e 's/_chk@.*//') )
-      FS_functions=( $($readelf -s "$2/exe" | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//') )
+      FS_chk_func_libc=( $($readelf -s $FS_libc 2>/dev/null | grep _chk@@ | awk '{ print $8 }' | cut -c 3- | sed -e 's/_chk@.*//') )
+      FS_functions=( $($readelf -s "$2/exe" 2>/dev/null | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//') )
       echo_message "" "" "<fortify-test name='$name' pid='$N' " "{ \"fortify-test\": { \"name\":\"$name\", \"pid\":\"$N\", "
       FS_libc_check
       FS_binary_check
