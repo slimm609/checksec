@@ -1,0 +1,9 @@
+version: '2'
+
+services:
+  checksec-ubuntu:
+    build:
+      context: ./
+      dockerfile: Dockerfile.ubuntu
+    image:  checksec
+    command: bash -c "./tests/test-checksec.sh"

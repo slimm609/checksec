@@ -10,10 +10,13 @@ else
  exit 255
 fi
 
+DIR=$(cd $(dirname "$0"); pwd)
+PARENT=$(cd $(dirname "$0")/..; pwd)
+
 #check xml for proc-all
 echo "starting proc-all check - xml"
-../checksec --format xml --proc-all > output.xml
-xmllint --noout output.xml
+$PARENT/checksec --format xml --proc-all > $DIR/output.xml
+xmllint --noout $DIR/output.xml
 RET=$?
 if [ $RET != 0 ]; then
  echo "proc-all xml validation failed"
@@ -22,8 +25,8 @@ fi
 
 #check xml for kernel
 echo "starting kernel check - xml"
-../checksec --format xml --kernel > output.xml
-xmllint --noout output.xml
+$PARENT/checksec --format xml --kernel > $DIR/output.xml
+xmllint --noout $DIR/output.xml
 RET=$?
 if [ $RET != 0 ]; then
  echo "kernel xml validation failed"
@@ -32,8 +35,8 @@ fi
 
 #check xml against custom kernel config to trigger all checks
 echo "starting custom kernel check - xml"
-../checksec --format xml --kernel kernel.config > output.xml
-xmllint --noout output.xml
+$PARENT/checksec --format xml --kernel kernel.config > $DIR/output.xml
+xmllint --noout $DIR/output.xml
 RET=$?
 if [ $RET != 0 ]; then
  echo "custom kernel xml validation failed"
@@ -42,8 +45,8 @@ fi
 
 #check xml for file
 echo "starting file check - xml"
-../checksec --format xml --file $test_file > output.xml
-xmllint --noout output.xml
+$PARENT/checksec --format xml --file $test_file > $DIR/output.xml
+xmllint --noout $DIR/output.xml
 RET=$?
 if [ $RET != 0 ]; then
  echo "file xml validation failed"
@@ -52,8 +55,8 @@ fi
 
 #check xml for fortify file
 echo "starting fortify-file check - xml"
-../checksec --format xml --fortify-file $test_file > output.json
-xmllint --noout output.xml
+$PARENT/checksec --format xml --fortify-file $test_file > $DIR/output.xml.json
+xmllint --noout $DIR/output.xml
 RET=$?
 if [ $RET != 0 ]; then
  echo "fortify-file xml validation failed"
@@ -62,8 +65,8 @@ fi
  
 #check xml for dir 
 echo "starting dir check - xml"
-../checksec --format xml --dir /sbin > output.xml
-xmllint --noout output.xml
+$PARENT/checksec --format xml --dir /sbin > $DIR/output.xml
+xmllint --noout $DIR/output.xml
 RET=$?
 if [ $RET != 0 ]; then
  echo "dir xml validation failed"
@@ -73,4 +76,4 @@ fi
 
 
 echo "All XML validation tests passed xmllint"
-rm -f output.xml
+rm -f $DIR/output.xml

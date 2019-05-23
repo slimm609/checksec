@@ -1,5 +1,6 @@
 #!/bin/bash
 # run a quick test of checksec to ensure normal operations. 
+DIR=$(cd $(dirname "$0"); pwd)
 
-./xml-checks.sh || exit 2
-./json-checks.sh || exit 2
+$DIR/xml-checks.sh || exit 2
+$DIR/json-checks.sh || exit 2

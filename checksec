@@ -68,10 +68,10 @@ format="cli"
 SCRIPT_NAME="checksec"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
 SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename ${SCRIPT_NAME} .sh).sig"
-SCRIPT_VERSION=2019011901
+SCRIPT_VERSION=2019052301
 SCRIPT_MAJOR=1
-SCRIPT_MINOR=11
-SCRIPT_REVISION=1
+SCRIPT_MINOR=12
+SCRIPT_REVISION=0
 pkg_release=false
 
 if [[ $(id -u) != 0 ]]; then
@@ -708,7 +708,7 @@ kernelcheck() {
   if $kconfig | grep -qi 'CONFIG_SLAB_FREELIST_RANDOM'; then
     echo_message "  SLAB freelist randomization:            " "" "" ""
     if $kconfig | grep -qi 'CONFIG_SLAB_FREELIST_RANDOM=y'; then
-      echo_message "\033[32mEnabled\033[m\n" "Enabled," " slab_freelist_randomization'yes'" '"slab_freelist_randomization":"yes",'
+      echo_message "\033[32mEnabled\033[m\n" "Enabled," " slab_freelist_randomization='yes'" '"slab_freelist_randomization":"yes",'
     else
       echo_message "\033[31mDisabled\033[m\n" "Disabled," " slab_freelist_randomization='no'" '"slab_freelist_randomization":"no",'
     fi
@@ -1488,15 +1488,15 @@ do
     fdircount=0
     fdirtotal=0
 
-    find -L "$tempdir" -type f 2>/dev/null | while read N; do
+    while read N; do
       if [[ "$N" != "[A-Za-z1-0]*" ]]; then
-        out=$(file "$N" 2>/dev/null)
+        out=$(file "$(readlink -f "$N")")
         if [[  $out =~ ELF ]] ; then
           (( fdirtotal++ ))
         fi
       fi
-    done
-    find -L "$tempdir" -type f 2>/dev/null | while read N; do
+    done < <(find -L "$tempdir" -type f 2>/dev/null)
+    while read N; do
       if [[ "$N" != "[A-Za-z1-0]*" ]]; then
     # read permissions?
     if [[ ! -r "$N" ]]; then
@@ -1527,7 +1527,7 @@ do
         fi
     fi
       fi
-    done
+    done < <(find -L "$tempdir" -type f 2>/dev/null)
     echo_message "" "" "</dir>\n" "}"
     exit 0
     ;;
@@ -1578,7 +1578,7 @@ do
     aslrcheck
     echo_message "* Does the CPU support NX: " "" "<procs>" ""
     nxcheck
-    echo_message "* Core-Dumps access to all users: " "" "<procs>" ""
+    echo_message "* Core-Dumps access to all users: " "" "" ""
     coredumpcheck
     echo_message "         COMMAND    PID RELRO           STACK CANARY            SECCOMP          NX/PaX        PIE                     FORTIFY\n" "" "" '{'
     lastpid=0
