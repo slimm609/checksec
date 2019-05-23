@@ -276,12 +276,12 @@ filecheck() {
   $debug && echo "***function filecheck->RELRO"
   if $readelf -l "$1" 2>/dev/null | grep -q 'GNU_RELRO'; then
     if $readelf -d "$1" 2>/dev/null | grep -q 'BIND_NOW'; then
-      echo_message '\033[32mFull RELRO   \033[m   ' 'Full RELRO,' '<file relro="full"' ' "file": { "relro":"full",'
+      echo_message '\033[32mFull RELRO   \033[m   ' 'Full RELRO,' '<file relro="full"' " \"$1\": { \"relro\":\"full\","
     else
-      echo_message '\033[33mPartial RELRO\033[m   ' 'Partial RELRO,' '<file relro="partial"' ' "file": { "relro":"partial",'
+      echo_message '\033[33mPartial RELRO\033[m   ' 'Partial RELRO,' '<file relro="partial"' " \"$1\": { \"relro\":\"partial\","
     fi
   else
-    echo_message '\033[31mNo RELRO     \033[m   ' 'No RELRO,' '<file relro="no"' ' "file": { "relro":"no",'
+    echo_message '\033[31mNo RELRO     \033[m   ' 'No RELRO,' '<file relro="no"' " \"file\": { \"relro\":\"no\","
   fi
 
   # check for stack canary support
@@ -500,14 +500,18 @@ libcheck() {
   $debug && echo "***function libcheck"
   libs=( $(awk '{ print $6 }' "/proc/$1/maps" | grep '/' | sort -u | xargs file | grep ELF | awk '{ print $1 }' | sed 's/:/ /') )
 
-  echo_message "\n* Loaded libraries (file information, # of mapped files: ${#libs[@]}):\n\n" "" "" ""
+  echo_message "\n* Loaded libraries (file information, # of mapped files: ${#libs[@]}):\n\n" "" "" "\"libs\": {"
 
   for ((element=0; element<${#libs[@]}; element++))
   do
     echo_message "  ${libs[$element]}:\n" "${libs[$element]}," "" ""
     echo_message "    " "" "    " ""
     filecheck "${libs[$element]}"
-    echo_message "\n\n" "\n" " filename='${libs[$element]}' />\n" "\"filename\"=\"${libs[$element]}\""
+    if [[ $element == $((${#libs[@]} - 1)) ]]; then
+      echo_message "\n\n" "\n" " filename='${libs[$element]}' />\n" ""
+    else
+      echo_message "\n\n" "\n" " filename='${libs[$element]}' />\n" "},"
+    fi
   done
 }
 
@@ -1557,9 +1561,9 @@ do
     echo_message "RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH\tSymbols\t\tFORTIFY\tFortified\tFortifiable  FILE\n" '' '' '{'
     filecheck "$2"
     if [[ "$(find "$2" \( -perm -004000 -o -perm -002000 \) -type f -print)" ]] ; then
-      echo_message "\033[37;41m$2$N\033[m" ",$2$N" " filename='$2$N'/>\n" ",\"filename\":\"$2$N\" } }"
+      echo_message "\033[37;41m$2$N\033[m" ",$2$N" " filename='$2$N'/>\n" " } }"
     else
-      echo_message "$2\n" ",$2\n" " filename='$2'/>\n" ",\"filename\":\"$2\" } }"
+      echo_message "$2\n" ",$2\n" " filename='$2'/>\n" " } }"
     fi
     echo
     exit 0
@@ -1592,8 +1596,8 @@ do
           printf "%16s" "$name"
           printf "%7d " "$N"
         else
-          echo_message "" "$N," "<proc pid='$N'" " \$N\": { "
-          echo_message "" "$name," " name='$name'" " \"name\":\"$name\","
+          echo_message "" "$N," " <proc pid='$N'" " \"$N\": { "
+          echo_message "" "$name," " name='$name'" "\"name\":\"$name\","
         fi
         proccheck "$N"
     if [[ "$lastpid" == "$currpid" ]]; then
@@ -1712,10 +1716,10 @@ do
     exit 1
     fi
       proccheck "$N"
-      echo_message "\n\n\n" "\n" "\n" ""
+      echo_message "\n\n\n" "\n" "\n" ","
       echo_message "    RELRO           STACK CANARY   NX/PaX        PIE            RPath       RunPath   Fortify Fortified   Fortifiable\n" '' '' ''
       libcheck "$N"
-      echo_message "\n" "\n" "</proc>\n" "} }"
+      echo_message "\n" "\n" "</proc>\n" "} } }"
     fi
     exit 0
     ;;
