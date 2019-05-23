@@ -424,9 +424,9 @@ proccheck() {
     fi
   else
     if [[ "$1" == "1" ]] ; then
-      echo -n -e '\033[33mPermission denied    \033[m  '
+      echo_message '\033[33mPermission denied    \033[m   ' 'Permission denied,' ' canary="Permission denied"' '"canary":"Permission denied",'
     else
-      echo -n -e '\033[33mNo symbol table found \033[m  '
+      echo_message '\033[33mNo symbol table found \033[m  ' 'No symbol table found,' ' canary="No symbol table found"' '"canary":"No symbol table found",'
     fi
   fi
 
@@ -1638,15 +1638,18 @@ do
     echo_message "* Does the CPU support NX: " '' '' ''
     nxcheck
     echo_message "         COMMAND    PID RELRO           STACK CANARY            SECCOMP          NX/PaX        PIE                     FORTIFY\n" "" "" '{'
-    for N in $(ps -Ao pid,comm | grep "$2" | cut -b1-6); do
+    fpids=($(pgrep -d ' ' "$2"))
+    pos=$(( ${#fpids[*]} - 1 ))
+    last=${fpids[$pos]}
+    for N in "${fpids[@]}"; do
       if [[ -d "$N" ]] ; then
       name=$(head -1 "$N"/status | cut -b 7-)
       if [[ $format == "cli" ]]; then
         printf "%16s" "$name"
         printf "%7d " "$N"
       else
-      echo_message "" "$name," "<proc name='$name'" " \"$name\": {"
-      echo_message "" "$N," " pid='$N'" "\"pid\":\"$N\","
+      echo_message "" "$N," "<proc pid='$N'" " \"$N\": {"
+      echo_message "" "$name," " name='$name'" "\"name\":\"$name\","
   fi
   if [[ ! -r "$N/exe" ]] ; then
     if ! (root_privs) ; then
@@ -1660,7 +1663,11 @@ do
     exit 1
   fi
   proccheck "$N"
-  echo_message "\n" "\n" "</proc>\n" ""
+  if [[ "$N" == "$last" ]]; then
+    echo_message "\n" "\n" "</proc>\n" ""
+  else
+    echo_message "\n" "\n" "</proc>\n" ","
+  fi
       fi
     done
   echo_message "\n" "\n" "\n" "}\n"
