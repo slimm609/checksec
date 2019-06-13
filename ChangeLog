@@ -1,3 +1,19 @@
+Rev-2019061301  Brian Davis     <slimm609@gmail.com>
+        * checksec.sh: adds Clang CFI and SafeStack checks
+           Thanks dobin
+        * checksec.sh: Proc-all proccheck() json fix
+           Thanks etke
+        * checksec.sh: Fix --proc-all json output
+           Thanks etke
+        * checksec.sh: Switch --proc to use pgrep and fix json output
+           Thanks etke
+        * checksec.sh: Fix --proc-libs json output
+           Thanks etke
+        * checksec.sh: Fixed some calls to readelf missing stderr redirection to /dev/null
+           Thanks areisbr
+        * checksec.sh: fixed several issues around json and xml formatting
+        * checksec.sh: fixed fortify source catching false positives
+
 Rev-2019011901  Brian Davis     <slimm609@gmail.com>
         * checksec.sh: Updated to 1.11.1
         * checksec.sh: resolved issues with readelf
