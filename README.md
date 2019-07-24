@@ -6,8 +6,9 @@ It has been originally written by Tobias Klein and the original source is availa
 
 Updates
 -------
-  ** MAJOR UPDATES **
-   - changed structure to more modular and switched to getopts so options can be in any order.   e.g. format=json can be at the end now, however.   All options now require `--$option=$value` instead of `--$option $value`
+  ** MAJOR UPDATES ** 2.0.0
+   - Changed structure to be more modular and switched to getopts so options can be in any order.   e.g. format=json can be at the end now, however.  
+   - All options now require `--$option=$value` instead of `--$option $value`
 
    Last Update: 2019-07-23
 
