@@ -5,5 +5,12 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile.ubuntu
-    image:  checksec
+    image:  checksec-ubuntu
+    command: bash -c "./tests/test-checksec.sh"
+
+  checksec-arch:
+    build:
+      context: ./
+      dockerfile: Dockerfile.arch
+    image:  checksec-arch
     command: bash -c "./tests/test-checksec.sh"

@@ -1,7 +1,7 @@
 FROM archlinux/base:latest
 
 # Install dependencies
-RUN pacman -Syu --noconfirm vim base-devel && ln -s $(command -v vim) /bin/vi
+RUN pacman -Syu --noconfirm vim base-devel python-pip && ln -s $(command -v vim) /bin/vi && pip install demjson
 
 COPY .  /root
 WORKDIR /root

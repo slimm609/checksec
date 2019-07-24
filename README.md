@@ -6,7 +6,10 @@ It has been originally written by Tobias Klein and the original source is availa
 
 Updates
 -------
-   Last Update: 2019-06-13
+  ** MAJOR UPDATES **
+   - changed structure to more modular and switched to getopts so options can be in any order.   e.g. format=json can be at the end now, however.   All options now require `--$option=$value` instead of `--$option $value`
+
+   Last Update: 2019-07-23
 
 For OSX
 -------
@@ -15,31 +18,31 @@ For OSX
 Examples
 --------
 
-**normal (or --format cli)**
+**normal (or --format=cli)**
 
-    $checksec --file /bin/ls
+    $checksec --file=/bin/ls
     RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FILE
     Partial RELRO   Canary found      NX enabled    No PIE          No RPATH   No RUNPATH   /bin/ls
 
 **csv**
 
-    $ checksec --output csv --file /bin/ls
+    $ checksec --output=csv --file=/bin/ls
     Partial RELRO,Canary found,NX enabled,No PIE,No RPATH,No RUNPATH,/bin/ls
 
 **xml**
     
-    $ checksec --output xml --file /bin/ls
+    $ checksec --output=xml --file=/bin/ls
     <?xml version="1.0" encoding="UTF-8"?>
     <file relro="partial" canary="yes" nx="yes" pie="no" rpath="no" runpath="no" filename='/bin/ls'/>
 
 **json**
 
-	$ checksec --output json --file /bin/ls	
+	$ checksec --output=json --file=/bin/ls	
 	{ "file": { "relro":"partial","canary":"yes","nx":"yes","pie":"no","rpath":"no","runpath":"no","filename":"/bin/ls" } }
 
 **Fortify test in cli**
 
-    $ checksec --fortify-proc 1
+    $ checksec --fortify-proc=1
     * Process name (PID)                         : init (1)
     * FORTIFY_SOURCE support available (libc)    : Yes
     * Binary compiled with FORTIFY_SOURCE support: Yes
@@ -123,7 +126,7 @@ Examples
 
 **Kernel Test in XML**
 
-	$ checksec --output xml --kernel
+	$ checksec --output=xml --kernel
 	<?xml version="1.0" encoding="UTF-8"?>
 	<kernel config='/boot/config-3.11-2-amd64' gcc_stack_protector='yes' strict_user_copy_check='no' ro_kernel_data='yes' restrict_dev_mem_access='yes' restrict_dev_kmem_access='no'>
 		<grsecurity config='no' />
@@ -132,7 +135,7 @@ Examples
 
 **Kernel Test in Json**
 
-	$ checksec --output json --kernel
+	$ checksec --output=json --kernel
  	{ "kernel": { "KernelConfig":"/boot/config-3.11-2-amd64","gcc_stack_protector":"yes","strict_user_copy_check":"no","ro_kernel_data":"yes","restrict_dev_mem_access":"yes","restrict_dev_kmem_access":"no" },{ "grsecurity_config":"no" },{ "kernheap_config":"no" } }
 
 Using with Cross-compiled Systems
@@ -145,9 +148,4 @@ The checksec tool can be used against cross-compiled target file-systems offline
 The checksec tool's normal use case is for runtime checking of the systems configruation.  If the system is an embedded target, the native binutils tools like readelf may not be present.  This would restrict which parts of the script will work.
 
 Even with those limitations, the amount of valuable information this script provides, still makes it a valuable tool for checking offline file-systems.
-
-Warning
--------
-
-Due to the original structure of the script the **--output** argument should be placed first on the command line arguments. Doing differently would require really big changes in the code.
 
