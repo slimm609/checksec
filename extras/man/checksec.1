@@ -1,7 +1,7 @@
 \" Process this file with
 .\" groff -man -Tascii foo.1
 .\"
-.TH CHECKSEC 1 "FEBURARY 2016" Linux "User Manuals"
+.TH CHECKSEC 1 "FEBURARY 2019" Linux "User Manuals"
 .SH NAME
 checksec \- check executables and kernel properties
 .SH SYNOPSIS
@@ -13,41 +13,41 @@ is a bash script used to check the properties of executables
 options (like GRSecurity and SELinux).
 .SH OPTIONS
 .TP
-\fB\-o\fP or \fB\--output\fP or \fB\--format\fP \fB{cli|csv|xml|json}\fP
+\fB\--output=\fP or \fB\--format=\fP \fB{cli|csv|xml|json}\fP
 Output the results in different formats for ingestion to other applications.
 NOTE: This option must go before any other options currently
 .TP
-\fB\-h\fP or \fB\--help\fP
+\fB\--help\fP
 Displays the help text
 .TP
-\fB\-f\fP or \fB\--file\fP
+\fB\--file={filename}\fP
 Checks individual files for security features compiled into the executable
 .TP
-\fB\-d\fP or \fB\--dir\fP
+\fB\--dir={directory}\fP
 Recursively checks all executable files in the directory for security features compiled into the executables
 .TP
-\fB\-p\fP or \fB\--proc\fP
+\fB\--proc={pid}\fP
 Checks the security features of a running process by name
 .TP
-\fB\-pa\fP or \fB\--proc-all\fP
+\fB\--proc-all\fP
 Checks the security features of all running processes
 .TP
-\fB\-pl\fP or \fB\--proc-libs\fP
+\fB\--proc-libs\fP
 Checks the security features of the all libraries of a running process ID
 .TP
-\fB\-k\fP or \fB\--kernel\fP
+\fB\--kernel[=kconfig]\fP
 Checks the security features of the running kernel or a specified kernel config
 .TP
-\fB\-ff\fP or \fB\--fortify-file\fP
+\fB\--fortify-file={filename}\fP
 Checks the fortifiability of a file and if any of the fortifiable features have already been compiled into the file
 .TP
-\fB\-fp\fP or \fB\--fortify-proc\fP
+\fB\--fortify-proc={pid}\fP
 Checks the fortifiability of a running process and if any of the fortifiable features have already been compiled in  
 .TP
 \fB\--version\fP 
 Shows the current version of the running software
 .TP
-\fB\-u\fP or \fB\--update\fP or \fB\--upgrade\fP
+\fB\--update\fP or \fB\--upgrade\fP
 Checks source for a signed update and updates the application if available
 
 .SH DIAGNOSTICS

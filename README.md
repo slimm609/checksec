@@ -10,7 +10,7 @@ Updates
    - Changed structure to be more modular and switched to getopts so options can be in any order.   e.g. format=json can be at the end now, however.  
    - All options now require `--$option=$value` instead of `--$option $value`
 
-   Last Update: 2019-07-23
+   Last Update: 2019-07-24
 
 For OSX
 -------

@@ -68,10 +68,10 @@ format="cli"
 SCRIPT_NAME="checksec"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
 SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename ${SCRIPT_NAME} .sh).sig"
-SCRIPT_VERSION=2019072301
+SCRIPT_VERSION=2019072401
 SCRIPT_MAJOR=2
 SCRIPT_MINOR=0
-SCRIPT_REVISION=0
+SCRIPT_REVISION=1
 pkg_release=false
 commandsmissing=false
 OPT=0
@@ -231,20 +231,20 @@ version() {
 
 # help
 help() {
-  echo "Usage: checksec [--output {cli|csv|xml|json}] [OPTION]"
+  echo "Usage: checksec [--format={cli,csv,xml,json}] [OPTION]"
   echo
   echo
   echo "Options:"
   echo
   echo " ## Checksec Options"
-  echo "  --file=<file>"
-  echo "  --dir=<directory>"
-  echo "  --proc=<process name>"
+  echo "  --file={file}"
+  echo "  --dir={directory}"
+  echo "  --proc={process name}"
   echo "  --proc-all"
-  echo "  --proc-libs=<process ID>"
-  echo "  --kernel=[kconfig]"
-  echo "  --fortify-file=<executable-file>"
-  echo "  --fortify-proc=<process ID>"
+  echo "  --proc-libs={process ID}"
+  echo "  --kernel[=kconfig]"
+  echo "  --fortify-file={executable-file}"
+  echo "  --fortify-proc={process ID}"
   echo "  --version"
   echo "  --help"
   if ! ${pkg_release}; then
@@ -254,7 +254,8 @@ help() {
   echo " ## Modifiers"
   echo "  --debug"
   echo "  --verbose"
-  echo "  --format=[cli|csv|xml|json]"
+  echo "  --format={cli,csv,xml,json}"
+  echo "  --output={cli,csv,xml,json}"
   echo
   echo "For more information, see:"
   echo "  http://github.com/slimm609/checksec.sh"
@@ -1831,7 +1832,7 @@ while getopts "${optspec}" optchar; do
                   upgrade
                   exit 0
                   ;;
-                format=*)
+                format=*|output=*)
                   output_format=${OPTARG#*=}
                   format
                   ;;
@@ -1889,8 +1890,11 @@ while getopts "${optspec}" optchar; do
     esac
 done
 
-if [[ "${OPT}" != 1 ]]; then
-  printf "\033[31mError: To many options selected. Please select one at a time.\033[m\n\n" 
+if [[ "${OPT}" == 0 ]]; then
+  printf "\033[31mError: No option selected. Please select an option.\033[m\n\n"
+  exit 1
+elif [[ "${OPT}" != 1 ]]; then
+  printf "\033[31mError: To many options selected. Please select one at a time.\033[m\n\n"
   exit 1
 fi
 
@@ -1898,7 +1902,7 @@ for variable in CHK_DIR CHK_FILE CHK_FORTIFY_FILE CHK_FORTIFY_PROC CHK_PROC CHK_
   chk_name="${variable#*_}"
   if [[ -n ${!variable+x} ]]; then
    if [[ ${chk_name,,} == ${!variable} ]]; then
-     printf "\033[31mError: Option Required.\033[m\n\n" 
+     printf "\033[31mError: Option Required.\033[m\n\n"
      help
      exit 1
    fi
