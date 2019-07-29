@@ -68,13 +68,14 @@ format="cli"
 SCRIPT_NAME="checksec"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
 SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename ${SCRIPT_NAME} .sh).sig"
-SCRIPT_VERSION=2019072401
+SCRIPT_VERSION=2019072901
 SCRIPT_MAJOR=2
-SCRIPT_MINOR=0
-SCRIPT_REVISION=1
+SCRIPT_MINOR=1
+SCRIPT_REVISION=0
 pkg_release=false
 commandsmissing=false
 OPT=0
+extended_checks=false
 # FORTIFY_SOURCE vars
 FS_end=_chk
 FS_cnt_total=0
@@ -256,6 +257,7 @@ help() {
   echo "  --verbose"
   echo "  --format={cli,csv,xml,json}"
   echo "  --output={cli,csv,xml,json}"
+  echo "  --extended"
   echo
   echo "For more information, see:"
   echo "  http://github.com/slimm609/checksec.sh"
@@ -406,6 +408,27 @@ filecheck() {
     echo_message '\033[33mNot an ELF file\033[m   ' 'Not an ELF file,' ' pie="not_elf"' '"pie":"not_elf",'
   fi
 
+  if ${extended_checks}; then
+    # check if compiled with Clang CFI
+    ${debug} && echo -e "\n***function filecheck->clangcfi"
+    #if $readelf -s "$1" 2>/dev/null | grep -Eq '\.cfi'; then
+    read -a cfifunc <<< $($readelf -s "${1}" 2>/dev/null | grep .cfi | awk '{ print $8 }' )
+    func=${cfifunc/.cfi/}
+    if [ ! -z "$cfifunc" ] && $readelf -s "$1" 2>/dev/null | grep -q "$func$"; then
+      echo_message '\033[32mClang CFI found   \033[m   ' 'with CFI,' ' clangcfi="yes"' '"clangcfi":"yes",'
+    else
+      echo_message '\033[31mNo Clang CFI found\033[m   ' 'without CFI,' ' clangcfi="no"' '"clangcfi":"no",'
+    fi
+
+    # check if compiled with Clang SafeStack
+    ${debug} && echo -e "\n***function filecheck->safestack"
+    if $readelf -s "$1" 2>/dev/null | grep -Eq '__safestack_init'; then
+      echo_message '\033[32mSafeStack found   \033[m   ' 'with SafeStack,' ' safestack="yes"' '"safestack":"yes",'
+    else
+      echo_message '\033[31mNo SafeStack found\033[m   ' 'without SafeStack,' ' safestack="no"' '"safestack":"no",'
+    fi
+  fi
+
   # check for rpath / run path
   ${debug} && echo -e "\n***function filecheck->rpath"
   # search for a line that matches RPATH and extract the colon-separated path list within brackets
@@ -517,6 +540,27 @@ proccheck() {
       echo_message '\033[33mPermission denied    \033[m   ' 'Permission denied,' ' canary="Permission denied"' '"canary":"Permission denied",'
     else
       echo_message '\033[33mNo symbol table found \033[m  ' 'No symbol table found,' ' canary="No symbol table found"' '"canary":"No symbol table found",'
+    fi
+  fi
+
+  if ${extended_checks}; then
+    # check if compiled with Clang CFI
+    $debug && echo -e "\n***function proccheck->clangcfi"
+    #if $readelf -s "$1" 2>/dev/null | grep -Eq '\.cfi'; then
+    read -a cfifunc <<< $($readelf -s "$1/exe" 2>/dev/null | grep .cfi | awk '{ print $8 }' )
+    func=${cfifunc/.cfi/}
+    if [ ! -z "$cfifunc" ] && $readelf -s "$1/exe" 2>/dev/null | grep -q "$func$"; then
+      echo_message '\033[32mClang CFI found   \033[m   ' 'with CFI,' ' clangcfi="yes"' '"clangcfi":"yes",'
+    else
+      echo_message '\033[31mNo Clang CFI found\033[m   ' 'without CFI,' ' clangcfi="no"' '"clangcfi":"no",'
+    fi
+
+    # check if compiled with Clang SafeStack
+    $debug && echo -e "\n***function proccheck->safestack"
+    if $readelf -s "$1/exe" 2>/dev/null | grep -Eq '__safestack_init'; then
+      echo_message '\033[32mSafeStack found   \033[m   ' 'with SafeStack,' ' safestack="yes"' '"safestack":"yes",'
+    else
+      echo_message '\033[31mNo SafeStack found\033[m   ' 'without SafeStack,' ' safestack="no"' '"safestack":"no",'
     fi
   fi
 
@@ -1468,8 +1512,11 @@ chk_dir () {
     printf "\033[31mError: The directory '%s' does not exist.\033[m\n\n" "${tempdir}"
     exit 1
   fi
-
-  echo_message "RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH    Symbols      \tFORTIFY\tFortified\tFortifiable   Filename\n" '' "<dir name='$tempdir'>\n" "{ \"dir\": { \"name\":\"$tempdir\" },"
+  if ${extended_checks}; then
+    echo_message "RELRO           STACK CANARY      NX            PIE             Clang CFI            SafeStack            RPATH      RUNPATH    Symbols      \tFORTIFY\tFortified\tFortifiable   Filename\n" '' "<dir name='$tempdir'>\n" "{ \"dir\": { \"name\":\"$tempdir\" },"
+  else
+    echo_message "RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH    Symbols      \tFORTIFY\tFortified\tFortifiable   Filename\n" '' "<dir name='$tempdir'>\n" "{ \"dir\": { \"name\":\"$tempdir\" },"
+  fi
   fdircount=0
   fdirtotal=0
 
@@ -1539,7 +1586,11 @@ chk_file () {
     printf "\033[m\n"
     exit 1
   fi
-  echo_message "RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH\tSymbols\t\tFORTIFY\tFortified\tFortifiable  FILE\n" '' '' '{'
+  if ${extended_checks}; then
+    echo_message "RELRO           STACK CANARY      NX            PIE             Clang CFI            SafeStack            RPATH      RUNPATH\tSymbols\t\tFORTIFY\tFortified\tFortifiable  FILE\n" '' '' '{'
+  else
+    echo_message "RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH\tSymbols\t\tFORTIFY\tFortified\tFortifiable  FILE\n" '' '' '{'
+  fi
   filecheck "${CHK_FILE}"
   if [[ "$(find "${CHK_FILE}" \( -perm -004000 -o -perm -002000 \) -type f -print)" ]] ; then
     echo_message "\033[37;41m${CHK_FILE}${N}\033[m" ",${CHK_FILE}${N}" " filename='${CHK_FILE}${N}'/>\n" " } }"
@@ -1556,7 +1607,11 @@ chk_proc_all () {
   nxcheck
   echo_message "* Core-Dumps access to all users: " "" "" ""
   coredumpcheck
-  echo_message "         COMMAND    PID RELRO           STACK CANARY            SECCOMP          NX/PaX        PIE                     FORTIFY\n" "" "" '{'
+  if ${extended_checks}; then
+    echo_message "         COMMAND    PID RELRO           STACK CANARY            Clang CFI            SafeStack            SECCOMP          NX/PaX        PIE                     FORTIFY\n" "" "" '{'
+  else
+    echo_message "         COMMAND    PID RELRO           STACK CANARY            SECCOMP          NX/PaX        PIE                     FORTIFY\n" "" "" '{'
+  fi
   lastpid=0
   currpid=0
   for N in [1-9]*; do
@@ -1569,11 +1624,11 @@ chk_proc_all () {
       (( currpid++ ))
       name=$(head -1 "${N}"/status | cut -b 7-)
       if [[ $format == "cli" ]]; then
-        printf "%16s" "${N}ame"
+        printf "%16s" "${name}"
         printf "%7d " "${N}"
       else
         echo_message "" "${N}," " <proc pid='${N}'" " \"${N}\": { "
-        echo_message "" "${N}ame," " name='${N}ame'" "\"name\":\"${N}ame\","
+        echo_message "" "${name}," " name='${name}'" "\"name\":\"${name}\","
       fi
       proccheck "${N}"
   if [[ "${lastpid}" == "${currpid}" ]]; then
@@ -1609,7 +1664,11 @@ chk_proc () {
   aslrcheck
   echo_message "* Does the CPU support NX: " '' '' ''
   nxcheck
-  echo_message "         COMMAND    PID RELRO           STACK CANARY            SECCOMP          NX/PaX        PIE                     FORTIFY\n" "" "" '{'
+  if ${extended_checks}; then
+    echo_message "         COMMAND    PID RELRO           STACK CANARY            Clang CFI            SafeStack            SECCOMP          NX/PaX        PIE                     FORTIFY\n" "" "" '{'
+  else
+    echo_message "         COMMAND    PID RELRO           STACK CANARY            SECCOMP          NX/PaX        PIE                     FORTIFY\n" "" "" '{'
+  fi
   fpids=($(pgrep -d ' ' "${CHK_PROC}"))
   pos=$(( ${#fpids[*]} - 1 ))
   last=${fpids[$pos]}
@@ -1617,11 +1676,11 @@ chk_proc () {
     if [[ -d "${N}" ]] ; then
       name=$(head -1 "${N}"/status | cut -b 7-)
       if [[ $format == "cli" ]]; then
-        printf "%16s" "${N}ame"
+        printf "%16s" "${name}"
         printf "%7d " "${N}"
       else
         echo_message "" "${N}," "<proc pid='${N}'" " \"${N}\": {"
-        echo_message "" "${N}ame," " name='${N}ame'" "\"name\":\"${N}ame\","
+        echo_message "" "${name}," " name='${name}'" "\"name\":\"${name}\","
       fi
       if [[ ! -r "${N}/exe" ]] ; then
         if ! (root_privs) ; then
@@ -1660,15 +1719,19 @@ chk_proc_libs () {
   echo_message "* Does the CPU support NX: " '' '' ''
   nxcheck
   echo_message "* Process information:\n\n" "" "" ""
-  echo_message "         COMMAND    PID RELRO           STACK CANARY            SECCOMP        NX/PaX        PIE                     Fortify Source\n" '' '' ''
+  if ${extended_checks}; then
+    echo_message "         COMMAND    PID RELRO           STACK CANARY            Clang CFI            SafeStack            SECCOMP        NX/PaX        PIE                     Fortify Source\n" '' '' ''
+  else
+    echo_message "         COMMAND    PID RELRO           STACK CANARY            SECCOMP        NX/PaX        PIE                     Fortify Source\n" '' '' ''
+  fi
   N=${CHK_PROC_LIBS}
   if [[ -d "${N}" ]] ; then
     name=$(head -1 "${N}/status" | cut -b 7-)
     if [[ "${format}" == "cli" ]]; then
-      printf "%16s" "${N}ame"
+      printf "%16s" "${name}"
       printf "%7d " "${N}"
     else
-      echo_message "" "${N}ame," "<proc name='${N}ame'" "{ \"proc\": { \"name\":\"${N}ame\", "
+      echo_message "" "${name}," "<proc name='${name}'" "{ \"proc\": { \"name\":\"${name}\", "
       echo_message "" "${N}," " pid='${N}'" "\"pid\":\"${N}\","
     fi
       # read permissions?
@@ -1685,7 +1748,11 @@ chk_proc_libs () {
     fi
     proccheck "${N}"
     echo_message "\n\n\n" "\n" "\n" ","
-    echo_message "    RELRO           STACK CANARY   NX/PaX        PIE            RPath       RunPath   Fortify Fortified   Fortifiable\n" '' '' ''
+    if ${extended_checks}; then
+      echo_message "    RELRO           STACK CANARY   Clang CFI            SafeStack            NX/PaX        PIE            Clang CFI            SafeStack            RPath       RunPath   Fortify Fortified   Fortifiable\n" '' '' ''
+    else
+      echo_message "    RELRO           STACK CANARY   NX/PaX        PIE            RPath       RunPath   Fortify Fortified   Fortifiable\n" '' '' ''
+    fi
     libcheck "${N}"
     echo_message "\n" "\n" "</proc>\n" "} } }"
   fi
@@ -1824,6 +1891,10 @@ while getopts "${optspec}" optchar; do
                   ;;
                 debug)
                   debug=true;;
+                help)
+                  help
+                  exit 0
+                  ;;
                 debug_report)
                   debug_report
                   exit 0
@@ -1838,6 +1909,9 @@ while getopts "${optspec}" optchar; do
                   ;;
                 verbose)
                   verbose=true
+                  ;;
+                extended)
+                  extended_checks=true
                   ;;
                 dir=*|dir)
                   CHK_DIR=${OPTARG#*=};
