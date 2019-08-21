@@ -632,7 +632,7 @@ proccheck() {
 # check mapped libraries
 libcheck() {
   ${debug} && echo "***function libcheck"
-  libs=( $(awk '{ print $6 }' "/proc/${1}/maps" | grep '/' | sort -u | xargs file | grep ELF | awk '{ print ${1} }' | sed 's/:/ /') )
+  libs=( $(awk '{ print $6 }' "/proc/${1}/maps" | grep '/' | sort -u | xargs file | grep ELF | awk '{ print $1 }' | sed 's/:/ /') )
 
   echo_message "\n* Loaded libraries (file information, # of mapped files: ${#libs[@]}):\n\n" "" "" "\"libs\": {"
 
