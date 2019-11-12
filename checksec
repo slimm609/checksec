@@ -91,6 +91,10 @@ command_exists () {
   type "${1}"  > /dev/null 2>&1;
 }
 
+if [[ $(id -u) != 0 ]]; then
+    export PATH=${PATH}:/sbin/:/usr/sbin/
+fi
+
 for command in cat awk sysctl uname mktemp openssl grep stat file find sort fgrep head ps readlink basename id which xargs; do
     if ! (command_exists ${command}); then
        echo -e "\e[31mWARNING: '${command}' not found! It's required for most checks.\e[0m"
@@ -112,12 +116,6 @@ elif (command_exists greadelf); then
 else
     echo -e "\n\e[31mERROR: readelf is a required tool for almost all tests. Aborting...\e[0m\n"
     exit
-fi
-
-
-
-if [[ $(id -u) != 0 ]]; then
-    export PATH=${PATH}:/sbin/:/usr/sbin/
 fi
 
 sysarch=$(uname -m)
