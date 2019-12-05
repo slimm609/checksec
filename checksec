@@ -923,11 +923,6 @@ kernelcheck() {
     if ${kconfig} | grep -qi 'CONFIG_HARDENED_USERCOPY=y'; then
       echo_message "\033[32mEnabled\033[m\n" "Enabled," " hardened_usercopy='yes'" '"hardened_usercopy":"yes",'
       echo_message "  Hardened Usercopy Pagespan:             " "" "" ""
-      if ${kconfig} | grep -qi 'CONFIG_HARDENED_USERCOPY_PAGESPAN=y'; then
-        echo_message "\033[32mEnabled\033[m\n" "Enabled," " hardened_usercopy_pagespan='yes'" '"hardened_usercopy_pagespan":"yes",'
-      else
-        echo_message "\033[31mDisabled\033[m\n" "Disabled," " hardened_usercopy_pagespan='no'" '"hardened_usercopy_pagespan":"no",'
-      fi
     else
       echo_message "\033[31mDisabled\033[m\n" "Disabled," " hardened_usercopy='no'" '"hardened_usercopy":"no",'
     fi
