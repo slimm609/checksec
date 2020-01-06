@@ -62,7 +62,6 @@ export LC_ALL="C"
 
 # global vars
 debug=false
-have_readelf=1
 verbose=false
 format="cli"
 SCRIPT_NAME="checksec"
