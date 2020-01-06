@@ -764,6 +764,18 @@ kernelcheck() {
     echo_message "\033[31mNone\033[m\n" "None," " randomize_va_space='none'" '"randomize_va_space":"none",'
   fi
 
+  echo_message "  NX protection:                          " "" "" ""
+  if (command_exists dmesg) && (root_privs); then
+    nx_protection=$(dmesg -t | grep -Fw NX)
+    if [[ "x${nx_protection}" == "xNX (Execute Disable) protection: active" ]]; then
+      echo_message "\033[32mEnabled\033[m\n" "Enabled," " nx_protection='yes'" '"nx_protection":"yes",'
+    else
+      echo_message "\033[31mDisabled\033[m\n" "Disabled," " nx_protection='no'" '"nx_protection":"no",'
+    fi
+  else
+    echo_message "\033[33mSkipped\033[m\n" "Skipped," " nx_protection='skipped'" '"nx_protection":"skipped",'
+  fi
+
   echo_message "  Protected symlinks:                     " "" "" ""
   symlink=$(sysctl -b -e fs.protected_symlinks)
   if [[ "x${symlink}" == "x1" ]]; then
