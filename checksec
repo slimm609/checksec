@@ -911,13 +911,6 @@ kernelcheck() {
     fi
   fi
 
-  echo_message "  Exec Shield:                            " """" ""
-  if grep -qi 'kernel.exec-shield = 1' /etc/sysctl.conf 2>/dev/null ; then
-    echo_message '\033[32mEnabled\033[m\n\n' '' '' ''
-  else
-    echo_message '\033[31mDisabled\033[m\n\n' '' '' ''
-  fi
-
   if ${kconfig} | grep -qi 'CONFIG_HARDENED_USERCOPY'; then
     echo_message "  Hardened Usercopy:                      " "" "" ""
     if ${kconfig} | grep -qi 'CONFIG_HARDENED_USERCOPY=y'; then
