@@ -412,7 +412,7 @@ filecheck() {
     #if $readelf -s "$1" 2>/dev/null | grep -Eq '\.cfi'; then
     read -a cfifunc <<< $($readelf -s "${1}" 2>/dev/null | grep .cfi | awk '{ print $8 }' )
     func=${cfifunc/.cfi/}
-    if [ ! -z "$cfifunc" ] && $readelf -s "$1" 2>/dev/null | grep -q "$func$"; then
+    if [ -n "$cfifunc" ] && $readelf -s "$1" 2>/dev/null | grep -q "$func$"; then
       echo_message '\033[32mClang CFI found   \033[m   ' 'with CFI,' ' clangcfi="yes"' '"clangcfi":"yes",'
     else
       echo_message '\033[31mNo Clang CFI found\033[m   ' 'without CFI,' ' clangcfi="no"' '"clangcfi":"no",'
@@ -547,7 +547,7 @@ proccheck() {
     #if $readelf -s "$1" 2>/dev/null | grep -Eq '\.cfi'; then
     read -a cfifunc <<< $($readelf -s "$1/exe" 2>/dev/null | grep .cfi | awk '{ print $8 }' )
     func=${cfifunc/.cfi/}
-    if [ ! -z "$cfifunc" ] && $readelf -s "$1/exe" 2>/dev/null | grep -q "$func$"; then
+    if [ -n "$cfifunc" ] && $readelf -s "$1/exe" 2>/dev/null | grep -q "$func$"; then
       echo_message '\033[32mClang CFI found   \033[m   ' 'with CFI,' ' clangcfi="yes"' '"clangcfi":"yes",'
     else
       echo_message '\033[31mNo Clang CFI found\033[m   ' 'without CFI,' ' clangcfi="no"' '"clangcfi":"no",'
