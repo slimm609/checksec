@@ -95,7 +95,7 @@ if [[ $(id -u) != 0 ]]; then
     export PATH=${PATH}:/sbin/:/usr/sbin/
 fi
 
-for command in cat awk sysctl uname mktemp openssl grep stat file find sort fgrep head ps readlink basename id which xargs; do
+for command in cat awk sysctl uname mktemp openssl grep stat file find sort head ps readlink basename id which xargs; do
     if ! (command_exists ${command}); then
        echo -e "\e[31mWARNING: '${command}' not found! It's required for most checks.\e[0m"
        commandsmissing=true
@@ -492,8 +492,8 @@ filecheck() {
   FS_chk_func_libc="$(${readelf} -s $FS_libc 2>/dev/null | sed -ne 's/.*__\(.*_chk\)@@.*/\1/p')"
   FS_func_libc="$(echo "${FS_chk_func_libc}" | sed 's/_chk$//')"
   FS_functions="$(${readelf} --dyn-syms "${1}" 2>/dev/null | awk '{ print $8 }' | sed -e 's/_*//' -e 's/@.*//' -e '/^$/d')"
-  FS_cnt_checked=$(fgrep -xf <(sort <<< "${FS_chk_func_libc}") <(sort <<< "${FS_functions}") | wc -l)
-  FS_cnt_unchecked=$(fgrep -xf <(sort <<< "${FS_func_libc}") <(sort <<< "${FS_functions}") | wc -l)
+  FS_cnt_checked=$(grep -Fxf <(sort <<< "${FS_chk_func_libc}") <(sort <<< "${FS_functions}") | wc -l)
+  FS_cnt_unchecked=$(grep -Fxf <(sort <<< "${FS_func_libc}") <(sort <<< "${FS_functions}") | wc -l)
   FS_cnt_total=$((FS_cnt_unchecked+FS_cnt_checked))
 
   if [[ "${FS_functions}" =~ _chk ]]; then
