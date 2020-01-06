@@ -691,7 +691,7 @@ aslrcheck() {
 # check cpu nx flag
 nxcheck() {
   ${debug} && echo -e "\n***function nxcheck"
-  if grep -q nx /proc/cpuinfo; then
+  if grep -qFw nx /proc/cpuinfo; then
     echo_message '\033[32mYes\033[m\n\n' '' '' ''
   else
     echo_message '\033[31mNo\033[m\n\n' '' '' ''
