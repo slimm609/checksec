@@ -101,7 +101,7 @@ for command in cat awk sysctl uname mktemp openssl grep stat file find sort fgre
     fi
 done
 
-if [[ ${command}smissing == true ]]; then
+if [[ ${commandsmissing} == true ]]; then
     echo -e "\n\e[31mWARNING: Not all necessary commands found. Some tests might not work!\e[0m\n"
     sleep 2
 fi
