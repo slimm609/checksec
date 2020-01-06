@@ -788,14 +788,6 @@ kernelcheck() {
     echo_message "\033[31mDisabled\033[m\n" "Disabled," " ipv4_rpath='no'" '"ipv4_rpath":"no",'
   fi
 
-  echo_message "  Ipv6 reverse path filtering:            " "" "" ""
-  ipv6_rpath=$(sysctl -b -e net.ipv6.conf.all.rp_filter)
-  if [[ "x${ipv6_rpath}" == "x1" ]]; then
-    echo_message "\033[32mEnabled\033[m\n" "Enabled," " ipv6_rpath='yes'" '"ipv6_rpath":"yes",'
-  else
-    echo_message "\033[31mDisabled\033[m\n" "Disabled," " ipv6_rpath='no'" '"ipv6_rpath":"no",'
-  fi
-
   echo_message "  Kernel heap randomization:              " "" "" ""
   # NOTE: y means it turns off kernel heap randomization for backwards compatability (libc5)
   if ${kconfig} | grep -qi 'CONFIG_COMPAT_BRK=y'; then
