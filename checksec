@@ -500,8 +500,8 @@ filecheck() {
   else
     echo_message "\033[31mNo\033[m" "No," ' fortify_source="no" ' '"fortify_source":"no",'
   fi
-  echo_message "\t${FS_cnt_checked}\t" ${FS_cnt_checked},  "fortified=\"${FS_cnt_checked}\" " "\"fortified\":\"${FS_cnt_checked}\","
-  echo_message "\t${FS_cnt_total}\t" ${FS_cnt_total} "fortify-able=\"${FS_cnt_total}\"" "\"fortify-able\":\"${FS_cnt_total}\""
+  echo_message "\t${FS_cnt_checked}\t" "${FS_cnt_checked}",  "fortified=\"${FS_cnt_checked}\" " "\"fortified\":\"${FS_cnt_checked}\","
+  echo_message "\t${FS_cnt_total}\t" "${FS_cnt_total}" "fortify-able=\"${FS_cnt_total}\"" "\"fortify-able\":\"${FS_cnt_total}\""
 }
 
 # check process(es)
@@ -1380,7 +1380,7 @@ FS_comparison() {
 
   if [[ ${FS_tmp_func} =~ ^${FS_tmp_libc}$ ]] ; then
     if [[ ${format} == "cli" ]]; then
-      printf " \033[31m%-30s\033[m | __%s%s\n" ${FS_tmp_func} ${FS_tmp_libc} ${FS_end}
+      printf " \033[31m%-30s\033[m | __%s%s\n" "${FS_tmp_func}" "${FS_tmp_libc}" "${FS_end}"
     else
       if [[ $FS_elem_functions == 0 ]]; then
         echo_message "" "${FS_tmp_func},${FS_tmp_libc},yes\n" "    <function name='${FS_tmp_func}' libc='${FS_tmp_libc}' fortifiable='yes' />\n" "\"function\": { \"name\":\"${FS_tmp_func}\", \"libc\":\"${FS_tmp_libc}\", \"fortifiable\":\"yes\" },"
@@ -1394,7 +1394,7 @@ FS_comparison() {
         (( FS_cnt_unchecked++ ))
    elif [[ ${FS_tmp_func} =~ ^${FS_tmp_libc}(_chk) ]] ; then
      if [[ ${format} == "cli" ]]; then
-       printf " \033[32m%-30s\033[m | __%s%s\n" ${FS_tmp_func} ${FS_tmp_libc} ${FS_end}
+       printf " \033[32m%-30s\033[m | __%s%s\n" "${FS_tmp_func}" "${FS_tmp_libc}" "${FS_end}"
      else
       if [[ $FS_elem_functions == 0 ]]; then
         echo_message "" "${FS_tmp_func},${FS_tmp_libc},no\n" "    <function name='${FS_tmp_func}' libc='${FS_tmp_libc}' fortifiable='no' />\n" "\"function\": { \"name\":\"${FS_tmp_func}\", \"libc\":\"${FS_tmp_libc}\", \"fortifiable\":\"no\" },"
