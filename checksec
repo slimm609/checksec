@@ -410,7 +410,7 @@ filecheck() {
     # check if compiled with Clang CFI
     ${debug} && echo -e "\n***function filecheck->clangcfi"
     #if $readelf -s "$1" 2>/dev/null | grep -Eq '\.cfi'; then
-    read -a cfifunc <<< $($readelf -s "${1}" 2>/dev/null | grep .cfi | awk '{ print $8 }' )
+    read -r -a cfifunc <<< $($readelf -s "${1}" 2>/dev/null | grep .cfi | awk '{ print $8 }' )
     func=${cfifunc/.cfi/}
     if [ ! -z "$cfifunc" ] && $readelf -s "$1" 2>/dev/null | grep -q "$func$"; then
       echo_message '\033[32mClang CFI found   \033[m   ' 'with CFI,' ' clangcfi="yes"' '"clangcfi":"yes",'
@@ -431,7 +431,7 @@ filecheck() {
   ${debug} && echo -e "\n***function filecheck->rpath"
   # search for a line that matches RPATH and extract the colon-separated path list within brackets
   # example input: "0x000000000000000f (RPATH) Library rpath: [/lib/systemd:/lib/apparmor]"
-  IFS=: read -a rpath_array <<< $(${readelf} -d "${1}" 2>/dev/null | awk -F'[][]' '/RPATH/ {print $2}')
+  IFS=: read -r -a rpath_array <<< $(${readelf} -d "${1}" 2>/dev/null | awk -F'[][]' '/RPATH/ {print $2}')
   if [[ "${#rpath_array[@]}" -gt 0 ]]; then
     if xargs stat -c %A <<< ${rpath_array[*]} 2>/dev/null | grep -q 'rw'; then
       echo_message '\033[31mRW-RPATH \033[m  ' 'RPATH,' ' rpath="yes"' '"rpath":"yes",'
@@ -444,7 +444,7 @@ filecheck() {
 
   ${debug} && echo -e "\n***function filecheck->runpath"
   # search for a line that matches RUNPATH and extract the colon-separated path list within brackets
-  IFS=: read -a runpath_array <<< $(${readelf} -d "${1}" 2>/dev/null | awk -F'[][]' '/RUNPATH/ {print $2}')
+  IFS=: read -r -a runpath_array <<< $(${readelf} -d "${1}" 2>/dev/null | awk -F'[][]' '/RUNPATH/ {print $2}')
   if [[ "${#runpath_array[@]}" -gt 0 ]]; then
     if xargs stat -c %A <<< ${runpath_array[*]} 2>/dev/null | grep -q 'rw'; then
       echo_message '\033[31mRW-RUNPATH \033[m  ' 'RUNPATH,' ' runpath="yes"' '"runpath":"yes",'
@@ -545,7 +545,7 @@ proccheck() {
     # check if compiled with Clang CFI
     $debug && echo -e "\n***function proccheck->clangcfi"
     #if $readelf -s "$1" 2>/dev/null | grep -Eq '\.cfi'; then
-    read -a cfifunc <<< $($readelf -s "$1/exe" 2>/dev/null | grep .cfi | awk '{ print $8 }' )
+    read -r -a cfifunc <<< $($readelf -s "$1/exe" 2>/dev/null | grep .cfi | awk '{ print $8 }' )
     func=${cfifunc/.cfi/}
     if [ ! -z "$cfifunc" ] && $readelf -s "$1/exe" 2>/dev/null | grep -q "$func$"; then
       echo_message '\033[32mClang CFI found   \033[m   ' 'with CFI,' ' clangcfi="yes"' '"clangcfi":"yes",'
@@ -1513,7 +1513,7 @@ chk_dir () {
   fdircount=0
   fdirtotal=0
 
-  while read N; do
+  while read -r N; do
     if [[ "${N}" != "[A-Za-z1-0]*" ]]; then
       out=$(file "$(readlink -f "${N}")")
       if [[ ${out} =~ ELF ]] ; then
@@ -1521,7 +1521,7 @@ chk_dir () {
       fi
     fi
   done < <(find -L "${tempdir}" -type f 2>/dev/null)
-  while read N; do
+  while read -r N; do
     if [[ "${N}" != "[A-Za-z1-0]*" ]]; then
   # read permissions?
   if [[ ! -r "${N}" ]]; then
