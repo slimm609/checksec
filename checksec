@@ -922,7 +922,6 @@ kernelcheck() {
     echo_message "  Hardened Usercopy:                      " "" "" ""
     if ${kconfig} | grep -qi 'CONFIG_HARDENED_USERCOPY=y'; then
       echo_message "\033[32mEnabled\033[m\n" "Enabled," " hardened_usercopy='yes'" '"hardened_usercopy":"yes",'
-      echo_message "  Hardened Usercopy Pagespan:             " "" "" ""
     else
       echo_message "\033[31mDisabled\033[m\n" "Disabled," " hardened_usercopy='no'" '"hardened_usercopy":"no",'
     fi
@@ -1965,7 +1964,7 @@ elif [[ "${OPT}" != 1 ]]; then
   exit 1
 fi
 
-for variable in CHK_DIR CHK_FILE CHK_FORTIFY_FILE CHK_FORTIFY_PROC CHK_PROC CHK_PROC_LIBS; do 
+for variable in CHK_DIR CHK_FILE CHK_FORTIFY_FILE CHK_FORTIFY_PROC CHK_PROC CHK_PROC_LIBS; do
   chk_name="${variable#*_}"
   if [[ -n ${!variable+x} ]]; then
    if [[ ${chk_name,,} == ${!variable} ]]; then
