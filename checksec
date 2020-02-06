@@ -3,6 +3,7 @@
 # The BSD License (http://www.opensource.org/licenses/bsd-license.php)
 # specifies the terms and conditions of use for checksec.sh:
 #
+# Copyright (c) 2020, Estella Mystagic
 # Copyright (c) 2014-2019, Brian Davis
 # Copyright (c) 2013, Robin David
 # Copyright (c) 2009-2011, Tobias Klein
@@ -34,6 +35,13 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 # THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
+#
+# --- Modified Version ---
+# Name    : checksec.sh
+# Version : x.x.x (selfrando)
+# Author  : Estella Mystagic
+# Date    : Feburary 2020
+# Download: https://github.com/Estella/checksec.sh
 #
 # --- Modified Version ---
 # Name    : checksec.sh
@@ -406,6 +414,14 @@ filecheck() {
     echo_message '\033[33mNot an ELF file\033[m   ' 'Not an ELF file,' ' pie="not_elf"' '"pie":"not_elf",'
   fi
 
+  # check for selfrando support
+  ${debug} && echo -e "\n***function filecheck->selfrando"
+  if ${readelf} -S "${1}" 2>/dev/null | grep -c txtrp | grep -q '1'; then
+    echo_message '\033[32mSelfrando enabled  \033[m   '
+  else
+    echo_message '\033[31mNo Selfrando       \033[m   '
+  fi
+
   if ${extended_checks}; then
     # check if compiled with Clang CFI
     ${debug} && echo -e "\n***function filecheck->clangcfi"
@@ -613,6 +629,14 @@ proccheck() {
     fi
   else
     echo_message '\033[33mNot an ELF file      \033[m   ' 'Not an ELF file,' ' pie="not_elf"' '"pie":"not_elf",'
+  fi
+
+  # check for selfrando support
+  ${debug} && echo -e "\n***function proccheck->selfrando"
+  if ${readelf} -S "${1}/exe" 2>/dev/null | grep -c txtrp | grep -q '1'; then
+    echo_message '\033[32mSelfrando enabled    \033[m   '
+  else
+    echo_message '\033[31mNo Selfrando         \033[m   '
   fi
 
   #check for forifty source support
@@ -1506,9 +1530,9 @@ chk_dir () {
     exit 1
   fi
   if ${extended_checks}; then
-    echo_message "RELRO           STACK CANARY      NX            PIE             Clang CFI            SafeStack            RPATH      RUNPATH    Symbols      \tFORTIFY\tFortified\tFortifiable   Filename\n" '' "<dir name='$tempdir'>\n" "{ \"dir\": { \"name\":\"$tempdir\" },"
+    echo_message "RELRO           STACK CANARY      NX            PIE             SELFRANDO             Clang CFI            SafeStack            RPATH      RUNPATH    Symbols      \tFORTIFY\tFortified\tFortifiable   Filename\n" '' "<dir name='$tempdir'>\n" "{ \"dir\": { \"name\":\"$tempdir\" },"
   else
-    echo_message "RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH    Symbols      \tFORTIFY\tFortified\tFortifiable   Filename\n" '' "<dir name='$tempdir'>\n" "{ \"dir\": { \"name\":\"$tempdir\" },"
+    echo_message "RELRO           STACK CANARY      NX            PIE             SELFRANDO             RPATH      RUNPATH    Symbols      \tFORTIFY\tFortified\tFortifiable   Filename\n" '' "<dir name='$tempdir'>\n" "{ \"dir\": { \"name\":\"$tempdir\" },"
   fi
   fdircount=0
   fdirtotal=0
@@ -1580,9 +1604,9 @@ chk_file () {
     exit 1
   fi
   if ${extended_checks}; then
-    echo_message "RELRO           STACK CANARY      NX            PIE             Clang CFI            SafeStack            RPATH      RUNPATH\tSymbols\t\tFORTIFY\tFortified\tFortifiable  FILE\n" '' '' '{'
+    echo_message "RELRO           STACK CANARY      NX            PIE             SELFRANDO             Clang CFI            SafeStack            RPATH      RUNPATH\tSymbols\t\tFORTIFY\tFortified\tFortifiable  FILE\n" '' '' '{'
   else
-    echo_message "RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH\tSymbols\t\tFORTIFY\tFortified\tFortifiable  FILE\n" '' '' '{'
+    echo_message "RELRO           STACK CANARY      NX            PIE             SELFRANDO             RPATH      RUNPATH\tSymbols\t\tFORTIFY\tFortified\tFortifiable  FILE\n" '' '' '{'
   fi
   filecheck "${CHK_FILE}"
   if [[ "$(find "${CHK_FILE}" \( -perm -004000 -o -perm -002000 \) -type f -print)" ]] ; then
@@ -1601,9 +1625,9 @@ chk_proc_all () {
   echo_message "* Core-Dumps access to all users: " "" "" ""
   coredumpcheck
   if ${extended_checks}; then
-    echo_message "         COMMAND    PID RELRO           STACK CANARY            Clang CFI            SafeStack            SECCOMP          NX/PaX        PIE                     FORTIFY\n" "" "" '{'
+    echo_message "         COMMAND    PID RELRO           STACK CANARY            Clang CFI            SafeStack            SECCOMP          NX/PaX        PIE                     SELFRANDO             FORTIFY\n" "" "" '{'
   else
-    echo_message "         COMMAND    PID RELRO           STACK CANARY            SECCOMP          NX/PaX        PIE                     FORTIFY\n" "" "" '{'
+    echo_message "         COMMAND    PID RELRO           STACK CANARY            SECCOMP          NX/PaX        PIE                     SELFRANDO             FORTIFY\n" "" "" '{'
   fi
   lastpid=0
   currpid=0
@@ -1658,9 +1682,9 @@ chk_proc () {
   echo_message "* Does the CPU support NX: " '' '' ''
   nxcheck
   if ${extended_checks}; then
-    echo_message "         COMMAND    PID RELRO           STACK CANARY            Clang CFI            SafeStack            SECCOMP          NX/PaX        PIE                     FORTIFY\n" "" "" '{'
+    echo_message "         COMMAND    PID RELRO           STACK CANARY            Clang CFI            SafeStack            SECCOMP          NX/PaX        PIE                     SELFRANDO             FORTIFY\n" "" "" '{'
   else
-    echo_message "         COMMAND    PID RELRO           STACK CANARY            SECCOMP          NX/PaX        PIE                     FORTIFY\n" "" "" '{'
+    echo_message "         COMMAND    PID RELRO           STACK CANARY            SECCOMP          NX/PaX        PIE                     SELFRANDO             FORTIFY\n" "" "" '{'
   fi
   fpids=($(pgrep -d ' ' "${CHK_PROC}"))
   pos=$(( ${#fpids[*]} - 1 ))
