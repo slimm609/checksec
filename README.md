@@ -1,4 +1,4 @@
-checksec
+checksec + selfrando support modification: https://github.com/immunant/selfrando
 ========
 
 Checksec is a bash script to check the properties of executables (like PIE, RELRO, PaX, Canaries, ASLR, Fortify Source).
