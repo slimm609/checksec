@@ -1,6 +1,8 @@
 checksec + selfrando support modification: https://github.com/immunant/selfrando
 ========
 
+![CHECKSEC](/checksec2020.png)
+
 Checksec is a bash script to check the properties of executables (like PIE, RELRO, PaX, Canaries, ASLR, Fortify Source).
 It has been originally written by Tobias Klein and the original source is available here: http://www.trapkit.de/tools/checksec.html
 
