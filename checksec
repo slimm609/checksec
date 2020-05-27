@@ -502,7 +502,7 @@ filecheck() {
     echo_message "\033[31mNo\033[m" "No," ' fortify_source="no" ' '"fortify_source":"no",'
   fi
   echo_message "\t${FS_cnt_checked}\t" ${FS_cnt_checked},  "fortified=\"${FS_cnt_checked}\" " "\"fortified\":\"${FS_cnt_checked}\","
-  echo_message "\t${FS_cnt_total}\t" ${FS_cnt_total} "fortify-able=\"${FS_cnt_total}\"" "\"fortify-able\":\"${FS_cnt_total}\""
+  echo_message "\t${FS_cnt_total}\t\t" ${FS_cnt_total} "fortify-able=\"${FS_cnt_total}\"" "\"fortify-able\":\"${FS_cnt_total}\""
 }
 
 # check process(es)
@@ -1563,12 +1563,12 @@ chk_file () {
   fi
   # does the file exist?
   if [[ ! -e "${CHK_FILE}" ]] ; then
-    printf "\033[31mError: The file '%s' does not exist.\033[m\n\n" "${2}"
+    printf "\033[31mError: The file '%s' does not exist.\033[m\n\n" "${CHK_FILE}"
     exit 1
   fi
   # read permissions?
   if [[ ! -r "${CHK_FILE}" ]] ; then
-    printf "\033[31mError: No read permissions for '%s' (run as root).\033[m\n\n" "${2}"
+    printf "\033[31mError: No read permissions for '%s' (run as root).\033[m\n\n" "${CHK_FILE}"
     exit 1
   fi
   # ELF executable?
@@ -1580,9 +1580,9 @@ chk_file () {
     exit 1
   fi
   if ${extended_checks}; then
-    echo_message "RELRO           STACK CANARY      NX            PIE             Clang CFI            SafeStack            RPATH      RUNPATH\tSymbols\t\tFORTIFY\tFortified\tFortifiable  FILE\n" '' '' '{'
+    echo_message "RELRO           STACK CANARY      NX            PIE             Clang CFI            SafeStack            RPATH      RUNPATH\tSymbols\t\tFORTIFY\tFortified\tFortifiable\tFILE\n" '' '' '{'
   else
-    echo_message "RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH\tSymbols\t\tFORTIFY\tFortified\tFortifiable  FILE\n" '' '' '{'
+    echo_message "RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH\tSymbols\t\tFORTIFY\tFortified\tFortifiable\tFILE\n" '' '' '{'
   fi
   filecheck "${CHK_FILE}"
   if [[ "$(find "${CHK_FILE}" \( -perm -004000 -o -perm -002000 \) -type f -print)" ]] ; then
