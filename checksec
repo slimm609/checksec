@@ -1709,6 +1709,10 @@ chk_proc () {
     echo_message "         COMMAND    PID RELRO           STACK CANARY            SECCOMP          NX/PaX        PIE                     SELFRANDO             FORTIFY\n" "" "" '{'
   fi
   fpids=($(pgrep -d ' ' "${CHK_PROC}"))
+  if [[ ${#fpids} -eq 0 ]]; then
+    printf "\033[31mError: No process with the given name found.\033[m\n\n"
+    exit 1
+  fi
   pos=$(( ${#fpids[*]} - 1 ))
   last=${fpids[$pos]}
   for N in "${fpids[@]}"; do
