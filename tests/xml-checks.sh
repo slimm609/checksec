@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 if [ -f /bin/bash ]; then 
 	test_file="/bin/bash"
 elif [ -f /bin/sh ]; then
@@ -19,6 +19,7 @@ $PARENT/checksec --format=xml --proc-all > $DIR/output.xml
 xmllint --noout $DIR/output.xml
 RET=$?
 if [ $RET != 0 ]; then
+ cat ${DIR}/output.xml
  echo "proc-all xml validation failed"
  exit $RET
 fi
@@ -29,19 +30,23 @@ $PARENT/checksec --format=xml --kernel > $DIR/output.xml
 xmllint --noout $DIR/output.xml
 RET=$?
 if [ $RET != 0 ]; then
+ cat ${DIR}/output.xml
  echo "kernel xml validation failed"
  exit $RET
 fi
 
-#check xml against custom kernel config to trigger all checks
-echo "starting custom kernel check - xml"
-$PARENT/checksec --format=xml --kernel=kernel.config > $DIR/output.xml
-xmllint --noout $DIR/output.xml
-RET=$?
-if [ $RET != 0 ]; then
- echo "custom kernel xml validation failed"
- exit $RET
-fi
+for file in $(ls ${PARENT}/kernel_configs/configs/config-*); do
+	#check xml against custom kernel config to trigger all checks
+	echo "starting custom kernel check for file ${file} - xml"
+	$PARENT/checksec --format=xml --kernel=${file} > $DIR/output.xml
+	xmllint --noout $DIR/output.xml
+	RET=$?
+	if [ $RET != 0 ]; then
+	cat ${DIR}/output.xml
+	echo "custom kernel xml validation failed"
+	exit $RET
+	fi
+done
 
 #check xml for file
 echo "starting file check - xml"
@@ -49,6 +54,7 @@ $PARENT/checksec --format=xml --file=$test_file > $DIR/output.xml
 xmllint --noout $DIR/output.xml
 RET=$?
 if [ $RET != 0 ]; then
+ cat ${DIR}/output.xml
  echo "file xml validation failed"
  exit $RET
 fi
@@ -59,6 +65,7 @@ $PARENT/checksec --format=xml --fortify-file=$test_file > $DIR/output.xml
 xmllint --noout $DIR/output.xml
 RET=$?
 if [ $RET != 0 ]; then
+cat ${DIR}/output.xml
  echo "fortify-file xml validation failed"
  exit $RET
 fi
@@ -69,6 +76,7 @@ $PARENT/checksec --format=xml --fortify-proc=1 > $DIR/output.xml
 xmllint --noout $DIR/output.xml
 RET=$?
 if [ $RET != 0 ]; then
+cat ${DIR}/output.xml
  echo "fortify-proc xml validation failed"
  exit $RET
 fi
@@ -80,6 +88,7 @@ $PARENT/checksec --format=xml --dir=/sbin > $DIR/output.xml
 xmllint --noout $DIR/output.xml
 RET=$?
 if [ $RET != 0 ]; then
+ cat ${DIR}/output.xml
  echo "dir xml validation failed"
  exit $RET
 fi

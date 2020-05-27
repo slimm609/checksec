@@ -1,1 +1,4 @@
 sign-checksec.sh
+checksec.crt
+checksec.key
+checksec.pub

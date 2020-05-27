@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # run a quick test of checksec to ensure normal operations. 
 DIR=$(cd $(dirname "$0"); pwd)
 
