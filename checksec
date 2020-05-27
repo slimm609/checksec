@@ -739,10 +739,10 @@ kernelcheck() {
     kconfig="zcat /proc/config.gz"
     echo_message "\033[32m/proc/config.gz\033[m\n\n" '/proc/config.gz' '<kernel config="/proc/config.gz"' '{ "KernelConfig":"/proc/config.gz",'
   elif [[ -f /boot/config-"$(uname -r)" ]] ; then
-    kconfig="cat /boot/config-$(uname -r)"
     kern=$(uname -r)
-    echo_message "\033[33m/boot/config-${kern}\033[m\n\n" "/boot/config-${kern}," "<kernel config='/boot/config-${kern}'" "{ \"KernelConfig\":\"/boot/config-${kern}\","
-    echo_message "  Warning: The config on disk may not represent running kernel config!\n\n" "" "" ""
+    kconfig="cat /boot/config-${kern}"
+    echo_message "\033[33m    /boot/config-${kern}\033[m\n\n" "/boot/config-${kern}," "<kernel config='/boot/config-${kern}'" "{ \"KernelConfig\":\"/boot/config-${kern}\","
+    echo_message "  Warning: The config on disk may not represent running kernel config!\n           Running kernel: ${kern}\n\n" "" "" ""
   elif [[ -f "${KBUILD_OUTPUT:-/usr/src/linux}"/.config ]] ; then
     kconfig="cat ${KBUILD_OUTPUT:-/usr/src/linux}/.config"
     echo_message "\033[33m${KBUILD_OUTPUT:-/usr/src/linux}/.config\033[m\n\n" "${KBUILD_OUTPUT:-/usr/src/linux}/.config," "<kernel config='${KBUILD_OUTPUT:-/usr/src/linux}/.config'" "{ \"KernelConfig\":\"${KBUILD_OUTPUT:-/usr/src/linux}/.config\","
