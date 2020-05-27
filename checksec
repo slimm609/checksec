@@ -810,16 +810,20 @@ kernelcheck() {
   fi
 
   echo_message "  Protected fifos:                        " "" "" ""
-  symlink=$(sysctl -b -e fs.protected_fifos)
-  if [[ "x${symlink}" == "x2" ]]; then
+  fifos=$(sysctl -b -e fs.protected_fifos)
+  if [[ "x${fifos}" == "x" ]]; then
+    echo_message "\033[33mUnsupported\033[m\n" "Unsupported," " protect_fifos='unsupported'" ', "protect_fifos":"unsupported"'
+  elif [[ "x${fifos}" == "x2" ]]; then
     echo_message "\033[32mEnabled\033[m\n" "Enabled," " protect_fifos='yes'" ', "protect_fifos":"yes"'
   else
     echo_message "\033[31mDisabled\033[m\n" "Disabled," " protect_fifos='no'" ', "protect_fifos":"no"'
   fi
 
   echo_message "  Protected regular:                      " "" "" ""
-  hardlink=$(sysctl -b -e fs.protected_regular)
-  if [[ "x${hardlink}" == "x2" ]]; then
+  regular=$(sysctl -b -e fs.protected_regular)
+  if [[ "x${regular}" == "x" ]]; then
+    echo_message "\033[33mUnsupported\033[m\n" "Unsupported," " protect_regular='unsupported'" ', "protect_regular":"unsupported"'
+  elif [[ "x${regular}" == "x2" ]]; then
     echo_message "\033[32mEnabled\033[m\n" "Enabled," " protect_regular='yes'" ', "protect_regular":"yes"'
   else
     echo_message "\033[31mDisabled\033[m\n" "Disabled," " protect_regular='no'" ', "protect_regular":"no"'
