@@ -24,6 +24,17 @@ if [ $RET != 0 ]; then
  exit $RET
 fi
 
+#check json for proc-all
+echo "starting extended proc-all check - json"
+$PARENT/checksec --format=json --proc-all --extended > $DIR/output.json
+$jsonlint --allow duplicate-keys $DIR/output.json > /dev/null
+RET=$?
+if [ $RET != 0 ]; then
+ cat ${DIR}/output.json
+ echo "proc-all json validation failed"
+ exit $RET
+fi
+
 #check json for kernel
 echo "starting kernel check - json"
 $PARENT/checksec --format=json --kernel > $DIR/output.json
@@ -59,6 +70,17 @@ cat ${DIR}/output.json
  exit $RET
 fi
 
+#check json for file extended
+echo "starting extended file check - json"
+$PARENT/checksec --format=json --extended --file=$test_file > $DIR/output.json
+$jsonlint $DIR/output.json > /dev/null
+RET=$?
+if [ $RET != 0 ]; then
+cat ${DIR}/output.json
+ echo "file json validation failed"
+ exit $RET
+fi
+
 #check json for fortify file
 echo "starting fortify-file check - json"
 $PARENT/checksec --format=json --fortify-file=$test_file > $DIR/output.json
@@ -70,9 +92,31 @@ cat ${DIR}/output.json
  exit $RET
 fi
  
+#check json for fortify file
+echo "starting extended fortify-file check - json"
+$PARENT/checksec --format=json --fortify-file=$test_file --extended > $DIR/output.json
+$jsonlint --allow duplicate-keys $DIR/output.json > /dev/null
+RET=$?
+if [ $RET != 0 ]; then
+cat ${DIR}/output.json
+ echo "fortify-file json validation failed"
+ exit $RET
+fi
+
 #check json for fortify proc
 echo "starting fortify-proc check - json"
 $PARENT/checksec --format=json --fortify-proc=1 > $DIR/output.json
+$jsonlint --allow duplicate-keys $DIR/output.json > /dev/null
+RET=$?
+if [ $RET != 0 ]; then
+cat ${DIR}/output.json
+ echo "fortify-file json validation failed"
+ exit $RET
+fi
+
+#check json for fortify proc
+echo "starting extended fortify-proc check - json"
+$PARENT/checksec --format=json --fortify-proc=1 --extended > $DIR/output.json
 $jsonlint --allow duplicate-keys $DIR/output.json > /dev/null
 RET=$?
 if [ $RET != 0 ]; then

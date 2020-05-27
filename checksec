@@ -3,7 +3,7 @@
 # The BSD License (http://www.opensource.org/licenses/bsd-license.php)
 # specifies the terms and conditions of use for checksec.sh:
 #
-# Copyright (c) 2014-2019, Brian Davis
+# Copyright (c) 2014-2020, Brian Davis
 # Copyright (c) 2013, Robin David
 # Copyright (c) 2009-2011, Tobias Klein
 # All rights reserved.
@@ -69,7 +69,7 @@ SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
 SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename ${SCRIPT_NAME} .sh).sig"
 SCRIPT_VERSION=2019072901
 SCRIPT_MAJOR=2
-SCRIPT_MINOR=1
+SCRIPT_MINOR=2
 SCRIPT_REVISION=0
 pkg_release=false
 commandsmissing=false
@@ -511,7 +511,7 @@ filecheck() {
     echo_message "\033[31mNo\033[m" "No," ' fortify_source="no" ' '"fortify_source":"no",'
   fi
   echo_message "\t${FS_cnt_checked}\t" "${FS_cnt_checked}",  "fortified=\"${FS_cnt_checked}\" " "\"fortified\":\"${FS_cnt_checked}\","
-  echo_message "\t${FS_cnt_total}\t" "${FS_cnt_total}" "fortify-able=\"${FS_cnt_total}\"" "\"fortify-able\":\"${FS_cnt_total}\""
+  echo_message "\t${FS_cnt_total}\t\t" "${FS_cnt_total}" "fortify-able=\"${FS_cnt_total}\"" "\"fortify-able\":\"${FS_cnt_total}\""
 }
 
 # check process(es)
@@ -756,16 +756,16 @@ kernelcheck() {
     kconfig="zcat /proc/config.gz"
     echo_message "\033[32m/proc/config.gz\033[m\n\n" '/proc/config.gz' '<kernel config="/proc/config.gz"' '{ "KernelConfig":"/proc/config.gz"'
   elif [[ -f /boot/config-"$(uname -r)" ]] ; then
-    kconfig="cat /boot/config-$(uname -r)"
     kern=$(uname -r)
-    echo_message "\033[33m/boot/config-${kern}\033[m\n\n" "/boot/config-${kern}," "<kernel config='/boot/config-${kern}'" "{ \"KernelConfig\":\"/boot/config-${kern}\""
-    echo_message "  Warning: The config on disk may not represent running kernel config!\n\n" "" "" ""
+    kconfig="cat /boot/config-${kern}"
+    echo_message "\033[33m    /boot/config-${kern}\033[m\n\n" "/boot/config-${kern}," "<kernel config='/boot/config-${kern}'" "{ \"KernelConfig\":\"/boot/config-${kern}\""
+    echo_message "  Warning: The config on disk may not represent running kernel config!\n           Running kernel: ${kern}\n\n" "" "" ""
   elif [[ -f "${KBUILD_OUTPUT:-/usr/src/linux}"/.config ]] ; then
     kconfig="cat ${KBUILD_OUTPUT:-/usr/src/linux}/.config"
     echo_message "\033[33m${KBUILD_OUTPUT:-/usr/src/linux}/.config\033[m\n\n" "${KBUILD_OUTPUT:-/usr/src/linux}/.config," "<kernel config='${KBUILD_OUTPUT:-/usr/src/linux}/.config'" "{ \"KernelConfig\":\"${KBUILD_OUTPUT:-/usr/src/linux}/.config\""
     echo_message "  Warning: The config on disk may not represent running kernel config!\n\n" "" "" ""
   else
-    echo_message "\033[31mNOT FOUND\033[m\n\n" "NOT FOUND,,,,,,," "<kernel config='not_found' />" '{ "KernelConfig":"not_found"'
+    echo_message "\033[31mNOT FOUND\033[m\n\n" "NOT FOUND,,,,,,," "<kernel config='not_found' />" '{ "KernelConfig":"not_found" }'
     exit 0
   fi
   ${debug} && ${kconfig} | grep "CONFIG_GRKERNSEC"
@@ -824,6 +824,7 @@ kernelcheck() {
   else
     echo_message "\033[31mDisabled\033[m\n" "Disabled," " protect_regular='no'" ', "protect_regular":"no"'
   fi
+
   echo_message "  Ipv4 reverse path filtering:            " "" "" ""
   ipv4_rpath=$(sysctl -b -e net.ipv4.conf.all.rp_filter)
   if [[ "x${ipv4_rpath}" == "x1" ]]; then
@@ -1548,9 +1549,9 @@ chk_dir () {
     exit 1
   fi
   if ${extended_checks}; then
-    echo_message "RELRO           STACK CANARY      NX            PIE             SELFRANDO             Clang CFI            SafeStack            RPATH      RUNPATH    Symbols      \tFORTIFY\tFortified\tFortifiable   Filename\n" '' "<dir name='$tempdir'>\n" "{ \"dir\": { \"name\":\"$tempdir\" },"
+    echo_message "RELRO           STACK CANARY      NX            PIE             SELFRANDO             Clang CFI            SafeStack            RPATH      RUNPATH    Symbols      \tFORTIFY\tFortified\tFortifiable   Filename\n" '' "<dir name='$tempdir'>\n" "{ \"dir\": { \"name\":\"$tempdir\" }"
   else
-    echo_message "RELRO           STACK CANARY      NX            PIE             SELFRANDO             RPATH      RUNPATH    Symbols      \tFORTIFY\tFortified\tFortifiable   Filename\n" '' "<dir name='$tempdir'>\n" "{ \"dir\": { \"name\":\"$tempdir\" },"
+    echo_message "RELRO           STACK CANARY      NX            PIE             SELFRANDO             RPATH      RUNPATH    Symbols      \tFORTIFY\tFortified\tFortifiable   Filename\n" '' "<dir name='$tempdir'>\n" "{ \"dir\": { \"name\":\"$tempdir\" }"
   fi
   fdircount=0
   fdirtotal=0
@@ -1563,11 +1564,14 @@ chk_dir () {
       fi
     fi
   done < <(find "${tempdir}" -type f 2>/dev/null)
+  if [[ $fdirtotal -gt 0 ]]; then 
+    echo_message "" "" "" ","
+  fi
   while read -r N; do
     if [[ "${N}" != "[A-Za-z1-0]*" ]]; then
   # read permissions?
   if [[ ! -r "${N}" ]]; then
-      printf "\033[31mError: No read permissions for '%s' (run as root).\033[m\n" "${N}"
+      printf "\033[31mError: No read permissions for '%s' (run as root).\033[m\n" ", ${N}"
   else
       # ELF executable?
       out=$(file "$(readlink -f "${N}")")
@@ -1603,16 +1607,19 @@ chk_file () {
     printf "\033[31mError: Please provide a valid file.\033[m\n\n"
   exit 1
   fi
+
   # does the file exist?
   if [[ ! -e "${CHK_FILE}" ]] ; then
-    printf "\033[31mError: The file '%s' does not exist.\033[m\n\n" "${2}"
+    printf "\033[31mError: The file '%s' does not exist.\033[m\n\n" "${CHK_FILE}"
     exit 1
   fi
+
   # read permissions?
   if [[ ! -r "${CHK_FILE}" ]] ; then
-    printf "\033[31mError: No read permissions for '%s' (run as root).\033[m\n\n" "${2}"
+    printf "\033[31mError: No read permissions for '%s' (run as root).\033[m\n\n" "${CHK_FILE}"
     exit 1
   fi
+
   # ELF executable?
   out=$(file "$(readlink -f "${CHK_FILE}")")
   if [[ ! ${out} =~ ELF ]] ; then
@@ -1622,9 +1629,9 @@ chk_file () {
     exit 1
   fi
   if ${extended_checks}; then
-    echo_message "RELRO           STACK CANARY      NX            PIE             SELFRANDO             Clang CFI            SafeStack            RPATH      RUNPATH\tSymbols\t\tFORTIFY\tFortified\tFortifiable  FILE\n" '' '' '{'
+    echo_message "RELRO           STACK CANARY      NX            PIE             SELFRANDO             Clang CFI            SafeStack            RPATH      RUNPATH\tSymbols\t\tFORTIFY\tFortified\tFortifiable\tFILE\n" '' '' '{'
   else
-    echo_message "RELRO           STACK CANARY      NX            PIE             SELFRANDO             RPATH      RUNPATH\tSymbols\t\tFORTIFY\tFortified\tFortifiable  FILE\n" '' '' '{'
+    echo_message "RELRO           STACK CANARY      NX            PIE             SELFRANDO             RPATH      RUNPATH\tSymbols\t\tFORTIFY\tFortified\tFortifiable\tFILE\n" '' '' '{'
   fi
   filecheck "${CHK_FILE}"
   if [[ "$(find "${CHK_FILE}" \( -perm -004000 -o -perm -002000 \) -type f -print)" ]] ; then

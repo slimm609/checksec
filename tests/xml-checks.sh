@@ -24,6 +24,17 @@ if [ $RET != 0 ]; then
  exit $RET
 fi
 
+#check xml for proc-all
+echo "starting extended proc-all check - xml"
+$PARENT/checksec --format=xml --proc-all --extended > $DIR/output.xml
+xmllint --noout $DIR/output.xml
+RET=$?
+if [ $RET != 0 ]; then
+ cat ${DIR}/output.xml
+ echo "proc-all xml validation failed"
+ exit $RET
+fi
+
 #check xml for kernel
 echo "starting kernel check - xml"
 $PARENT/checksec --format=xml --kernel > $DIR/output.xml
@@ -59,9 +70,31 @@ if [ $RET != 0 ]; then
  exit $RET
 fi
 
+#check xml for file
+echo "starting extended file check - xml"
+$PARENT/checksec --format=xml --file=$test_file --extended > $DIR/output.xml
+xmllint --noout $DIR/output.xml
+RET=$?
+if [ $RET != 0 ]; then
+ cat ${DIR}/output.xml
+ echo "file xml validation failed"
+ exit $RET
+fi
+
 #check xml for fortify file
 echo "starting fortify-file check - xml"
 $PARENT/checksec --format=xml --fortify-file=$test_file > $DIR/output.xml
+xmllint --noout $DIR/output.xml
+RET=$?
+if [ $RET != 0 ]; then
+cat ${DIR}/output.xml
+ echo "fortify-file xml validation failed"
+ exit $RET
+fi
+
+#check xml for fortify file
+echo "starting extended fortify-file check - xml"
+$PARENT/checksec --format=xml --fortify-file=$test_file --extended > $DIR/output.xml
 xmllint --noout $DIR/output.xml
 RET=$?
 if [ $RET != 0 ]; then
@@ -81,6 +114,16 @@ cat ${DIR}/output.xml
  exit $RET
 fi
 
+#check xml for fortify proc
+echo "starting extended fortify-proc check - xml"
+$PARENT/checksec --format=xml --fortify-proc=1 --extended > $DIR/output.xml
+xmllint --noout $DIR/output.xml
+RET=$?
+if [ $RET != 0 ]; then
+cat ${DIR}/output.xml
+ echo "fortify-proc xml validation failed"
+ exit $RET
+fi
  
 #check xml for dir 
 echo "starting dir check - xml"
