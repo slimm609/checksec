@@ -1632,7 +1632,7 @@ chk_file () {
   fi
   filecheck "${CHK_FILE}"
   if [[ "$(find "${CHK_FILE}" \( -perm -004000 -o -perm -002000 \) -type f -print)" ]] ; then
-    echo_message "\033[37;41m${CHK_FILE}${N}\033[m" ",${CHK_FILE}${N}" " filename='${CHK_FILE}${N}'/>\n" " } }"
+    echo_message "\033[37;41m${CHK_FILE}\033[m\n" ",${CHK_FILE}\n" " filename='${CHK_FILE}'/>\n" " } }"
   else
     echo_message "${CHK_FILE}\n" ",${CHK_FILE}\n" " filename='${CHK_FILE}'/>\n" " } }"
   fi
