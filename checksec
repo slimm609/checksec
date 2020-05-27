@@ -912,7 +912,10 @@ kernelcheck() {
   fi
 
   echo_message "  Exec Shield:                            " """" ""
-  if grep -qi 'kernel.exec-shield = 1' /etc/sysctl.conf 2>/dev/null ; then
+  execshield=$(sysctl -b -e kernel.exec-shield)
+  if [[ "x${execshield}" == "x" ]]; then
+    echo_message '\033[32mUnsupported\033[m\n\n' '' '' ''
+  elif [[ "x${execshield}" == "x1" ]]; then
     echo_message '\033[32mEnabled\033[m\n\n' '' '' ''
   else
     echo_message '\033[31mDisabled\033[m\n\n' '' '' ''
