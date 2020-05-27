@@ -10,6 +10,8 @@ Rev-2020052701  Brian Davis    <slimm609@gmail.com>
            Thanks @cgzones
         * checksec.sh: improve core dump checks
            Thanks @cgzones
+        * checksec.sh: Run readelf in wide mode
+           Thanks @cgzones
 Rev-2019061301  Brian Davis     <slimm609@gmail.com>
         * checksec.sh: Updated to 2.0.0 - Breaking changes in options, no longer support short options
         * checksec.sh: Rewrite checksec to use getopts and move to all functions
