@@ -2029,7 +2029,6 @@ elif [[ "${OPT}" != 1 ]]; then
 fi
 
 for variable in CHK_DIR CHK_FILE CHK_FORTIFY_FILE CHK_FORTIFY_PROC CHK_PROC CHK_PROC_LIBS; do
-  chk_name="${variable#*_}"
   if [[ -n ${!variable+x} ]]; then
    if [[ -z "${!variable}" ]]; then
      printf "\033[31mError: Option Required.\033[m\n\n"
