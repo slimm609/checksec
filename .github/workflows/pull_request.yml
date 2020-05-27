@@ -1,0 +1,11 @@
+name: docker-compose-test
+on: pull_request
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: ubuntu checksec
+        run: docker-compose run checksec-ubuntu
+      - name: arch checksec
+        run: docker-compose run checksec-arch

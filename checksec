@@ -403,6 +403,8 @@ filecheck() {
     else
       echo_message '\033[33mDSO          \033[m   ' 'DSO,' ' pie="dso"' '"pie":"dso",'
     fi
+  elif ${readelf} -h "${1}" 2>/dev/null | grep -q 'Type:[[:space:]]*REL'; then
+    echo_message '\033[33mREL          \033[m   ' 'REL,' ' pie="rel"' '"pie":"rel",'
   else
     echo_message '\033[33mNot an ELF file\033[m   ' 'Not an ELF file,' ' pie="not_elf"' '"pie":"not_elf",'
   fi
@@ -468,9 +470,9 @@ filecheck() {
   SYM_cnt=' '
   SYM_cnt=( $(${readelf} --symbols "${1}" 2>/dev/null | grep '\.symtab' | cut -d' ' -f5 | cut -d: -f1))
   if ${readelf} --symbols "${1}" 2>/dev/null | grep -q '\.symtab'; then
-    echo_message "\033[31m${SYM_cnt[0]} Symbols   \033[m  " 'Symbols,' ' symbols="yes"' '"symbols":"yes",'
+    echo_message "\033[31m${SYM_cnt[0]} Symbols\t\033[m  " 'Symbols,' ' symbols="yes"' '"symbols":"yes",'
   else
-    echo_message '\033[32mNo Symbols    \033[m  ' 'No Symbols,' ' symbols="no"' '"symbols":"no",'
+    echo_message '\033[32mNo Symbols\t\033[m  ' 'No Symbols,' ' symbols="no"' '"symbols":"no",'
   fi
 
   # check for FORTIFY SOURCE
@@ -2004,7 +2006,7 @@ while getopts "${optspec}" optchar; do
                   ;;
                 *)
                     printf "\033[31mError: Unknown option %s.\033[m\n\n" "${OPTARG}"
-                    exit 0
+                    exit 1
                     ;;
             esac;;
         *)
