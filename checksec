@@ -67,7 +67,7 @@ format="cli"
 SCRIPT_NAME="checksec"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
 SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename ${SCRIPT_NAME} .sh).sig"
-SCRIPT_VERSION=2019072901
+SCRIPT_VERSION=2020052701
 SCRIPT_MAJOR=2
 SCRIPT_MINOR=2
 SCRIPT_REVISION=0
@@ -763,7 +763,7 @@ kernelcheck() {
     echo_message "\033[33m${KBUILD_OUTPUT:-/usr/src/linux}/.config\033[m\n\n" "${KBUILD_OUTPUT:-/usr/src/linux}/.config," "<kernel config='${KBUILD_OUTPUT:-/usr/src/linux}/.config'" "{ \"KernelConfig\":\"${KBUILD_OUTPUT:-/usr/src/linux}/.config\""
     echo_message "  Warning: The config on disk may not represent running kernel config!\n\n" "" "" ""
   else
-    echo_message "\033[31mNOT FOUND\033[m\n\n" "NOT FOUND,,,,,,," "<kernel config='not_found' />" '{ "KernelConfig":"not_found" }'
+    echo_message "\033[31mNOT FOUND\033[m\n\n" "NOT FOUND,,,,,,," "<kernel config='not_found' />" '{ "KernelConfig":"not_found" } }'
     exit 0
   fi
   ${debug} && ${kconfig} | grep "CONFIG_GRKERNSEC"
