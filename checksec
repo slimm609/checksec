@@ -107,11 +107,11 @@ if [[ ${commandsmissing} == true ]]; then
 fi
 
 if (command_exists readelf); then
-     readelf=readelf
+     readelf="readelf -W"
 elif (command_exists eu-readelf); then
-     readelf=eu-readelf
+     readelf="eu-readelf -W"
 elif (command_exists greadelf); then
-     readelf=greadelf
+     readelf="greadelf -W"
 else
     echo -e "\n\e[31mERROR: readelf is a required tool for almost all tests. Aborting...\e[0m\n"
     exit
@@ -383,8 +383,8 @@ filecheck() {
 
   # check for NX support
   ${debug} && echo -e "\n***function filecheck->nx"
-  if ${readelf} -W -l "${1}" 2>/dev/null | grep -q 'GNU_STACK'; then
-    if ${readelf} -W -l "${1}" 2>/dev/null | grep 'GNU_STACK' | grep -q 'RWE'; then
+  if ${readelf} -l "${1}" 2>/dev/null | grep -q 'GNU_STACK'; then
+    if ${readelf} -l "${1}" 2>/dev/null | grep 'GNU_STACK' | grep -q 'RWE'; then
       echo_message '\033[31mNX disabled\033[m   ' 'NX disabled,' ' nx="no"' '"nx":"no",'
     else
       echo_message '\033[32mNX enabled \033[m   ' 'NX enabled,' ' nx="yes"' '"nx":"yes",'
@@ -604,7 +604,7 @@ proccheck() {
     fi
   # fallback check for NX support
   ${debug} && echo -e "\n***function proccheck->NX"
-  elif ${readelf} -W -l "${1}/exe" 2>/dev/null | grep 'GNU_STACK' | grep -q 'RWE'; then
+  elif ${readelf} -l "${1}/exe" 2>/dev/null | grep 'GNU_STACK' | grep -q 'RWE'; then
     echo_message '\033[31mNX disabled\033[m   ' 'NX disabled,' ' nx="no"' '"nx":"no",'
   else
     echo_message '\033[32mNX enabled \033[m   ' 'NX enabled,' ' pax="yes"' '"nx":"yes",'
