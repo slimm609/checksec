@@ -14,3 +14,9 @@ services:
       dockerfile: Dockerfile.arch
     image:  checksec-arch
     command: bash -c "./tests/test-checksec.sh"
+
+  shellcheck:
+    volumes:
+      - .:/mnt
+    image: koalaman/shellcheck
+    command: "checksec"

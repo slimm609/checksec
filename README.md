@@ -17,6 +17,10 @@ For OSX
 -------
  Most of the tools do not work on mach-O binaries or the OSX kernel, so it is not supported
 
+Manually verify checksec
+
+`openssl dgst -sha256 -verify checksec.pub -signature checksec.sig checksec`
+
 Examples
 --------
 

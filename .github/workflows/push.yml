@@ -8,6 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: shellcheck
+        run: docker-compose run shellcheck
       - name: ubuntu checksec
         run: docker-compose run checksec-ubuntu
       - name: arch checksec

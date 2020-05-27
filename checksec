@@ -67,7 +67,7 @@ format="cli"
 SCRIPT_NAME="checksec"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
 SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename ${SCRIPT_NAME} .sh).sig"
-SCRIPT_VERSION=2020052701
+SCRIPT_VERSION=2020052702
 SCRIPT_MAJOR=2
 SCRIPT_MINOR=2
 SCRIPT_REVISION=0
@@ -467,8 +467,7 @@ filecheck() {
   fi
 
   # check for stripped symbols in the binary
-  SYM_cnt=' '
-  SYM_cnt=( $(${readelf} --symbols "${1}" 2>/dev/null | grep '\.symtab' | cut -d' ' -f5 | cut -d: -f1))
+  IFS=" " read -r -a SYM_cnt <<< "$(${readelf} --symbols "${1}" 2>/dev/null | grep '\.symtab' | cut -d' ' -f5 | cut -d: -f1))"
   if ${readelf} --symbols "${1}" 2>/dev/null | grep -q '\.symtab'; then
     echo_message "\033[31m${SYM_cnt[0]} Symbols\t\033[m  " 'Symbols,' ' symbols="yes"' '"symbols":"yes",'
   else
@@ -558,6 +557,8 @@ proccheck() {
     #if $readelf -s "$1" 2>/dev/null | grep -Eq '\.cfi'; then
     read -r -a cfifunc <<< "$($readelf -s "$1/exe" 2>/dev/null | grep .cfi | awk '{ print $8 }')"
     func=${cfifunc/.cfi/}
+    # TODO: fix this check properly, need more clang CFI files to be able to test properly
+    # shellcheck disable=SC2128
     if [ -n "$cfifunc" ] && $readelf -s "$1/exe" 2>/dev/null | grep -q "$func$"; then
       echo_message '\033[32mClang CFI found   \033[m   ' 'with CFI,' ' clangcfi="yes"' '"clangcfi":"yes",'
     else
@@ -646,8 +647,7 @@ proccheck() {
 # check mapped libraries
 libcheck() {
   ${debug} && echo "***function libcheck"
-  libs=( $(awk '{ print $6 }' "/proc/${1}/maps" | grep '/' | sort -u | xargs file | grep ELF | awk '{ print $1 }' | sed 's/:/ /') )
-
+  IFS=" " read -r -a libs <<< "$(awk '{ print $6 }' "/proc/${1}/maps" | grep '/' | sort -u | xargs file | grep ELF | awk '{ print $1 }' | sed 's/:/ /')"
   echo_message "\n* Loaded libraries (file information, # of mapped files: ${#libs[@]}):\n\n" "" "" "\"libs\": {"
 
   for ((element=0; element<${#libs[@]}; element++))
@@ -720,7 +720,7 @@ coredumpcheck() {
         coreValue=$(grep -Exic "hard[[:blank:]]+core[[:blank:]]+0" /etc/security/limits.conf)
         coreValueDefault=$(grep -Exic "\*[[:blank:]]+hard[[:blank:]]+core[[:blank:]]+0" /etc/security/limits.conf)
         dumpableValue=$(sysctl -b -e fs.suid_dumpable)
-        if ([[ "${coreValue}" == 1 ]] || [[ "${coreValueDefault}" == 1 ]])&& ([[ "${dumpableValue}" == 0 ]] || [[ "${dumpableValue}" == 2 ]]); then
+        if { [[ "${coreValue}" == 1 ]] || [[ "${coreValueDefault}" == 1 ]]; } && { [[ "${dumpableValue}" == 0 ]] || [[ "${dumpableValue}" == 2 ]]; }; then
                 echo_message '\033[32mRestricted\033[m\n\n' '' '' ''
         else
                 echo_message '\033[31mNot Restricted\033[m\n\n' '' '' ''
@@ -1706,6 +1706,11 @@ chk_proc () {
     exit 1
   fi
   cd /proc || exit
+  IFS=" " read -r -a fpids <<<"$(pgrep -d ' ' "${CHK_PROC}")"
+  if [[ ${#fpids} -eq 0 ]]; then
+    printf "\033[31mError: No process with the given name found.\033[m\n\n"
+    exit 1
+  fi
   echo_message "* System-wide ASLR" '' '' ''
   aslrcheck
   echo_message "* Does the CPU support NX: " '' '' ''
@@ -1714,11 +1719,6 @@ chk_proc () {
     echo_message "         COMMAND    PID RELRO           STACK CANARY            Clang CFI            SafeStack            SECCOMP          NX/PaX        PIE                     SELFRANDO             FORTIFY\n" "" "" '{'
   else
     echo_message "         COMMAND    PID RELRO           STACK CANARY            SECCOMP          NX/PaX        PIE                     SELFRANDO             FORTIFY\n" "" "" '{'
-  fi
-  fpids=($(pgrep -d ' ' "${CHK_PROC}"))
-  if [[ ${#fpids} -eq 0 ]]; then
-    printf "\033[31mError: No process with the given name found.\033[m\n\n"
-    exit 1
   fi
   pos=$(( ${#fpids[*]} - 1 ))
   last=${fpids[$pos]}
@@ -1854,8 +1854,10 @@ chk_fortify_file () {
     exit 1
   fi
 
-  FS_chk_func_libc=( $(${readelf} -s ${FS_libc} 2>/dev/null | grep _chk@@ | awk '{ print $8 }' | cut -c 3- | sed -e 's/_chk@.*//') )
-  FS_functions=( $(${readelf} -s "${CHK_FORTIFY_FILE}" 2>/dev/null | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//') )
+  FS_chk_func_libc=()
+  FS_functions=()
+  while IFS='' read -r line; do FS_chk_func_libc+=("$line"); done < <(${readelf} -s ${FS_libc} 2>/dev/null | grep _chk@@ | awk '{ print $8 }' | cut -c 3- | sed -e 's/_chk@.*//')
+  while IFS='' read -r line; do FS_functions+=("$line"); done < <(${readelf} -s "${CHK_FORTIFY_FILE}" 2>/dev/null | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//')
   echo_message "" "" "<fortify-test name='${CHK_FORTIFY_FILE}' " "{ \"fortify-test\": { \"name\":\"${CHK_FORTIFY_FILE}\" "
   FS_libc_check
   FS_binary_check
@@ -1902,8 +1904,11 @@ chk_fortify_proc () {
     fi
     name=$(head -1 "${N}/status" | cut -b 7-)
     echo_message  "* Process name (PID)                         : ${name} (${N})\n" "" "" ""
-    FS_chk_func_libc=( $(${readelf} -s $FS_libc 2>/dev/null | grep _chk@@ | awk '{ print $8 }' | cut -c 3- | sed -e 's/_chk@.*//') )
-    FS_functions=( $(${readelf} -s "${CHK_FORTIFY_PROC}/exe" 2>/dev/null | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//') )
+
+    FS_chk_func_libc=()
+    FS_functions=()
+    while IFS='' read -r line; do FS_chk_func_libc+=("$line"); done < <(${readelf} -s $FS_libc 2>/dev/null | grep _chk@@ | awk '{ print $8 }' | cut -c 3- | sed -e 's/_chk@.*//')
+    while IFS='' read -r line; do FS_functions+=("$line"); done < <(${readelf} -s "${CHK_FORTIFY_PROC}/exe" 2>/dev/null | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//')
     echo_message "" "" "<fortify-test name='${name}' pid='${N}' " "{ \"fortify-test\": { \"name\":\"${name}\", \"pid\":\"${N}\" "
     FS_libc_check
     FS_binary_check
