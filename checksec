@@ -715,9 +715,10 @@ nxcheck() {
 #Check core dumps restricted?
 coredumpcheck() {
         ${debug} && echo -e "\n***function coredumpcheck"
-        coreValue=$(grep -ic "hard core 0" /etc/security/limits.conf)
+        coreValue=$(grep -Exic "hard[[:blank:]]+core[[:blank:]]+0" /etc/security/limits.conf)
+        coreValueDefault=$(grep -Exic "\*[[:blank:]]+hard[[:blank:]]+core[[:blank:]]+0" /etc/security/limits.conf)
         dumpableValue=$(sysctl -b -e fs.suid_dumpable)
-        if [[ "${coreValue}" == 1 ]] && [[ "${dumpableValue}" == 0 ]] || [[ "${dumpableValue}" == 2 ]]; then
+        if ([[ "${coreValue}" == 1 ]] || [[ "${coreValueDefault}" == 1 ]])&& ([[ "${dumpableValue}" == 0 ]] || [[ "${dumpableValue}" == 2 ]]); then
                 echo_message '\033[32mRestricted\033[m\n\n' '' '' ''
         else
                 echo_message '\033[31mNot Restricted\033[m\n\n' '' '' ''
