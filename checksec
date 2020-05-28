@@ -408,13 +408,15 @@ filecheck() {
   else
     echo_message '\033[33mNot an ELF file\033[m   ' 'Not an ELF file,' ' pie="not_elf"' '"pie":"not_elf",'
   fi
-
-  # check for selfrando support
-  ${debug} && echo -e "\n***function filecheck->selfrando"
-  if ${readelf} -S "${1}" 2>/dev/null | grep -c txtrp | grep -q '1'; then
-    echo_message '\033[32mSelfrando enabled  \033[m   '
-  else
-    echo_message '\033[31mNo Selfrando       \033[m   '
+  
+  if ${extended_checks}; then
+    # check for selfrando support
+    ${debug} && echo -e "\n***function filecheck->selfrando"
+    if ${readelf} -S "${1}" 2>/dev/null | grep -c txtrp | grep -q '1'; then
+      echo_message '\033[32mSelfrando enabled  \033[m   '
+    else
+      echo_message '\033[31mNo Selfrando       \033[m   '
+    fi
   fi
 
   if ${extended_checks}; then
@@ -627,13 +629,15 @@ proccheck() {
     echo_message '\033[33mNot an ELF file      \033[m   ' 'Not an ELF file,' ' pie="not_elf"' '"pie":"not_elf",'
   fi
 
-  # check for selfrando support
-  ${debug} && echo -e "\n***function proccheck->selfrando"
-  if ${readelf} -S "${1}/exe" 2>/dev/null | grep -c txtrp | grep -q '1'; then
-    echo_message '\033[32mSelfrando enabled    \033[m   '
-  else
-    echo_message '\033[31mNo Selfrando         \033[m   '
-  fi
+  if ${extended_checks}; then
+    # check for selfrando support
+    ${debug} && echo -e "\n***function proccheck->selfrando"
+    if ${readelf} -S "${1}/exe" 2>/dev/null | grep -c txtrp | grep -q '1'; then
+      echo_message '\033[32mSelfrando enabled    \033[m   '
+    else
+      echo_message '\033[31mNo Selfrando         \033[m   '
+    fi
+  fi 
 
   #check for forifty source support
   FS_functions="$(${readelf} -s "${1}/exe" 2>/dev/null | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//')"
@@ -1555,7 +1559,7 @@ chk_dir () {
   if ${extended_checks}; then
     echo_message "RELRO           STACK CANARY      NX            PIE             SELFRANDO             Clang CFI            SafeStack            RPATH      RUNPATH    Symbols      \tFORTIFY\tFortified\tFortifiable   Filename\n" '' "<dir name='$tempdir'>\n" "{ \"dir\": { \"name\":\"$tempdir\" }"
   else
-    echo_message "RELRO           STACK CANARY      NX            PIE             SELFRANDO             RPATH      RUNPATH    Symbols      \tFORTIFY\tFortified\tFortifiable   Filename\n" '' "<dir name='$tempdir'>\n" "{ \"dir\": { \"name\":\"$tempdir\" }"
+    echo_message "RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH    Symbols      \tFORTIFY\tFortified\tFortifiable   Filename\n" '' "<dir name='$tempdir'>\n" "{ \"dir\": { \"name\":\"$tempdir\" }"
   fi
   fdircount=0
   fdirtotal=0
@@ -1635,7 +1639,7 @@ chk_file () {
   if ${extended_checks}; then
     echo_message "RELRO           STACK CANARY      NX            PIE             SELFRANDO             Clang CFI            SafeStack            RPATH      RUNPATH\tSymbols\t\tFORTIFY\tFortified\tFortifiable\tFILE\n" '' '' '{'
   else
-    echo_message "RELRO           STACK CANARY      NX            PIE             SELFRANDO             RPATH      RUNPATH\tSymbols\t\tFORTIFY\tFortified\tFortifiable\tFILE\n" '' '' '{'
+    echo_message "RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH\tSymbols\t\tFORTIFY\tFortified\tFortifiable\tFILE\n" '' '' '{'
   fi
   filecheck "${CHK_FILE}"
   if [[ "$(find "${CHK_FILE}" \( -perm -004000 -o -perm -002000 \) -type f -print)" ]] ; then
@@ -1656,7 +1660,7 @@ chk_proc_all () {
   if ${extended_checks}; then
     echo_message "         COMMAND    PID RELRO           STACK CANARY            Clang CFI            SafeStack            SECCOMP          NX/PaX        PIE                     SELFRANDO             FORTIFY\n" "" "" '{'
   else
-    echo_message "         COMMAND    PID RELRO           STACK CANARY            SECCOMP          NX/PaX        PIE                     SELFRANDO             FORTIFY\n" "" "" '{'
+    echo_message "         COMMAND    PID RELRO           STACK CANARY            SECCOMP          NX/PaX        PIE                     FORTIFY\n" "" "" '{'
   fi
   lastpid=0
   currpid=0
@@ -1718,7 +1722,7 @@ chk_proc () {
   if ${extended_checks}; then
     echo_message "         COMMAND    PID RELRO           STACK CANARY            Clang CFI            SafeStack            SECCOMP          NX/PaX        PIE                     SELFRANDO             FORTIFY\n" "" "" '{'
   else
-    echo_message "         COMMAND    PID RELRO           STACK CANARY            SECCOMP          NX/PaX        PIE                     SELFRANDO             FORTIFY\n" "" "" '{'
+    echo_message "         COMMAND    PID RELRO           STACK CANARY            SECCOMP          NX/PaX        PIE                     FORTIFY\n" "" "" '{'
   fi
   pos=$(( ${#fpids[*]} - 1 ))
   last=${fpids[$pos]}
