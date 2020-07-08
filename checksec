@@ -96,13 +96,13 @@ fi
 
 for command in cat awk sed sysctl uname mktemp openssl grep stat file find sort head ps readlink basename id which xargs; do
     if ! (command_exists ${command}); then
-       echo -e "\e[31mWARNING: '${command}' not found! It's required for most checks.\e[0m"
+       >&2 echo -e "\e[31mWARNING: '${command}' not found! It's required for most checks.\e[0m"
        commandsmissing=true
     fi
 done
 
 if [[ ${commandsmissing} == true ]]; then
-    echo -e "\n\e[31mWARNING: Not all necessary commands found. Some tests might not work!\e[0m\n"
+    >&2 echo -e "\n\e[31mWARNING: Not all necessary commands found. Some tests might not work!\e[0m\n"
     sleep 2
 fi
 
