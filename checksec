@@ -67,10 +67,10 @@ format="cli"
 SCRIPT_NAME="checksec"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
 SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename ${SCRIPT_NAME} .sh).sig"
-SCRIPT_VERSION=2020071901
+SCRIPT_VERSION=2020071902
 SCRIPT_MAJOR=2
-SCRIPT_MINOR=2
-SCRIPT_REVISION=3
+SCRIPT_MINOR=3
+SCRIPT_REVISION=0
 pkg_release=false
 commandsmissing=false
 OPT=0
@@ -370,7 +370,7 @@ filecheck() {
       echo_message '\033[33mPartial RELRO\033[m   ' 'Partial RELRO,' '<file relro="partial"' " \"${1}\": { \"relro\":\"partial\","
     fi
   else
-    echo_message '\033[31mNo RELRO     \033[m   ' 'No RELRO,' '<file relro="no"' " \"file\": { \"relro\":\"no\","
+    echo_message '\033[31mNo RELRO     \033[m   ' 'No RELRO,' '<file relro="no"' " \"${1}\": { \"relro\":\"no\","
   fi
 
   # check for stack canary support
@@ -1957,7 +1957,7 @@ while getopts "${optspec}" optchar; do
                   debug=true
                   ;;
                 trace)
-                  BASH_XTRACEFD="5"
+                  export BASH_XTRACEFD=5
                   export PS4='(${BASH_SOURCE##*/}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
                   set -x
                   ;;
