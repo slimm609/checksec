@@ -67,7 +67,7 @@ format="cli"
 SCRIPT_NAME="checksec"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
 SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename ${SCRIPT_NAME} .sh).sig"
-SCRIPT_VERSION=2020070801
+SCRIPT_VERSION=2020071901
 SCRIPT_MAJOR=2
 SCRIPT_MINOR=2
 SCRIPT_REVISION=3
@@ -1954,7 +1954,13 @@ while getopts "${optspec}" optchar; do
                   exit 0
                   ;;
                 debug)
-                  debug=true;;
+                  debug=true
+                  ;;
+                trace)
+                  BASH_XTRACEFD="5"
+                  export PS4='(${BASH_SOURCE##*/}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+                  set -x
+                  ;;
                 help)
                   help
                   exit 0
