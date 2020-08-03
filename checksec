@@ -1694,7 +1694,7 @@ chk_file_list () {
         echo_message "${CHK_FILE}\n" ",${CHK_FILE}\n" " filename='${CHK_FILE}'/>\n" " } }"
       fi
 
-    done <${CHK_FILE_LIST}
+    done <"${CHK_FILE_LIST}"
 
 }
 
