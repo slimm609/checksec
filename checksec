@@ -1658,9 +1658,9 @@ chk_file_list () {
       echo_message "RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH\tSymbols\t\tFORTIFY\tFortified\tFortifiable\tFILE\n" '' '' '{\n'
     fi
 
-    while IFS="" read -r p || [ -n "$p" ]
+    while IFS="" read -r p || [[ -n "${p}" ]]
     do
-      CHK_FILE="$p"
+      CHK_FILE="${p}"
 
       if [[ -z "${CHK_FILE}" ]] ; then
         printf "\033[31mError: Please provide a valid file.\033[m\n\n"
