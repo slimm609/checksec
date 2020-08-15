@@ -1,3 +1,9 @@
+Rev-2020081501  Brian Davis    <slimm609@gmail.com>
+        * checksec.sh: Updated to 2.4.0 
+        * checksec.sh: checksec_automator.sh add check x-pie-executable
+           Thanks @ja-pa
+        * checksec.sh: Support for list file modifier
+           Thanks @dsuarezv
 Rev-2020052701  Brian Davis    <slimm609@gmail.com>
         * checksec.sh: Updated to 2.2.0 
         * checksec.sh: fix several small issues
