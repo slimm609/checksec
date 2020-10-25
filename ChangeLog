@@ -4,6 +4,8 @@ Rev-2020081501  Brian Davis    <slimm609@gmail.com>
            Thanks @ja-pa
         * checksec.sh: Support for list file modifier
            Thanks @dsuarezv
+        * checksec.sh: Update license
+           Thanks @mr-segfault
 Rev-2020052701  Brian Davis    <slimm609@gmail.com>
         * checksec.sh: Updated to 2.2.0 
         * checksec.sh: fix several small issues
