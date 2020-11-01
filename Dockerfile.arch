@@ -1,4 +1,4 @@
-FROM archlinux/base:latest
+FROM archlinux:latest
 
 # Install dependencies
 RUN pacman -Syu --noconfirm vim base-devel python-pip && ln -s $(command -v vim) /bin/vi && pip install demjson
