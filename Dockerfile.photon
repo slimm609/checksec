@@ -1,0 +1,12 @@
+FROM photon:3.0
+
+# Install dependencies
+RUN tdnf update -y && tdnf upgrade -y && tdnf remove toybox -y && \
+    tdnf install -y build-essential git rpm-build coreutils util-linux \
+    make autoconf automake gcc ncurses-devel sed tar texinfo procps-ng grep \
+    findutils gzip file which libxml2 python3 python3-pip && \
+    pip3 install --upgrade pip && pip3 install setuptools && \
+    pip3 install demjson
+
+COPY .  /root
+WORKDIR /root

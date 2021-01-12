@@ -15,6 +15,13 @@ services:
     image:  checksec-arch
     command: bash -c "./tests/test-checksec.sh"
 
+  checksec-photon:
+    build:
+      context: ./
+      dockerfile: Dockerfile.photon
+    image:  checksec-photon
+    command: bash -c "./tests/test-checksec.sh"
+
   shellcheck:
     volumes:
       - .:/mnt

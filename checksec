@@ -1413,7 +1413,6 @@ FS_binary_check() {
     fi
   done
   echo_message "\033[31mNo\033[m\n" "No\n" " binary_compiled_with_fortify='no'>\n" ', "binary_compiled_with_fortify":"no"'
-  exit 1
 }
 
 FS_comparison() {

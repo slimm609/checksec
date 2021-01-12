@@ -30,7 +30,7 @@ for i in {0..19}; do
   build_config 4.x 4 $i
 done
 
-#build configs for 5.x up to 5.5
-for i in {1..5}; do 
+#build configs for 5.x up to 5.10
+for i in {1..10}; do 
   build_config 5.x 5 $i
 done
