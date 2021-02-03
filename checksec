@@ -787,8 +787,12 @@ kernelcheck() {
   fi
 
   echo_message "  NX protection:                          " "" "" ""
-  if (command_exists dmesg) && (root_privs); then
-      nx_protection=$(dmesg -t 2>/dev/null | grep -Fw NX)
+  if (command_exists journalctl); then
+    nx_protection=$(journalctl -kb -o cat | grep -Fw NX | head -n 1)
+  elif (command_exists dmesg) && (root_privs); then
+    nx_protection=$(dmesg -t 2>/dev/null | grep -Fw NX)
+  fi
+  if [ -n "$nx_protection" ]; then
     if [[ "x${nx_protection}" == "xNX (Execute Disable) protection: active" ]]; then
       echo_message "\033[32mEnabled\033[m\n" "Enabled," " nx_protection='yes'" ', "nx_protection":"yes"'
     else
