@@ -14,3 +14,13 @@ jobs:
         run: docker-compose run checksec-ubuntu
       - name: arch checksec
         run: docker-compose run checksec-arch
+      - name: photon checksec
+        run: docker-compose run checksec-photon
+      - name: docker build
+        run: docker build -t slimm609/checksec:latest .
+      - name: Push to Docker Hub
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: slimm609/checksec:latest

@@ -11,3 +11,5 @@ jobs:
         run: docker-compose run checksec-ubuntu
       - name: arch checksec
         run: docker-compose run checksec-arch
+      - name: photon checksec
+        run: docker-compose run checksec-photon
