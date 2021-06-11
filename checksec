@@ -478,7 +478,7 @@ filecheck() {
   fi
 
   # check for FORTIFY SOURCE
-  ${debug} && echo "***function filecheck->fortify"
+  ${debug} && echo -e "\n***function filecheck->fortify"
   if [[ -e /lib/libc.so.6 ]] ; then
     FS_libc=/lib/libc.so.6
   elif [[ -e /lib/libc.so.7 ]] ; then
