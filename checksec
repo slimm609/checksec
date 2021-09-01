@@ -57,7 +57,7 @@
 # Download: http://www.trapkit.de/tools/checksec.html
 # Changes : http://www.trapkit.de/tools/checksec_changes.txt
 
-#set global lang to C
+# set global lang to C
 export LC_ALL="C"
 
 # global vars
@@ -86,59 +86,59 @@ FS_libc=0
 
 # check for required files and deps first
 # check if command exists
-command_exists () {
-  type "${1}"  > /dev/null 2>&1;
+command_exists() {
+  type "${1}" >/dev/null 2>&1;
 }
 
 if [[ $(id -u) != 0 ]]; then
-    export PATH=${PATH}:/sbin/:/usr/sbin/
+  export PATH=${PATH}:/sbin/:/usr/sbin/
 fi
 
 for command in cat awk sed sysctl uname mktemp openssl grep stat file find sort head ps readlink basename id which xargs; do
-    if ! (command_exists ${command}); then
-       >&2 echo -e "\e[31mWARNING: '${command}' not found! It's required for most checks.\e[0m"
-       commandsmissing=true
-    fi
+  if ! (command_exists ${command}); then
+    >&2 echo -e "\e[31mWARNING: '${command}' not found! It's required for most checks.\e[0m"
+    commandsmissing=true
+  fi
 done
 
 if [[ ${commandsmissing} == true ]]; then
-    >&2 echo -e "\n\e[31mWARNING: Not all necessary commands found. Some tests might not work!\e[0m\n"
-    sleep 2
+  >&2 echo -e "\n\e[31mWARNING: Not all necessary commands found. Some tests might not work!\e[0m\n"
+  sleep 2
 fi
 
 if (command_exists readelf); then
-     readelf="readelf -W"
+  readelf="readelf -W"
 elif (command_exists eu-readelf); then
-     readelf="eu-readelf -W"
+  readelf="eu-readelf -W"
 elif (command_exists greadelf); then
-     readelf="greadelf -W"
+  readelf="greadelf -W"
 else
-    echo -e "\n\e[31mERROR: readelf is a required tool for almost all tests. Aborting...\e[0m\n"
-    exit
+  echo -e "\n\e[31mERROR: readelf is a required tool for almost all tests. Aborting...\e[0m\n"
+  exit
 fi
 
 sysarch=$(uname -m)
 if [[ "${sysarch}" == "x86_64" ]]; then
-    arch="64"
+  arch="64"
 elif [[ "${sysarch}" == "i?86" ]]; then
-    arch="32"
+  arch="32"
 elif [[ "${sysarch}" =~ "arm" ]]; then
-    arch="arm"
+  arch="arm"
 elif [[ "${sysarch}" =~ "aarch64" ]]; then
-    arch="aarch64"
+  arch="aarch64"
 fi
 
-#openssl public key for verification of updates
+# openssl public key for verification of updates
 read -r PUBKEY <<EOF
 LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUF3Z25kcnk2WGJpNE8wR2w1T2UzSQp1eWRyMlZqR1hteDJFM0thd0wrK1F3a2FVT0RHOEVuT24weFZ1S1ZkZEphZjY3Rmxzd3pPYjh1RFRDTjdsWURnCnFKQXdmNllTOUFsdU5RRmlFQWhFRlgxL0dsMi9TSnFHYXhFVU9HTlV3NTI5a3BVR0MwNmN6SHhENEcvdWNBQlkKT05iWm9Vc1pIYmRnZUNueWs1dzZ0SWs3MEplNmZ2em5Da2JxbUZhS0UyQnhWTERLU0liSDBTak5XT3RSMmF6ZAp1V3p2RU1kVXFlZlZjYXErUDFjV0dLNy94VllSNkV3ME1aQTdWU0xkREhlRUVySW9Kc3UvM2VaeUR5ZDlaUlJvCmdpajM2R1N2SFREclU1ZVdXRlN0Q01UM29DRDhMSjVpbXBReWpWd3Z5M3Z4ZVNVYzVkdytZUDU0OU9jNHF2bzYKOXdJREFRQUIKLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg==
 EOF
 
 # Fetch the update
 fetch() {
-  if type wget > /dev/null 2>&1 ; then
+  if type wget >/dev/null 2>&1; then
     ${debug} && echo "fetching update via wget"
     wget --no-check-certificate -O "${2}" "${1}" >/dev/null 2>&1
-  elif type curl > /dev/null 2>&1 ; then
+  elif type curl >/dev/null 2>&1; then
     ${debug} && echo "fetching update via curl"
     curl --insecure --remote-name -o "${2}" "${1}" >/dev/null 2>&1
   else
@@ -149,50 +149,44 @@ fetch() {
 
 # Version compare
 vercomp() {
-    if [[ "${1}" == "${2}" ]]
-    then
-        return 0
-    fi
-    local IFS=.
-    local i ver1="${1}" ver2="${2}"
-    # fill empty fields in ver1 with zeros
-    for ((i=${#ver1[@]}; i<${#ver2[@]}; i++))
-    do
-        ver1[i]=0
-    done
-    for ((i=0; i<${#ver1[@]}; i++))
-    do
-        if [[ -z ${ver2[i]} ]]
-        then
-            # fill empty fields in ver2 with zeros
-            ver2[i]=0
-        fi
-        if ((10#${ver1[i]} > 10#${ver2[i]}))
-        then
-            return 1
-        fi
-        if ((10#${ver1[i]} < 10#${ver2[i]}))
-        then
-            return 2
-        fi
-    done
+  if [[ "${1}" == "${2}" ]]; then
     return 0
+  fi
+  local IFS=.
+  local i ver1="${1}" ver2="${2}"
+  # fill empty fields in ver1 with zeros
+  for ((i=${#ver1[@]}; i<${#ver2[@]}; i++)); do
+    ver1[i]=0
+  done
+  for ((i=0; i<${#ver1[@]}; i++)); do
+    if [[ -z ${ver2[i]} ]]; then
+      # fill empty fields in ver2 with zeros
+      ver2[i]=0
+    fi
+    if ((10#${ver1[i]} > 10#${ver2[i]})); then
+      return 1
+    fi
+    if ((10#${ver1[i]} < 10#${ver2[i]})); then
+      return 2
+    fi
+  done
+  return 0
 }
 
 # Update/Upgrade
 # shellcheck disable=SC2120
 upgrade() {
   if ${pkg_release}; then
-      printf "\033[31mError: Unknown option '%s'.\033[m\n\n" "${1}"
-      help
-      exit 1
-    fi
+    printf "\033[31mError: Unknown option '%s'.\033[m\n\n" "${1}"
+    help
+    exit 1
+  fi
   umask 027
   TMP_FILE=$(mktemp /tmp/checksec.XXXXXXXXXX)
   SIG_FILE=$(mktemp /tmp/checksec_sig.XXXXXXXX)
   PUBKEY_FILE=$(mktemp /tmp/checksec_pubkey.XXXXXXXXXX)
-    fetch "${SCRIPT_URL}" "${TMP_FILE}"
-    fetch "${SIG_URL}" "${SIG_FILE}"
+  fetch "${SCRIPT_URL}" "${TMP_FILE}"
+  fetch "${SIG_URL}" "${SIG_FILE}"
   echo "${PUBKEY}" | base64 -d > "${PUBKEY_FILE}"
   if ! openssl dgst -sha256 -verify "${PUBKEY_FILE}" -signature "${SIG_FILE}" "${TMP_FILE}" >/dev/null 2>&1; then
     echo "file signature does not match. Update may be tampered"
@@ -217,8 +211,8 @@ upgrade() {
     echo "checksec.sh not updated... Already on latest version"
     rm -f "${TMP_FILE}" "${SIG_FILE}" "${PUBKEY_FILE}" >/dev/null 2>&1
     exit 1
-    fi
-    exit 0
+  fi
+  exit 0
 }
 
 # version information
@@ -264,12 +258,12 @@ help() {
 }
 
 # format
-format () {
+format() {
   list="cli csv xml json"
   if [[ -n "${output_format}" ]]; then
     if [[ ! ${list} =~ ${output_format} ]]; then
-  printf "\033[31mError: Please provide a valid format {cli, csv, xml, json}.\033[m\n\n"
-  exit 1
+      printf "\033[31mError: Please provide a valid format {cli, csv, xml, json}.\033[m\n\n"
+      exit 1
     fi
   fi
   if [[ "${output_format}" == "xml" ]]; then
@@ -278,7 +272,7 @@ format () {
   format="${output_format}"
 }
 
-#run help if nothing is passed
+# run help if nothing is passed
 if [[ $# -lt 1 ]]; then
   help
   exit 1
@@ -286,13 +280,13 @@ fi
 
 echo_message() {
   if [[ ${format} == "csv" ]]; then
-      echo -n -e "$2"
+    echo -n -e "$2"
   elif [[ ${format} == "xml" ]]; then
-      echo -n -e "$3"
+    echo -n -e "$3"
   elif [[ ${format} == "json" ]]; then
-      echo -n -e "$4"
-  else #default to cli
-      echo -n -e "${1}"
+    echo -n -e "$4"
+  else # default to cli
+    echo -n -e "${1}"
   fi
 }
 
@@ -324,13 +318,13 @@ getsestatus() {
       fi
     fi
   fi
-return ${status}
+  return ${status}
 }
 
 # check if directory exists
-dir_exists () {
+dir_exists() {
   ${debug} && echo "function dir_exists"
-  if [[ -d "${1}" ]] ; then
+  if [[ -d "${1}" ]]; then
     return 0
   else
     return 1
@@ -338,9 +332,9 @@ dir_exists () {
 }
 
 # check user privileges
-root_privs () {
- ${debug} && echo "***function root_privs"
-  if [[ $(/usr/bin/id -u) -eq 0 ]] ; then
+root_privs() {
+  ${debug} && echo "***function root_privs"
+  if [[ $(/usr/bin/id -u) -eq 0 ]]; then
     return 0
   else
     return 1
@@ -348,13 +342,13 @@ root_privs () {
 }
 
 # check if input is numeric
-isNumeric () {
+isNumeric() {
   ${debug} && echo "***function isNumeric"
   echo "$@" | grep -q -v "[^0-9]"
 }
 
 # check if input is a string
-isString () {
+isString() {
   ${debug} && echo "***function isString"
   echo "$@" | grep -q -v "[^ A-Z_a-z]"
 }
@@ -409,7 +403,7 @@ filecheck() {
   else
     echo_message '\033[33mNot an ELF file\033[m   ' 'Not an ELF file,' ' pie="not_elf"' '"pie":"not_elf",'
   fi
-  
+
   if ${extended_checks}; then
     # check for selfrando support
     ${debug} && echo -e "\n***function filecheck->selfrando"
@@ -466,7 +460,7 @@ filecheck() {
       echo_message '\033[31mRUNPATH   \033[m  ' 'RUNPATH,' ' runpath="yes"' '"runpath":"yes",'
     fi
   else
-   echo_message '\033[32mNo RUNPATH \033[m  ' 'No RUNPATH,' ' runpath="no"' '"runpath":"no",'
+    echo_message '\033[32mNo RUNPATH \033[m  ' 'No RUNPATH,' ' runpath="no"' '"runpath":"no",'
   fi
 
   # check for stripped symbols in the binary
@@ -479,23 +473,23 @@ filecheck() {
 
   # check for FORTIFY SOURCE
   ${debug} && echo -e "\n***function filecheck->fortify"
-  if [[ -e /lib/libc.so.6 ]] ; then
+  if [[ -e /lib/libc.so.6 ]]; then
     FS_libc=/lib/libc.so.6
-  elif [[ -e /lib/libc.so.7 ]] ; then
+  elif [[ -e /lib/libc.so.7 ]]; then
     FS_libc=/lib/libc.so.7
-  elif [[ -e /lib/libc.so ]] ; then
+  elif [[ -e /lib/libc.so ]]; then
     FS_libc=/lib/libc.so
-  elif [[ -e /lib64/libc.so.6 ]] ; then
+  elif [[ -e /lib64/libc.so.6 ]]; then
     FS_libc=/lib64/libc.so.6
-  elif [[ -e /lib/i386-linux-gnu/libc.so.6 ]] ; then
+  elif [[ -e /lib/i386-linux-gnu/libc.so.6 ]]; then
     FS_libc=/lib/i386-linux-gnu/libc.so.6
-  elif [[ -e /lib/x86_64-linux-gnu/libc.so.6 ]] ; then
+  elif [[ -e /lib/x86_64-linux-gnu/libc.so.6 ]]; then
     FS_libc=/lib/x86_64-linux-gnu/libc.so.6
-  elif [[ -e /lib/arm-linux-gnueabihf/libc.so.6 ]] ; then
+  elif [[ -e /lib/arm-linux-gnueabihf/libc.so.6 ]]; then
     FS_libc=/lib/arm-linux-gnueabihf/libc.so.6
-  elif [[ -e /lib/aarch64-linux-gnu/libc.so.6 ]] ; then
+  elif [[ -e /lib/aarch64-linux-gnu/libc.so.6 ]]; then
     FS_libc=/lib/aarch64-linux-gnu/libc.so.6
-  elif [[ -e /usr/x86_64-gentoo-linux-musl/bin/ld ]] ; then
+  elif [[ -e /usr/x86_64-gentoo-linux-musl/bin/ld ]]; then
     FS_libc=/usr/x86_64-gentoo-linux-musl/bin/ld
   else
     printf "\033[31mError: libc not found.\033[m\n\n"
@@ -526,9 +520,9 @@ proccheck() {
   if ${readelf} -l "${1}/exe" 2>/dev/null | grep -q 'Program Headers'; then
     if ${readelf} -l "${1}/exe" 2>/dev/null | grep -q 'GNU_RELRO'; then
       if ${readelf} -d "${1}/exe" 2>/dev/null | grep -q 'BIND_NOW'; then
-  echo_message '\033[32mFull RELRO   \033[m   ' 'Full RELRO,' ' relro="full"' '"relro":"full",'
+        echo_message '\033[32mFull RELRO   \033[m   ' 'Full RELRO,' ' relro="full"' '"relro":"full",'
       else
-  echo_message '\033[33mPartial RELRO\033[m   ' 'Partial RELRO,' ' relro="partial"' '"relro":"partial",'
+        echo_message '\033[33mPartial RELRO\033[m   ' 'Partial RELRO,' ' relro="partial"' '"relro":"partial",'
       fi
     else
       echo_message '\033[31mNo RELRO     \033[m   ' 'No RELRO,' ' relro="no"' '"relro":"no",'
@@ -547,7 +541,7 @@ proccheck() {
       echo_message '\033[31mNo canary found      \033[m   ' 'No Canary found,' ' canary="no"' '"canary":"no",'
     fi
   else
-    if [[ "${1}" == "1" ]] ; then
+    if [[ "${1}" == "1" ]]; then
       echo_message '\033[33mPermission denied    \033[m   ' 'Permission denied,' ' canary="Permission denied"' '"canary":"Permission denied",'
     else
       echo_message '\033[33mNo symbol table found \033[m  ' 'No symbol table found,' ' canary="No symbol table found"' '"canary":"No symbol table found",'
@@ -579,10 +573,10 @@ proccheck() {
 
   # check for Seccomp mode
   ${debug} && echo -e "\n***function proccheck->Seccomp"
-  seccomp=$(grep 'Seccomp:' "${1}/status" 2> /dev/null | cut -b10)
-  if [[ "${seccomp}" == "1" ]] ; then
+  seccomp=$(grep 'Seccomp:' "${1}/status" 2>/dev/null | cut -b10)
+  if [[ "${seccomp}" == "1" ]]; then
     echo_message '\033[32mSeccomp strict\033[m   ' 'Seccomp strict,' ' seccomp="strict"' '"seccomp":"strict",'
-  elif [[ "${seccomp}" == "2" ]] ; then
+  elif [[ "${seccomp}" == "2" ]]; then
     echo_message '\033[32mSeccomp-bpf   \033[m   ' 'Seccomp-bpf,' ' seccomp="bpf"' '"seccomp":"bpf",'
   else
     echo_message '\033[31mNo Seccomp    \033[m   ' 'No Seccomp,' ' seccomp="no"' '"seccomp":"no",'
@@ -590,20 +584,20 @@ proccheck() {
 
   # first check for PaX support
   ${debug} && echo -e "\n***function proccheck->PAX"
-  if grep -q 'PaX:' "${1}/status" 2> /dev/null ; then
-    pageexec=$(grep 'PaX:' "${1}/status" 2> /dev/null | cut -b6)
-    segmexec=$(grep 'PaX:' "${1}/status" 2> /dev/null | cut -b10)
-    mprotect=$(grep 'PaX:' "${1}/status" 2> /dev/null | cut -b8)
-    randmmap=$(grep 'PaX:' "${1}/status" 2> /dev/null | cut -b9)
-    if [[ "${pageexec}" = "P" || "${segmexec}" = "S" ]] && [[ "${mprotect}" = "M" && "${randmmap}" = "R" ]] ; then
+  if grep -q 'PaX:' "${1}/status" 2>/dev/null; then
+    pageexec=$(grep 'PaX:' "${1}/status" 2>/dev/null | cut -b6)
+    segmexec=$(grep 'PaX:' "${1}/status" 2>/dev/null | cut -b10)
+    mprotect=$(grep 'PaX:' "${1}/status" 2>/dev/null | cut -b8)
+    randmmap=$(grep 'PaX:' "${1}/status" 2>/dev/null | cut -b9)
+    if [[ "${pageexec}" = "P" || "${segmexec}" = "S" ]] && [[ "${mprotect}" = "M" && "${randmmap}" = "R" ]]; then
       echo_message '\033[32mPaX enabled\033[m   ' 'Pax enabled,' ' pax="yes"' '"pax":"yes",'
-    elif [[ "${pageexec}" = "p" && "${segmexec}" = "s" && "${randmmap}" = "R" ]] ; then
+    elif [[ "${pageexec}" = "p" && "${segmexec}" = "s" && "${randmmap}" = "R" ]]; then
       echo_message '\033[33mPaX ASLR only\033[m ' 'Pax ASLR only,' ' pax="aslr_only"' '"pax":"aslr_only",'
-    elif [[ "${pageexec}" = "P" || "${segmexec}" = "S" ]] && [[ "${mprotect}" = "m" && "${randmmap}" = "R" ]] ; then
+    elif [[ "${pageexec}" = "P" || "${segmexec}" = "S" ]] && [[ "${mprotect}" = "m" && "${randmmap}" = "R" ]]; then
       echo_message '\033[33mPaX mprot off \033[m' 'Pax mprot off,' ' pax="mprot_off"' '"pax":"mprot_off",'
-    elif [[ "${pageexec}" = "P" || "${segmexec}" = "S" ]] && [[ "${mprotect}" = "M" && "${randmmap}" = "r" ]] ; then
+    elif [[ "${pageexec}" = "P" || "${segmexec}" = "S" ]] && [[ "${mprotect}" = "M" && "${randmmap}" = "r" ]]; then
       echo_message '\033[33mPaX ASLR off\033[m  ' 'Pax ASLR off,' ' pax="aslr_off"' '"pax":"aslr_off",'
-    elif [[ "${pageexec}" = "P" || "${segmexec}" = "S" ]] && [[ "${mprotect}" = "m" && "${randmmap}" = "r" ]] ; then
+    elif [[ "${pageexec}" = "P" || "${segmexec}" = "S" ]] && [[ "${mprotect}" = "m" && "${randmmap}" = "r" ]]; then
       echo_message '\033[33mPaX NX only\033[m   ' 'Pax NX only,' ' pax="nx_only"' '"pax":"nx_only",'
     else
       echo_message '\033[31mPaX disabled\033[m  ' 'Pax disabled,' ' pax="no"' '"pax":"no",'
@@ -638,9 +632,9 @@ proccheck() {
     else
       echo_message '\033[31mNo Selfrando         \033[m   '
     fi
-  fi 
+  fi
 
-  #check for fortify source support
+  # check for fortify source support
   FS_functions="$(${readelf} -s "${1}/exe" 2>/dev/null | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//')"
   if grep -q '_chk$' <<<"$FS_functions"; then
     echo_message '\033[32mYes\033[m' 'Yes' " fortify_source='yes'>" '"fortify_source":"yes" }'
@@ -655,8 +649,7 @@ libcheck() {
   IFS=" " read -r -a libs <<< "$(awk '{ print $6 }' "/proc/${1}/maps" | grep '/' | sort -u | xargs file | grep ELF | awk '{ print $1 }' | sed 's/:/ /')"
   echo_message "\n* Loaded libraries (file information, # of mapped files: ${#libs[@]}):\n\n" "" "" "\"libs\": {"
 
-  for ((element=0; element<${#libs[@]}; element++))
-  do
+  for ((element=0; element<${#libs[@]}; element++)); do
     echo_message "  ${libs[$element]}:\n" "${libs[$element]}," "" ""
     echo_message "    " "" "    " ""
     filecheck "${libs[$element]}"
@@ -673,13 +666,13 @@ aslrcheck() {
   ${debug} && echo "***function aslrcheck"
   # PaX ASLR support
   ${debug} && echo -e "\n***function aslrcheck->PAX ASLR"
-  if ! (grep -q 'Name:' /proc/1/status 2> /dev/null) ; then
+  if ! (grep -q 'Name:' /proc/1/status 2>/dev/null); then
     echo_message '\033[33m insufficient privileges for PaX ASLR checks\033[m\n' '' '' ''
     echo_message '  Fallback to standard Linux ASLR check' '' '' ''
   fi
 
-  if grep -q 'PaX:' /proc/1/status 2> /dev/null; then
-    if grep -q 'PaX:' /proc/1/status 2> /dev/null | grep -q 'R'; then
+  if grep -q 'PaX:' /proc/1/status 2>/dev/null; then
+    if grep -q 'PaX:' /proc/1/status 2>/dev/null | grep -q 'R'; then
       echo_message '\033[32mPaX ASLR enabled\033[m\n\n' '' '' ''
     else
       echo_message '\033[31mPaX ASLR disabled\033[m\n\n' '' '' ''
@@ -719,17 +712,17 @@ nxcheck() {
   fi
 }
 
-#Check core dumps restricted?
+# Check core dumps restricted?
 coredumpcheck() {
-        ${debug} && echo -e "\n***function coredumpcheck"
-        coreValue=$(grep -Exic "hard[[:blank:]]+core[[:blank:]]+0" /etc/security/limits.conf)
-        coreValueDefault=$(grep -Exic "\*[[:blank:]]+hard[[:blank:]]+core[[:blank:]]+0" /etc/security/limits.conf)
-        dumpableValue=$(sysctl -b -e fs.suid_dumpable)
-        if { [[ "${coreValue}" == 1 ]] || [[ "${coreValueDefault}" == 1 ]]; } && { [[ "${dumpableValue}" == 0 ]] || [[ "${dumpableValue}" == 2 ]]; }; then
-                echo_message '\033[32mRestricted\033[m\n\n' '' '' ''
-        else
-                echo_message '\033[31mNot Restricted\033[m\n\n' '' '' ''
-        fi
+  ${debug} && echo -e "\n***function coredumpcheck"
+  coreValue=$(grep -Exic "hard[[:blank:]]+core[[:blank:]]+0" /etc/security/limits.conf)
+  coreValueDefault=$(grep -Exic "\*[[:blank:]]+hard[[:blank:]]+core[[:blank:]]+0" /etc/security/limits.conf)
+  dumpableValue=$(sysctl -b -e fs.suid_dumpable)
+  if { [[ "${coreValue}" == 1 ]] || [[ "${coreValueDefault}" == 1 ]]; } && { [[ "${dumpableValue}" == 0 ]] || [[ "${dumpableValue}" == 2 ]]; }; then
+    echo_message '\033[32mRestricted\033[m\n\n' '' '' ''
+  else
+    echo_message '\033[31mNot Restricted\033[m\n\n' '' '' ''
+  fi
 }
 
 # check for kernel protection mechanisms
@@ -741,7 +734,7 @@ kernelcheck() {
   echo_message "  options that harden the kernel itself against attack.\n\n" '' '' ''
   echo_message "  Kernel config:\n" '' '' '{ "kernel": '
 
-  if [[ ! "${1}" == "" ]] ; then
+  if [[ ! "${1}" == "" ]]; then
     kconfig="cat ${1}"
     echo_message "  Warning: The config ${1} on disk may not represent running kernel config!\n\n" "${1}" "<kernel config=\"${1}\"" "{ \"KernelConfig\":\"${1}\""
     # update the architecture based on the config rather than the system
@@ -757,15 +750,15 @@ kernelcheck() {
     if ${kconfig} | grep -qi 'CONFIG_X86_32=y'; then
       arch="32"
     fi
-  elif [[ -f /proc/config.gz ]] ; then
+  elif [[ -f /proc/config.gz ]]; then
     kconfig="zcat /proc/config.gz"
     echo_message "\033[32m/proc/config.gz\033[m\n\n" '/proc/config.gz' '<kernel config="/proc/config.gz"' '{ "KernelConfig":"/proc/config.gz"'
-  elif [[ -f /boot/config-"$(uname -r)" ]] ; then
+  elif [[ -f /boot/config-"$(uname -r)" ]]; then
     kern=$(uname -r)
     kconfig="cat /boot/config-${kern}"
     echo_message "\033[33m    /boot/config-${kern}\033[m\n\n" "/boot/config-${kern}," "<kernel config='/boot/config-${kern}'" "{ \"KernelConfig\":\"/boot/config-${kern}\""
     echo_message "  Warning: The config on disk may not represent running kernel config!\n           Running kernel: ${kern}\n\n" "" "" ""
-  elif [[ -f "${KBUILD_OUTPUT:-/usr/src/linux}"/.config ]] ; then
+  elif [[ -f "${KBUILD_OUTPUT:-/usr/src/linux}"/.config ]]; then
     kconfig="cat ${KBUILD_OUTPUT:-/usr/src/linux}/.config"
     echo_message "\033[33m${KBUILD_OUTPUT:-/usr/src/linux}/.config\033[m\n\n" "${KBUILD_OUTPUT:-/usr/src/linux}/.config," "<kernel config='${KBUILD_OUTPUT:-/usr/src/linux}/.config'" "{ \"KernelConfig\":\"${KBUILD_OUTPUT:-/usr/src/linux}/.config\""
     echo_message "  Warning: The config on disk may not represent running kernel config!\n\n" "" "" ""
@@ -856,7 +849,7 @@ kernelcheck() {
 
   if ${kconfig} | grep -qi 'CONFIG_CC_STACKPROTECTOR' || ${kconfig} | grep -qa 'CONFIG_STACKPROTECTOR'; then
     echo_message "  GCC stack protector support:            " "" "" ""
-    if ${kconfig} | grep -qi 'CONFIG_CC_STACKPROTECTOR=y' || ${kconfig} | grep -qi 'CONFIG_STACKPROTECTOR=y' ; then
+    if ${kconfig} | grep -qi 'CONFIG_CC_STACKPROTECTOR=y' || ${kconfig} | grep -qi 'CONFIG_STACKPROTECTOR=y'; then
       echo_message "\033[32mEnabled\033[m\n" "Enabled," " gcc_stack_protector='yes'" ', "gcc_stack_protector":"yes"'
 
       if ${kconfig} | grep -qi 'CONFIG_CC_STACKPROTECTOR_STRONG' || ${kconfig} | grep -qi 'CONFIG_STACKPROTECTOR_STRONG'; then
@@ -998,7 +991,7 @@ kernelcheck() {
     fi
   fi
 
-  #x86 only
+  # x86 only
   if [[ "${arch}" == "32" ]] || [[ "${arch}" == "64" ]]; then
     echo_message "\n" "\n" "" ""
     echo_message "* X86 only:            \n" "" "" ""
@@ -1024,7 +1017,7 @@ kernelcheck() {
     fi
   fi
 
-  #ARM only
+  # ARM only
   if [[ "${arch}" == "arm" ]]; then
     echo_message "\n" "\n" "\n" ""
     echo_message "* ARM only:            \n" "" "" ""
@@ -1049,7 +1042,7 @@ kernelcheck() {
 
   fi
 
-  #ARM64 only
+  # ARM64 only
   if [[ "${arch}" == "aarch64" ]]; then
     echo_message "\n" "\n" "\n" ""
     echo_message "* ARM64 only:            \n" "" "" ""
@@ -1119,22 +1112,22 @@ kernelcheck() {
   fi
 
   echo_message "" "" ">" "},"
-  
+
 
   echo_message "\n" "\n" "\n" ""
   echo_message "* SELinux:                                " "" "" ""
   if ${kconfig} | grep -qi 'CONFIG_SECURITY_SELINUX=y'; then
-  getsestatus
-  sestatus=$?
-  if [[ ${sestatus} == 0 ]]; then
+    getsestatus
+    sestatus=$?
+    if [[ ${sestatus} == 0 ]]; then
       echo_message "\033[31mDisabled\033[m\n" "Disabled,," "    <selinux enabled='no'" '"selinux":{ "enabled":"no"'
       echo_message "\n  SELinux information available here: \n" "" "" ""
       echo_message "    http://selinuxproject.org/\n" "" "" ""
-  elif [[ ${sestatus} == 1 ]]; then
+    elif [[ ${sestatus} == 1 ]]; then
       echo_message "\033[33mPermissive\033[m\n" "Permissive," "    <selinux enabled='yes' mode='permissive'" '"selinux":{ "enabled":"yes", "mode":"permissive"'
-  elif [[ ${sestatus} == 2 ]]; then
+    elif [[ ${sestatus} == 2 ]]; then
       echo_message "\033[32mEnforcing\033[m\n" "Enforcing," "    <selinux enabled='yes' mode='enforcing'" '"selinux":{ "enabled":"yes", "mode":"enforcing"'
-  fi
+    fi
   else
     echo_message "\033[31mNo SELinux\033[m\n" "Disabled,," "    <selinux enabled='no'" '"selinux":{ "enabled":"no"'
     echo_message "\n  SELinux information available here: \n" "" "" ""
@@ -1396,7 +1389,7 @@ FS_libc_check() {
   ${debug} && echo "***function FS_libc_check"
   echo_message "* FORTIFY_SOURCE support available (libc)    : " "" ""
 
-  if [[ "${#FS_chk_func_libc[@]}" != "0" ]] ; then
+  if [[ "${#FS_chk_func_libc[@]}" != "0" ]]; then
     echo_message "\033[32mYes\033[m\n" "Yes," " libc_fortify_source='yes' " ', "libc_fortify_source":"yes"'
   else
     echo_message "\033[31mNo\033[m\n" "No," " libc_fortify_source='no' " ', "libc_fortify_source":"no"'
@@ -1409,9 +1402,8 @@ FS_binary_check() {
   ${debug} && echo "***function FS_binary_check"
   echo_message "* Binary compiled with FORTIFY_SOURCE support: " "" "" ""
 
-  for ((FS_elem_functions=0; FS_elem_functions<${#FS_functions[@]}; FS_elem_functions++))
-  do
-    if [[ ${FS_functions[$FS_elem_functions]} =~ _chk$ ]] ; then
+  for ((FS_elem_functions=0; FS_elem_functions<${#FS_functions[@]}; FS_elem_functions++)); do
+    if [[ ${FS_functions[$FS_elem_functions]} =~ _chk$ ]]; then
       echo_message "\033[32mYes\033[m\n" "Yes\n" " binary_compiled_with_fortify='yes'>\n" ', "binary_compiled_with_fortify":"yes"'
       return
     fi
@@ -1427,15 +1419,13 @@ FS_comparison() {
   echo_message " -------------------------------------------------------\n" "" "" ""
 
   ${debug} && echo -e "\n***function FS_comparison->FS_elem_libc"
-  for ((FS_elem_libc=0; FS_elem_libc<${#FS_chk_func_libc[@]}; FS_elem_libc++))
-  do
+  for ((FS_elem_libc=0; FS_elem_libc<${#FS_chk_func_libc[@]}; FS_elem_libc++)); do
     ${debug} && echo -e "\n***function FS_comparison->FS_elem_libc->FS_elem_functions"
-    for ((FS_elem_functions=0; FS_elem_functions<${#FS_functions[@]}; FS_elem_functions++))
-    do
+    for ((FS_elem_functions=0; FS_elem_functions<${#FS_functions[@]}; FS_elem_functions++)); do
       FS_tmp_func=${FS_functions[$FS_elem_functions]}
       FS_tmp_libc=${FS_chk_func_libc[$FS_elem_libc]}
 
-  if [[ ${FS_tmp_func} =~ ^${FS_tmp_libc}$ ]] ; then
+  if [[ ${FS_tmp_func} =~ ^${FS_tmp_libc}$ ]]; then
     if [[ ${format} == "cli" ]]; then
       printf " \033[31m%-30s\033[m | __%s%s\n" "${FS_tmp_func}" "${FS_tmp_libc}" "${FS_end}"
     else
@@ -1449,7 +1439,7 @@ FS_comparison() {
   fi
         (( FS_cnt_total++ ))
         (( FS_cnt_unchecked++ ))
-   elif [[ ${FS_tmp_func} =~ ^${FS_tmp_libc}(_chk)$ ]] ; then
+   elif [[ ${FS_tmp_func} =~ ^${FS_tmp_libc}(_chk)$ ]]; then
      if [[ ${format} == "cli" ]]; then
        printf " \033[32m%-30s\033[m | __%s%s\n" "${FS_tmp_func}" "${FS_tmp_libc}" "${FS_end}"
      else
@@ -1539,24 +1529,24 @@ debug_report() {
         file "${path}"
       fi
     else
-       echo "*** can not find command ${command}"
-       failed=true
+      echo "*** can not find command ${command}"
+      failed=true
     fi
   done
 
   if [[ -n ${failed} ]]; then
     exit 1
- fi
+  fi
 }
 
-chk_dir () {
-  if [[ -z "${CHK_DIR}" ]] ; then
+chk_dir() {
+  if [[ -z "${CHK_DIR}" ]]; then
     printf "\033[31mError: Please provide a valid directory.\033[m\n\n"
     exit 1
   fi
   # remove trailing slashes
   tempdir=$(echo "${CHK_DIR}" | sed -e "s/\/*$//")
-  if [[ ! -d "${tempdir}" ]] ; then
+  if [[ ! -d "${tempdir}" ]]; then
     printf "\033[31mError: The directory '%s' does not exist.\033[m\n\n" "${tempdir}"
     exit 1
   fi
@@ -1571,70 +1561,70 @@ chk_dir () {
   while read -r N; do
     if [[ "${N}" != "[A-Za-z1-0]*" ]]; then
       out=$(file "$(readlink -f "${N}")")
-      if [[ ${out} =~ ELF ]] ; then
+      if [[ ${out} =~ ELF ]]; then
         (( fdirtotal++ ))
       fi
     fi
   done < <(find "${tempdir}" -type f 2>/dev/null)
-  if [[ $fdirtotal -gt 0 ]]; then 
+  if [[ $fdirtotal -gt 0 ]]; then
     echo_message "" "" "" ","
   fi
   while read -r N; do
     if [[ "${N}" != "[A-Za-z1-0]*" ]]; then
-  # read permissions?
-  if [[ ! -r "${N}" ]]; then
-      printf "\033[31mError: No read permissions for '%s' (run as root).\033[m\n" ", ${N}"
-  else
-      # ELF executable?
-      out=$(file "$(readlink -f "${N}")")
-      if [[ ! ${out} =~ ELF ]] ; then
-        if [[ "${verbose}" = "true" ]] ; then
+      # read permissions?
+      if [[ ! -r "${N}" ]]; then
+        printf "\033[31mError: No read permissions for '%s' (run as root).\033[m\n" ", ${N}"
+      else
+        # ELF executable?
+        out=$(file "$(readlink -f "${N}")")
+        if [[ ! ${out} =~ ELF ]]; then
+          if [[ "${verbose}" = "true" ]]; then
             echo_message "\033[34m*** Not an ELF file: ${tempdir}/" "" "" ""
-              file "${N}"
+            file "${N}"
             echo_message "\033[m" "" "" ""
-        fi
-      else
-          (( fdircount++ ))
-        echo_message "" "" "    " ""
-        filecheck "${N}"
-        if [[ "$(find "${N}" \( -perm -004000 -o -perm -002000 \) -type f -print)" ]]; then
-            echo_message "\033[37;41m${N}\033[m\n" ",${N}\n" " filename='${N}' />\n" ", \"filename\":\"${N}\"}"
+          fi
         else
+          (( fdircount++ ))
+          echo_message "" "" "    " ""
+          filecheck "${N}"
+          if [[ "$(find "${N}" \( -perm -004000 -o -perm -002000 \) -type f -print)" ]]; then
+            echo_message "\033[37;41m${N}\033[m\n" ",${N}\n" " filename='${N}' />\n" ", \"filename\":\"${N}\"}"
+          else
             echo_message "${N}\n" ",${N}\n" " filename='${N}' />\n" ", \"filename\":\"${N}\"}"
-        fi
-        if [[ "${fdircount}" == "${fdirtotal}" ]]; then
-        echo_message "" "" "" ""
-      else
-        echo_message "" "" "" ","
+          fi
+          if [[ "${fdircount}" == "${fdirtotal}" ]]; then
+            echo_message "" "" "" ""
+          else
+            echo_message "" "" "" ","
+          fi
         fi
       fi
-  fi
     fi
   done < <(find "${tempdir}" -type f 2>/dev/null)
   echo_message "" "" "</dir>\n" "}"
 }
 
-chk_file () {
-  if [[ -z "${CHK_FILE}" ]] ; then
+chk_file() {
+  if [[ -z "${CHK_FILE}" ]]; then
     printf "\033[31mError: Please provide a valid file.\033[m\n\n"
   exit 1
   fi
 
   # does the file exist?
-  if [[ ! -e "${CHK_FILE}" ]] ; then
+  if [[ ! -e "${CHK_FILE}" ]]; then
     printf "\033[31mError: The file '%s' does not exist.\033[m\n\n" "${CHK_FILE}"
     exit 1
   fi
 
   # read permissions?
-  if [[ ! -r "${CHK_FILE}" ]] ; then
+  if [[ ! -r "${CHK_FILE}" ]]; then
     printf "\033[31mError: No read permissions for '%s' (run as root).\033[m\n\n" "${CHK_FILE}"
     exit 1
   fi
 
   # ELF executable?
   out=$(file "$(readlink -f "${CHK_FILE}")")
-  if [[ ! ${out} =~ ELF ]] ; then
+  if [[ ! ${out} =~ ELF ]]; then
     printf "\033[31mError: Not an ELF file: "
     file "${CHK_FILE}"
     printf "\033[m\n"
@@ -1646,63 +1636,61 @@ chk_file () {
     echo_message "RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH\tSymbols\t\tFORTIFY\tFortified\tFortifiable\tFILE\n" '' '' '{'
   fi
   filecheck "${CHK_FILE}"
-  if [[ "$(find "${CHK_FILE}" \( -perm -004000 -o -perm -002000 \) -type f -print)" ]] ; then
+  if [[ "$(find "${CHK_FILE}" \( -perm -004000 -o -perm -002000 \) -type f -print)" ]]; then
     echo_message "\033[37;41m${CHK_FILE}\033[m\n" ",${CHK_FILE}\n" " filename='${CHK_FILE}'/>\n" " } }"
   else
     echo_message "${CHK_FILE}\n" ",${CHK_FILE}\n" " filename='${CHK_FILE}'/>\n" " } }"
   fi
 }
 
-chk_file_list () {
+chk_file_list() {
+  if ${extended_checks}; then
+    echo_message "RELRO           STACK CANARY      NX            PIE             SELFRANDO             Clang CFI            SafeStack            RPATH      RUNPATH\tSymbols\t\tFORTIFY\tFortified\tFortifiable\tFILE\n" '' '' '{\n'
+  else
+    echo_message "RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH\tSymbols\t\tFORTIFY\tFortified\tFortifiable\tFILE\n" '' '' '{\n'
+  fi
 
-    if ${extended_checks}; then
-      echo_message "RELRO           STACK CANARY      NX            PIE             SELFRANDO             Clang CFI            SafeStack            RPATH      RUNPATH\tSymbols\t\tFORTIFY\tFortified\tFortifiable\tFILE\n" '' '' '{\n'
-    else
-      echo_message "RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH\tSymbols\t\tFORTIFY\tFortified\tFortifiable\tFILE\n" '' '' '{\n'
+  while IFS="" read -r p || [[ -n "${p}" ]]; do
+    CHK_FILE="${p}"
+
+    if [[ -z "${CHK_FILE}" ]]; then
+      printf "\033[31mError: Please provide a valid file.\033[m\n\n"
+      exit 1
     fi
 
-    while IFS="" read -r p || [[ -n "${p}" ]]
-    do
-      CHK_FILE="${p}"
-
-      if [[ -z "${CHK_FILE}" ]] ; then
-        printf "\033[31mError: Please provide a valid file.\033[m\n\n"
+    # does the file exist?
+    if [[ ! -e "${CHK_FILE}" ]]; then
+      printf "\033[31mError: The file '%s' does not exist.\033[m\n\n" "${CHK_FILE}"
       exit 1
-      fi
+    fi
 
-      # does the file exist?
-      if [[ ! -e "${CHK_FILE}" ]] ; then
-        printf "\033[31mError: The file '%s' does not exist.\033[m\n\n" "${CHK_FILE}"
-        exit 1
-      fi
+    # read permissions?
+    if [[ ! -r "${CHK_FILE}" ]]; then
+      printf "\033[31mError: No read permissions for '%s' (run as root).\033[m\n\n" "${CHK_FILE}"
+      exit 1
+    fi
 
-      # read permissions?
-      if [[ ! -r "${CHK_FILE}" ]] ; then
-        printf "\033[31mError: No read permissions for '%s' (run as root).\033[m\n\n" "${CHK_FILE}"
-        exit 1
-      fi
+    # ELF executable?
+    out=$(file "$(readlink -f "${CHK_FILE}")")
+    if [[ ! ${out} =~ ELF ]]; then
+      printf "\033[31mError: Not an ELF file: "
+      file "${CHK_FILE}"
+      printf "\033[m\n"
+      exit 1
+    fi
+    filecheck "${CHK_FILE}"
+    if [[ "$(find "${CHK_FILE}" \( -perm -004000 -o -perm -002000 \) -type f -print)" ]]; then
+      echo_message "\033[37;41m${CHK_FILE}\033[m\n" ",${CHK_FILE}\n" " filename='${CHK_FILE}'/>\n" " } }"
+    else
+      echo_message "${CHK_FILE}\n" ",${CHK_FILE}\n" " filename='${CHK_FILE}'/>\n" " },\n"
+    fi
 
-      # ELF executable?
-      out=$(file "$(readlink -f "${CHK_FILE}")")
-      if [[ ! ${out} =~ ELF ]] ; then
-        printf "\033[31mError: Not an ELF file: "
-        file "${CHK_FILE}"
-        printf "\033[m\n"
-        exit 1
-      fi
-      filecheck "${CHK_FILE}"
-      if [[ "$(find "${CHK_FILE}" \( -perm -004000 -o -perm -002000 \) -type f -print)" ]] ; then
-        echo_message "\033[37;41m${CHK_FILE}\033[m\n" ",${CHK_FILE}\n" " filename='${CHK_FILE}'/>\n" " } }"
-      else
-        echo_message "${CHK_FILE}\n" ",${CHK_FILE}\n" " filename='${CHK_FILE}'/>\n" " },\n"
-      fi
+  done <"${CHK_FILE_LIST}"
 
-    done <"${CHK_FILE_LIST}"
-
-    echo_message '' '' '' ' }\n'
+  echo_message '' '' '' ' }\n'
 }
 
-chk_proc_all () {
+chk_proc_all() {
   cd /proc || exit
   echo_message "* System-wide ASLR" "" "" ""
   aslrcheck
@@ -1718,12 +1706,12 @@ chk_proc_all () {
   lastpid=0
   currpid=0
   for N in [1-9]*; do
-    if [[ "${N}" != "$$" ]] && readlink -q "${N}"/exe > /dev/null; then
+    if [[ "${N}" != "$$" ]] && readlink -q "${N}"/exe >/dev/null; then
       (( lastpid++ ))
     fi
   done
   for N in [1-9]*; do
-    if [[ "${N}" != "$$" ]] && readlink -q "${N}"/exe > /dev/null; then
+    if [[ "${N}" != "$$" ]] && readlink -q "${N}"/exe >/dev/null; then
       (( currpid++ ))
       name=$(head -1 "${N}"/status | cut -b 7-)
       if [[ $format == "cli" ]]; then
@@ -1734,31 +1722,31 @@ chk_proc_all () {
         echo_message "" "${name}," " name='${name}'" "\"name\":\"${name}\","
       fi
       proccheck "${N}"
-  if [[ "${lastpid}" == "${currpid}" ]]; then
-    echo_message "\n" "\n" "</proc>\n" ""
-  else
-    echo_message "\n" "\n" "</proc>\n" ","
-  fi
+      if [[ "${lastpid}" == "${currpid}" ]]; then
+        echo_message "\n" "\n" "</proc>\n" ""
+      else
+        echo_message "\n" "\n" "</proc>\n" ","
+      fi
     fi
   done
   echo_message "" "" "</procs>" " }\n"
-  if [[ ! -e /usr/bin/id ]] ; then
+  if [[ ! -e /usr/bin/id ]]; then
     echo_message "\n\033[33mNote: If you are running 'checksec.sh' as an unprivileged user, you\n" "" "" ""
     echo_message "      will not see all processes. Please run the script as root.\033[m\n\n" "" "" "\n"
   else
-    if ! (root_privs) ; then
+    if ! (root_privs); then
       echo_message "\n\033[33mNote: You are running 'checksec.sh' as an unprivileged user.\n" "" "" ""
       echo_message "      Too see all processes, please run the script as root.\033[m\n\n" "" "" "\n"
     fi
   fi
 }
 
-chk_proc () {
-  if [[ -z "${CHK_PROC}" ]] ; then
+chk_proc() {
+  if [[ -z "${CHK_PROC}" ]]; then
     printf "\033[31mError: Please provide a valid process name.\033[m\n\n"
     exit 1
   fi
-  if ! (isString "${CHK_PROC}") ; then
+  if ! (isString "${CHK_PROC}"); then
     printf "\033[31mError: Please provide a valid process name.\033[m\n\n"
     exit 1
   fi
@@ -1780,7 +1768,7 @@ chk_proc () {
   pos=$(( ${#fpids[*]} - 1 ))
   last=${fpids[$pos]}
   for N in "${fpids[@]}"; do
-    if [[ -d "${N}" ]] ; then
+    if [[ -d "${N}" ]]; then
       name=$(head -1 "${N}"/status | cut -b 7-)
       if [[ $format == "cli" ]]; then
         printf "%16s" "${name}"
@@ -1789,12 +1777,12 @@ chk_proc () {
         echo_message "" "${N}," "<proc pid='${N}'" " \"${N}\": {"
         echo_message "" "${name}," " name='${name}'" "\"name\":\"${name}\","
       fi
-      if [[ ! -r "${N}/exe" ]] ; then
-        if ! (root_privs) ; then
+      if [[ ! -r "${N}/exe" ]]; then
+        if ! (root_privs); then
           printf "\033[31mNo read permissions for '/proc/%s/exe' (run as root).\033[m\n\n" "${N}"
           exit 1
         fi
-        if [[ ! "$(readlink "${N}/exe")" ]] ; then
+        if [[ ! "$(readlink "${N}/exe")" ]]; then
           printf "\033[31mPermission denied. Requested process ID belongs to a kernel thread.\033[m\n\n"
           exit 1
         fi
@@ -1811,12 +1799,12 @@ chk_proc () {
   echo_message "\n" "\n" "\n" "}\n"
 }
 
-chk_proc_libs () {
-  if [[ -z "${CHK_PROC_LIBS}" ]] ; then
+chk_proc_libs() {
+  if [[ -z "${CHK_PROC_LIBS}" ]]; then
     printf "\033[31mError: Please provide a valid process ID.\033[m\n\n"
     exit 1
   fi
-  if ! (isNumeric "${CHK_PROC_LIBS}") ; then
+  if ! (isNumeric "${CHK_PROC_LIBS}"); then
     printf "\033[31mError: Please provide a valid process ID.\033[m\n\n"
     exit 1
   fi
@@ -1832,7 +1820,7 @@ chk_proc_libs () {
     echo_message "         COMMAND    PID RELRO           STACK CANARY            SECCOMP        NX/PaX        PIE                     Fortify Source\n" '' '' ''
   fi
   N=${CHK_PROC_LIBS}
-  if [[ -d "${N}" ]] ; then
+  if [[ -d "${N}" ]]; then
     name=$(head -1 "${N}/status" | cut -b 7-)
     if [[ "${format}" == "cli" ]]; then
       printf "%16s" "${name}"
@@ -1842,12 +1830,12 @@ chk_proc_libs () {
       echo_message "" "${N}," " pid='${N}'" "\"pid\":\"${N}\","
     fi
       # read permissions?
-    if [[ ! -r "${N}/exe" ]] ; then
-      if ! (root_privs) ; then
+    if [[ ! -r "${N}/exe" ]]; then
+      if ! (root_privs); then
         printf "\033[31mNo read permissions for '/proc/%s/exe' (run as root).\033[m\n\n" "${N}"
         exit 1
       fi
-      if [[ ! "$(readlink "${N}"/exe)" ]] ; then
+      if [[ ! "$(readlink "${N}"/exe)" ]]; then
         printf "\033[31mPermission denied. Requested process ID belongs to a kernel thread.\033[m\n\n"
         exit 1
       fi
@@ -1865,46 +1853,46 @@ chk_proc_libs () {
   fi
 }
 
-chk_fortify_file () {
+chk_fortify_file() {
   # if first char of pathname is '~' replace it with '${HOME}'
-  if [[ "${CHK_FORTIFY_FILE:0:1}" = '~' ]] ; then
+  if [[ "${CHK_FORTIFY_FILE:0:1}" = '~' ]]; then
     CHK_FORTIFY_FILE=${HOME}/${CHK_FORTIFY_FILE:1}
   fi
 
-  if [[ -z "${CHK_FORTIFY_FILE}" ]] ; then
+  if [[ -z "${CHK_FORTIFY_FILE}" ]]; then
     printf "\033[31mError: Please provide a valid file.\033[m\n\n"
   exit 1
   fi
   # does the file exist?
-  if [[ ! -f "${CHK_FORTIFY_FILE}" ]] ; then
+  if [[ ! -f "${CHK_FORTIFY_FILE}" ]]; then
     printf "\033[31mError: The file '%s' does not exist.\033[m\n\n" "${CHK_FORTIFY_FILE}"
     exit 1
   fi
   # read permissions?
-  if [[ ! -r "${CHK_FORTIFY_FILE}" ]] ; then
+  if [[ ! -r "${CHK_FORTIFY_FILE}" ]]; then
     printf "\033[31mError: No read permissions for '%s' (run as root).\033[m\n\n" "${CHK_FORTIFY_FILE}"
     exit 1
   fi
   # ELF executable?
   out=$(file "$(readlink -f "${CHK_FORTIFY_FILE}")")
-  if [[ ! ${out} =~ ELF ]] ; then
+  if [[ ! ${out} =~ ELF ]]; then
     printf "\033[31mError: Not an ELF file: "
     file "${CHK_FORTIFY_FILE}"
     printf "\033[m\n"
     exit 1
   fi
 
-  if [[ -e /lib/libc.so.6 ]] ; then
+  if [[ -e /lib/libc.so.6 ]]; then
     FS_libc=/lib/libc.so.6
-  elif [[ -e /lib64/libc.so.6 ]] ; then
+  elif [[ -e /lib64/libc.so.6 ]]; then
     FS_libc=/lib64/libc.so.6
-  elif [[ -e /lib/i386-linux-gnu/libc.so.6 ]] ; then
+  elif [[ -e /lib/i386-linux-gnu/libc.so.6 ]]; then
     FS_libc=/lib/i386-linux-gnu/libc.so.6
-  elif [[ -e /lib/x86_64-linux-gnu/libc.so.6 ]] ; then
+  elif [[ -e /lib/x86_64-linux-gnu/libc.so.6 ]]; then
     FS_libc=/lib/x86_64-linux-gnu/libc.so.6
-  elif [[ -e /lib/arm-linux-gnueabihf/libc.so.6 ]] ; then
+  elif [[ -e /lib/arm-linux-gnueabihf/libc.so.6 ]]; then
     FS_libc=/lib/arm-linux-gnueabihf/libc.so.6
-  elif [[ -e /lib/aarch64-linux-gnu/libc.so.6 ]] ; then
+  elif [[ -e /lib/aarch64-linux-gnu/libc.so.6 ]]; then
     FS_libc=/lib/aarch64-linux-gnu/libc.so.6
   else
     printf "\033[31mError: libc not found.\033[m\n\n"
@@ -1923,44 +1911,44 @@ chk_fortify_file () {
   echo_message "" "" "</fortify-test>\n" "} }"
 }
 
-chk_fortify_proc () {
-  if [[ -z "${CHK_FORTIFY_PROC}" ]] ; then
+chk_fortify_proc() {
+  if [[ -z "${CHK_FORTIFY_PROC}" ]]; then
     printf "\033[31mError: Please provide a valid process ID.\033[m\n\n"
     exit 1
   fi
-  if ! (isNumeric "${CHK_FORTIFY_PROC}") ; then
+  if ! (isNumeric "${CHK_FORTIFY_PROC}"); then
     printf "\033[31mError: Please provide a valid process ID.\033[m\n\n"
     exit 1
   fi
   cd /proc || exit
   N=${CHK_FORTIFY_PROC}
-  if [[ -d "${N}" ]] ; then
+  if [[ -d "${N}" ]]; then
     # read permissions?
-    if [[ ! -r "${N}/exe" ]] ; then
-      if ! (root_privs) ; then
+    if [[ ! -r "${N}/exe" ]]; then
+      if ! (root_privs); then
         printf "\033[31mNo read permissions for '/proc/%s/exe' (run as root).\033[m\n\n" "${N}"
         exit 1
       fi
-      if [[ ! "$(readlink "${N}/exe")" ]] ; then
+      if [[ ! "$(readlink "${N}/exe")" ]]; then
         printf "\033[31mPermission denied. Requested process ID belongs to a kernel thread.\033[m\n\n"
         exit 1
       fi
       exit 1
     fi
-    if [[ -e /lib/libc.so.6 ]] ; then
+    if [[ -e /lib/libc.so.6 ]]; then
       FS_libc=/lib/libc.so.6
-    elif [[ -e /lib64/libc.so.6 ]] ; then
+    elif [[ -e /lib64/libc.so.6 ]]; then
       FS_libc=/lib64/libc.so.6
-    elif [[ -e /lib/i386-linux-gnu/libc.so.6 ]] ; then
+    elif [[ -e /lib/i386-linux-gnu/libc.so.6 ]]; then
       FS_libc=/lib/i386-linux-gnu/libc.so.6
-    elif [[ -e /lib/x86_64-linux-gnu/libc.so.6 ]] ; then
+    elif [[ -e /lib/x86_64-linux-gnu/libc.so.6 ]]; then
       FS_libc=/lib/x86_64-linux-gnu/libc.so.6
     else
       printf "\033[31mError: libc not found.\033[m\n\n"
       exit 1
     fi
     name=$(head -1 "${N}/status" | cut -b 7-)
-    echo_message  "* Process name (PID)                         : ${name} (${N})\n" "" "" ""
+    echo_message "* Process name (PID)                         : ${name} (${N})\n" "" "" ""
 
     FS_chk_func_libc=()
     FS_functions=()
@@ -1975,122 +1963,122 @@ chk_fortify_proc () {
   fi
 }
 
-chk_kernel () {
-    if [[ ${CHK_KERNEL} == "kernel" ]]; then
-      CHK_KERNEL=""
-    fi
-    if [[ -e "${CHK_KERNEL}" ]] && [[ ! -d "${CHK_KERNEL}" ]]; then
-      if [[ -s "$(pwd -P)/${CHK_KERNEL}" ]]; then
-        configfile=$(pwd -P)/${CHK_KERNEL}
-      elif [[ -s "${CHK_KERNEL}" ]]; then
-        configfile=${CHK_KERNEL}
-      else
-        "Error: config file specified do not exist"
-        exit 1
-      fi
-      echo_message "* Kernel protection information for : $configfile \n\n" "" "" ""
-      cd /proc && kernelcheck "$configfile" || exit
+chk_kernel() {
+  if [[ ${CHK_KERNEL} == "kernel" ]]; then
+    CHK_KERNEL=""
+  fi
+  if [[ -e "${CHK_KERNEL}" ]] && [[ ! -d "${CHK_KERNEL}" ]]; then
+    if [[ -s "$(pwd -P)/${CHK_KERNEL}" ]]; then
+      configfile=$(pwd -P)/${CHK_KERNEL}
+    elif [[ -s "${CHK_KERNEL}" ]]; then
+      configfile=${CHK_KERNEL}
     else
-      cd /proc || exit
-      echo_message "* Kernel protection information:\n\n" "" "" ""
-      kernelcheck
+      "Error: config file specified do not exist"
+      exit 1
     fi
+    echo_message "* Kernel protection information for : $configfile \n\n" "" "" ""
+    cd /proc && kernelcheck "$configfile" || exit
+  else
+    cd /proc || exit
+    echo_message "* Kernel protection information:\n\n" "" "" ""
+    kernelcheck
+  fi
 }
 
 optspec=":h-:"
 while getopts "${optspec}" optchar; do
-    case "${optchar}" in
-        -)
-            case "${OPTARG}" in
-                version)
-                  version
-                  exit 0
-                  ;;
-                debug)
-                  debug=true
-                  ;;
-                trace)
-                  export BASH_XTRACEFD=5
-                  export PS4='(${BASH_SOURCE##*/}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
-                  set -x
-                  ;;
-                help)
-                  help
-                  exit 0
-                  ;;
-                debug_report)
-                  debug_report
-                  exit 0
-                  ;;
-                update|upgrade)
-                  # shellcheck disable=SC2119
-                  upgrade
-                  exit 0
-                  ;;
-                format=*|output=*)
-                  output_format=${OPTARG#*=}
-                  format
-                  ;;
-                verbose)
-                  verbose=true
-                  ;;
-                extended)
-                  extended_checks=true
-                  ;;
-                dir=*|dir)
-                  CHK_DIR=${OPTARG#*=};
-                  OPT=$((OPT + 1))
-                  CHK_FUNCTION="chk_dir"
-                  ;;
-                file=*|file)
-                  CHK_FILE=${OPTARG#*=};
-                  OPT=$((OPT + 1))
-                  CHK_FUNCTION="chk_file"
-                  ;;
-                listfile=*|listfile)
-                  CHK_FILE_LIST=${OPTARG#*=};
-                  OPT=$((OPT + 1))                  
-                  CHK_FUNCTION="chk_file_list"
-                  ;;
-                proc-all)
-                  OPT=$((OPT + 1))
-                  CHK_FUNCTION="chk_proc_all"
-                  ;;
-                proc=*|proc)
-                  CHK_PROC=${OPTARG#*=};
-                  OPT=$((OPT + 1))
-                  CHK_FUNCTION="chk_proc"
-                  ;;
-                proc-libs=*|proc-libs)
-                  CHK_PROC_LIBS=${OPTARG#*=};
-                  OPT=$((OPT + 1))
-                  CHK_FUNCTION="chk_proc_libs"
-                  ;;
-                fortify-file=*|fortify-file)
-                  CHK_FORTIFY_FILE=${OPTARG#*=};
-                  OPT=$((OPT + 1))
-                  CHK_FUNCTION="chk_fortify_file"
-                  ;;
-                fortify-proc=*|fortify-proc)
-                  CHK_FORTIFY_PROC=${OPTARG#*=};
-                  OPT=$((OPT + 1))
-                  CHK_FUNCTION="chk_fortify_proc"
-                  ;;
-                kernel=*|kernel)
-                  CHK_KERNEL=${OPTARG#*=};
-                  OPT=$((OPT + 1))
-                  CHK_FUNCTION="chk_kernel"
-                  ;;
-                *)
-                    printf "\033[31mError: Unknown option %s.\033[m\n\n" "${OPTARG}"
-                    exit 1
-                    ;;
-            esac;;
+  case "${optchar}" in
+    -)
+      case "${OPTARG}" in
+        version)
+          version
+          exit 0
+          ;;
+        debug)
+          debug=true
+          ;;
+        trace)
+          export BASH_XTRACEFD=5
+          export PS4='(${BASH_SOURCE##*/}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+          set -x
+          ;;
+        help)
+          help
+          exit 0
+          ;;
+        debug_report)
+          debug_report
+          exit 0
+          ;;
+        update|upgrade)
+          # shellcheck disable=SC2119
+          upgrade
+          exit 0
+          ;;
+        format=*|output=*)
+          output_format=${OPTARG#*=}
+          format
+          ;;
+        verbose)
+          verbose=true
+          ;;
+        extended)
+          extended_checks=true
+          ;;
+        dir=*|dir)
+          CHK_DIR=${OPTARG#*=};
+          OPT=$((OPT + 1))
+          CHK_FUNCTION="chk_dir"
+          ;;
+        file=*|file)
+          CHK_FILE=${OPTARG#*=};
+          OPT=$((OPT + 1))
+          CHK_FUNCTION="chk_file"
+          ;;
+        listfile=*|listfile)
+          CHK_FILE_LIST=${OPTARG#*=};
+          OPT=$((OPT + 1))
+          CHK_FUNCTION="chk_file_list"
+          ;;
+        proc-all)
+          OPT=$((OPT + 1))
+          CHK_FUNCTION="chk_proc_all"
+          ;;
+        proc=*|proc)
+          CHK_PROC=${OPTARG#*=};
+          OPT=$((OPT + 1))
+          CHK_FUNCTION="chk_proc"
+          ;;
+        proc-libs=*|proc-libs)
+          CHK_PROC_LIBS=${OPTARG#*=};
+          OPT=$((OPT + 1))
+          CHK_FUNCTION="chk_proc_libs"
+          ;;
+        fortify-file=*|fortify-file)
+          CHK_FORTIFY_FILE=${OPTARG#*=};
+          OPT=$((OPT + 1))
+          CHK_FUNCTION="chk_fortify_file"
+          ;;
+        fortify-proc=*|fortify-proc)
+          CHK_FORTIFY_PROC=${OPTARG#*=};
+          OPT=$((OPT + 1))
+          CHK_FUNCTION="chk_fortify_proc"
+          ;;
+        kernel=*|kernel)
+          CHK_KERNEL=${OPTARG#*=};
+          OPT=$((OPT + 1))
+          CHK_FUNCTION="chk_kernel"
+          ;;
         *)
-            help
-            exit 0
-            ;;
-    esac
+          printf "\033[31mError: Unknown option %s.\033[m\n\n" "${OPTARG}"
+          exit 1
+          ;;
+      esac;;
+    *)
+      help
+      exit 0
+      ;;
+  esac
 done
 
 if [[ "${OPT}" == 0 ]]; then
@@ -2103,11 +2091,11 @@ fi
 
 for variable in CHK_DIR CHK_FILE CHK_FORTIFY_FILE CHK_FORTIFY_PROC CHK_PROC CHK_PROC_LIBS; do
   if [[ -n ${!variable+x} ]]; then
-   if [[ -z "${!variable}" ]]; then
-     printf "\033[31mError: Option Required.\033[m\n\n"
-     help
-     exit 1
-   fi
+    if [[ -z "${!variable}" ]]; then
+      printf "\033[31mError: Option Required.\033[m\n\n"
+      help
+      exit 1
+    fi
   fi
 done
 

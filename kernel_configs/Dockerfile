@@ -1,6 +1,5 @@
 FROM ubuntu:bionic
 
-
 # Install dependencies
 RUN apt-get update               \
  && apt-get -y -q upgrade        \
