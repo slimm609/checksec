@@ -66,7 +66,7 @@ verbose=false
 format="cli"
 SCRIPT_NAME="checksec"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
-SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename ${SCRIPT_NAME} .sh).sig"
+SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename "${SCRIPT_NAME}" .sh).sig"
 SCRIPT_VERSION=2020081501
 SCRIPT_MAJOR=2
 SCRIPT_MINOR=4
@@ -1362,9 +1362,9 @@ kernelcheck() {
     if ${kconfig} | grep -qi 'CONFIG_GRKERNSEC_SYSCTL=y'; then
       echo_message "  Grsec sysctl options:\n" "" "" ', "grsecurity_sysctl": {'
       for command in audit_chdir audit_gid audit_group audit_mount audit_ptrace chroot_caps chroot_deny_bad_rename chroot_deny_chmod chroot_deny_chroot chroot_deny_fchdir chroot_deny_mknod chroot_deny_mount chroot_deny_pivot chroot_deny_shmat chroot_deny_sysctl chroot_deny_unix chroot_enforce_chdir chroot_execlog chroot_findtask chroot_restrict_nice consistent_setxid deny_new_usb deter_bruteforce disable_priv_io dmesg enforce_symlinksifowner exec_logging fifo_restrictions forkfail_logging grsec_lock harden_ipc harden_ptrace ip_blackhole lastack_retries linking_restrictions ptrace_readexec resource_logging romount_protect rwxmap_logging signal_logging socket_all socket_all_gid socket_client socket_client_gid socket_server socket_server_gid symlinkown_gid timechange_logging harden_tty tpe tpe_gid tpe_invert tpe_restrict_all; do
-        if [[ $(echo grsecurity.${command} | wc -c) -gt 27 ]]; then
+        if [[ $(echo "grsecurity.${command}" | wc -c) -gt 27 ]]; then
           echo_message "    grsecurity.${command}:\t  " "" "" ""
-        elif [[ $(echo grsecurity.${command} | wc -c) -le 20 ]]; then
+        elif [[ $(echo "grsecurity.${command}" | wc -c) -le 20 ]]; then
           echo_message "    grsecurity.${command}:\t\t\t  " "" "" ""
         else
           echo_message "    grsecurity.${command}:\t\t  " "" "" ""
@@ -1544,7 +1544,7 @@ debug_report() {
     fi
   done
 
-  if [[ ${failed} ]]; then
+  if [[ -n ${failed} ]]; then
     exit 1
  fi
 }

@@ -9,13 +9,13 @@ build_config () {
     revision=${4:-1}
     cd /root
     if [[ ! -s /root/configs/config-${major}.${minor}.${revision} ]]; then
-      wget --no-check-certificate https://mirrors.edge.kernel.org/pub/linux/kernel/v${folder}/linux-${major}.${minor}.${revision}.tar.xz 
-      tar Jxvf linux-${major}.${minor}.${revision}.tar.xz
-      cd linux-${major}.${minor}.${revision}
+      wget --no-check-certificate "https://mirrors.edge.kernel.org/pub/linux/kernel/v${folder}/linux-${major}.${minor}.${revision}.tar.xz" 
+      tar Jxvf "linux-${major}.${minor}.${revision}.tar.xz"
+      cd "linux-${major}.${minor}.${revision}"
       make allyesconfig
-      cp .config /root/configs/config-${major}.${minor}.${revision}
+      cp .config "/root/configs/config-${major}.${minor}.${revision}"
       cd /root
-      rm -rf linux-${major}.${minor}.${revision}.tar.xz linux-${major}.${minor}.${revision}
+      rm -rf "linux-${major}.${minor}.${revision}.tar.xz" "linux-${major}.${minor}.${revision}"
     fi
 }
 
