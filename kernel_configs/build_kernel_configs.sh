@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Build all yes kernel config for testing different versions
 set -eou pipefail
 
