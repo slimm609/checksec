@@ -14,7 +14,7 @@ include the output of `checksec --debug_report`
 
 
 ## OS version and Kernel version
-<!--- Include the os and kernel version -->
+<!--- Include the OS and kernel version -->
 
 
 ## Debug output

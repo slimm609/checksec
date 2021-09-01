@@ -151,7 +151,7 @@ The checksec tool can be used against cross-compiled target file-systems offline
 
 * File check -  the offline testing works for all the checks but the Fortify feature.  Fortify, uses the running system's libraries vs those in the offline file-system. There are ways to workaround this (chroot) but at the moment, the ideal configuration would have this script executing on the running system when checking the files.
 
-The checksec tool's normal use case is for runtime checking of the systems configruation.  If the system is an embedded target, the native binutils tools like readelf may not be present.  This would restrict which parts of the script will work.
+The checksec tool's normal use case is for runtime checking of the systems configuration.  If the system is an embedded target, the native binutils tools like readelf may not be present.  This would restrict which parts of the script will work.
 
 Even with those limitations, the amount of valuable information this script provides, still makes it a valuable tool for checking offline file-systems.
 
