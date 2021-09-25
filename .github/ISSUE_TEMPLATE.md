@@ -1,4 +1,3 @@
- 
 # Issue tracker
  If any of these values are not included, the issue will be closed and not worked
 
@@ -14,7 +13,7 @@ include the output of `checksec --debug_report`
 
 
 ## OS version and Kernel version
-<!--- Include the os and kernel version -->
+<!--- Include the OS and kernel version -->
 
 
 ## Debug output
@@ -22,4 +21,3 @@ include the output of `checksec --debug_report`
 Run the same command as above to reproduce the error but include the --debug flag
 
 e.x  `checksec --debug -f /usr/bin/ls`
-

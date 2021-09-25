@@ -16,7 +16,7 @@ if [[ "$#" -lt 1 ]]; then
   exit 1
 fi
 
-find "$1" -type f -executable -exec file -i '{}' \; | grep -e 'application/x-sharedlib; charset=binary' -e 'application/x-pie-executable; charset=binary' -e 'application/x-executable; charset=binary'  | cut -c1- | cut -d ':' -f1 > linux_executables.txt
+find "$1" -type f -executable -exec file -i '{}' \; | grep -e 'application/x-sharedlib; charset=binary' -e 'application/x-pie-executable; charset=binary' -e 'application/x-executable; charset=binary' | cut -c1- | cut -d ':' -f1 > linux_executables.txt
 
 echo "Checksec Output" | tee "$2"
 

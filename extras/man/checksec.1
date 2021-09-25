@@ -1,15 +1,15 @@
 \" Process this file with
 .\" groff -man -Tascii foo.1
 .\"
-.TH CHECKSEC 1 "FEBURARY 2019" Linux "User Manuals"
+.TH CHECKSEC 1 "FEBRUARY 2019" Linux "User Manuals"
 .SH NAME
 checksec \- check executables and kernel properties
 .SH SYNOPSIS
 .B checksec [options] [file]
 .SH DESCRIPTION
 .B checksec
-is a bash script used to check the properties of executables 
-(like PIE, RELRO, PaX, Canaries, ASLR, Fortify Source) and kernel security 
+is a bash script used to check the properties of executables
+(like PIE, RELRO, PaX, Canaries, ASLR, Fortify Source) and kernel security
 options (like GRSecurity and SELinux).
 .SH OPTIONS
 .TP
@@ -42,9 +42,9 @@ Checks the security features of the running kernel or a specified kernel config
 Checks the fortifiability of a file and if any of the fortifiable features have already been compiled into the file
 .TP
 \fB\--fortify-proc={pid}\fP
-Checks the fortifiability of a running process and if any of the fortifiable features have already been compiled in  
+Checks the fortifiability of a running process and if any of the fortifiable features have already been compiled in
 .TP
-\fB\--version\fP 
+\fB\--version\fP
 Shows the current version of the running software
 .TP
 \fB\--update\fP or \fB\--upgrade\fP
@@ -52,15 +52,15 @@ Checks source for a signed update and updates the application if available
 
 .SH DIAGNOSTICS
 The following diagnostics may be issued on stderr:
- 
+
 Permission Denied.
 .RS
 For most of the checks you must be root..
 .RE
-Debugging 
+Debugging
 .RS
 \fB\--debug\fP option can be specified for debug level output
 .SH AUTHORS
 Brian Davis <slimm609 at gmail dot com>
 .RE
-Checksec was originally written by Tobias Klein 
+Checksec was originally written by Tobias Klein

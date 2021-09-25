@@ -7,7 +7,7 @@ It has been originally written by Tobias Klein and the original source is availa
 Updates
 -------
   ** MAJOR UPDATES ** 2.1.0
-   - Changed structure to be more modular and switched to getopts so options can be in any order.   e.g. format=json can be at the end now, however.  
+   - Changed structure to be more modular and switched to getopts so options can be in any order.   e.g. format=json can be at the end now, however.
    - All options now require `--$option=$value` instead of `--$option $value`
    - --extended option now includes clang CFI and safe stack checks
 
@@ -36,14 +36,14 @@ Examples
     Partial RELRO,Canary found,NX enabled,No PIE,No RPATH,No RUNPATH,/bin/ls
 
 **xml**
-    
+
     $ checksec --output=xml --file=/bin/ls
     <?xml version="1.0" encoding="UTF-8"?>
     <file relro="partial" canary="yes" nx="yes" pie="no" rpath="no" runpath="no" filename='/bin/ls'/>
 
 **json**
 
-	$ checksec --output=json --file=/bin/ls	
+	$ checksec --output=json --file=/bin/ls
 	{ "file": { "relro":"partial","canary":"yes","nx":"yes","pie":"no","rpath":"no","runpath":"no","filename":"/bin/ls" } }
 
 **Fortify test in cli**
@@ -90,7 +90,7 @@ Examples
 	options that harden the kernel itself against attack.
 
 	Kernel config: /proc/config.gz
- 
+
 		GCC stack protector support:            Enabled
 		Strict user copy checks:                Disabled
 		Enforce read-only kernel data:          Disabled
@@ -151,7 +151,7 @@ The checksec tool can be used against cross-compiled target file-systems offline
 
 * File check -  the offline testing works for all the checks but the Fortify feature.  Fortify, uses the running system's libraries vs those in the offline file-system. There are ways to workaround this (chroot) but at the moment, the ideal configuration would have this script executing on the running system when checking the files.
 
-The checksec tool's normal use case is for runtime checking of the systems configruation.  If the system is an embedded target, the native binutils tools like readelf may not be present.  This would restrict which parts of the script will work.
+The checksec tool's normal use case is for runtime checking of the systems configuration.  If the system is an embedded target, the native binutils tools like readelf may not be present.  This would restrict which parts of the script will work.
 
 Even with those limitations, the amount of valuable information this script provides, still makes it a valuable tool for checking offline file-systems.
 

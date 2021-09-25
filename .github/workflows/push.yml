@@ -1,5 +1,5 @@
 name: docker-compose-test
-on: 
+on:
   push:
     branches:
       - master
