@@ -1546,7 +1546,7 @@ chk_dir() {
   fi
   # follow symlink
   if [[ -L "${CHK_DIR}" ]]; then
-    CHK_DIR=$(readlink "${CHK_DIR}")
+    CHK_DIR=$(readlink -f "${CHK_DIR}")
   fi
   # remove trailing slashes
   tempdir=$(echo "${CHK_DIR}" | sed -e "s/\/*$//")
