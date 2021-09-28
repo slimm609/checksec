@@ -1544,6 +1544,10 @@ chk_dir() {
     printf "\033[31mError: Please provide a valid directory.\033[m\n\n"
     exit 1
   fi
+  # follow symlink
+  if [[ -L "${CHK_DIR}" ]]; then
+    CHK_DIR=$(readlink "${CHK_DIR}")
+  fi
   # remove trailing slashes
   tempdir=$(echo "${CHK_DIR}" | sed -e "s/\/*$//")
   if [[ ! -d "${tempdir}" ]]; then
