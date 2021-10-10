@@ -5,8 +5,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: shellcheck
-        run: docker-compose run shellcheck
+      - name: render-checksec
+        run: |
+          pip install pre-commit
+          mkdir ${HOME}/bin
+          curl -Lo ${HOME}/bin/shfmt https://github.com/mvdan/sh/releases/download/v3.4.0/shfmt_v3.4.0_linux_amd64
+          chmod +x ${HOME}/bin/shfmt
+          export PATH=${PATH}:${HOME}/bin
+          ./build.sh
+          pre-commit run --all-files
+          git status
+          if [[ ! -z $(git status --porcelain) ]]; then
+            echo "source file differs, checksec needs build"
+            exit 1
+          fi
       - name: ubuntu checksec
         run: docker-compose run checksec-ubuntu
       - name: arch checksec

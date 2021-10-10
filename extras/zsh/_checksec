@@ -19,21 +19,21 @@ _arguments -C : \
 local ret=$?
 case $state in
 format)
-	local formats
-	formats=(
-	'cli:use cli output format'
-	'csv:use csv output format'
-	'xml:use xml output format'
-	'json:use json output format'
-	)
-	_describe -t formats 'output format' formats
-	ret=$?;;
+    local formats
+    formats=(
+    'cli:use cli output format'
+    'csv:use csv output format'
+    'xml:use xml output format'
+    'json:use json output format'
+    )
+    _describe -t formats 'output format' formats
+    ret=$?;;
 procname)
-	compadd "$expl[@]" ${${${${(f)"$(_call_program processes-names ps ${${EUID/(#s)0(#e)/xa}//[0-9]#/}ho command 2> /dev/null)"//[][\(\)]/}:#(ps|COMMAND|-*)}%%\ *}:t}
-	ret=$?;;
+    compadd "$expl[@]" ${${${${(f)"$(_call_program processes-names ps ${${EUID/(#s)0(#e)/xa}//[0-9]#/}ho command 2> /dev/null)"//[][\(\)]/}:#(ps|COMMAND|-*)}%%\ *}:t}
+    ret=$?;;
 vdir)
-	compadd "$expl[@]" -v
-	_files -/
-	ret=0;;
+    compadd "$expl[@]" -v
+    _files -/
+    ret=0;;
 esac
 return ret
