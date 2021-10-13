@@ -1,15 +1,15 @@
-Summary:	Tool to check system for binary-hardening
-Name:		checksec
-Version:	1.7.4
-Release:	1
-License:	BSD
-Group:		Development/Tools
-Source0:	https://raw.githubusercontent.com/slimm609/checksec.sh/master/%{name}
-Source1:	https://raw.githubusercontent.com/slimm609/checksec.sh/master/ChangeLog
-URL:		https://github.com/slimm609/checksec.sh
-Requires:	binutils
-BuildArch:	noarch
-BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
+Summary:    Tool to check system for binary-hardening
+Name:        checksec
+Version:    1.7.4
+Release:    1
+License:    BSD
+Group:        Development/Tools
+Source0:    https://raw.githubusercontent.com/slimm609/checksec.sh/master/%{name}
+Source1:    https://raw.githubusercontent.com/slimm609/checksec.sh/master/ChangeLog
+URL:        https://github.com/slimm609/checksec.sh
+Requires:    binutils
+BuildArch:    noarch
+BuildRoot:    %{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
 Modern Linux distributions offer some mitigation techniques to make it

@@ -21,15 +21,15 @@ build_config() {
 
 #build configs for 3.x up to 3.18
 for i in {1..18}; do
-  build_config 3.x 3 $i
+  build_config 3.x 3 "$i"
 done
 
 #build configs for 4.x up to 4.19
 for i in {0..19}; do
-  build_config 4.x 4 $i
+  build_config 4.x 4 "$i"
 done
 
 #build configs for 5.x up to 5.10
 for i in {1..10}; do
-  build_config 5.x 5 $i
+  build_config 5.x 5 "$i"
 done
