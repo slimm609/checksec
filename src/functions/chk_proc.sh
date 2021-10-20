@@ -58,14 +58,18 @@ chk_proc() {
     printf "\033[31mError: Please provide a valid process name.\033[m\n\n"
     exit 1
   fi
-  if ! (isString "${CHK_PROC}"); then
-    printf "\033[31mError: Please provide a valid process name.\033[m\n\n"
+  cd /proc || exit
+  if (isString "${CHK_PROC}"); then
+    IFS=" " read -r -a fpids <<< "$(pgrep -d ' ' "${CHK_PROC}")"
+  elif (isNumeric "${CHK_PROC}"); then
+    fpids=("${CHK_PROC}")
+  else
+    printf "\033[31mError: Please provide a valid process name or pid.\033[m\n\n"
     exit 1
   fi
-  cd /proc || exit
-  IFS=" " read -r -a fpids <<< "$(pgrep -d ' ' "${CHK_PROC}")"
+
   if [[ ${#fpids} -eq 0 ]]; then
-    printf "\033[31mError: No process with the given name found.\033[m\n\n"
+    printf "\033[31mError: No process with the given name or pid found.\033[m\n\n"
     exit 1
   fi
   echo_message "* System-wide ASLR" '' '' ''
