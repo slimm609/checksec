@@ -22,7 +22,7 @@ proccheck() {
 
   # check for stack canary support
   if ${readelf} -s "${1}/exe" 2> /dev/null | grep -q 'Symbol table'; then
-    if ${readelf} -s "${1}/exe" 2> /dev/null | grep -Eq '__stack_chk_fail|__intel_security_cookie'; then
+    if ${readelf} -s "${1}/exe" 2> /dev/null | grep -Eq '__stack_chk_fail|__stack_chk_guard|__intel_security_cookie'; then
       echo_message '\033[32mCanary found         \033[m   ' 'Canary found,' ' canary="yes"' '"canary":"yes",'
     else
       echo_message '\033[31mNo canary found      \033[m   ' 'No Canary found,' ' canary="no"' '"canary":"no",'
