@@ -129,6 +129,8 @@ filecheck() {
     FS_libc=/lib/aarch64-linux-gnu/libc.so.6
   elif [[ -e /usr/x86_64-gentoo-linux-musl/bin/ld ]]; then
     FS_libc=/usr/x86_64-gentoo-linux-musl/bin/ld
+  elif [[ -e /usr/lib/loongarch64-linux-gnu/libc.so.6 ]]; then
+    FS_libc=/usr/lib/loongarch64-linux-gnu/libc.so.6
   else
     printf "\033[31mError: libc not found.\033[m\n\n"
     exit 1

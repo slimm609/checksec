@@ -1,3 +1,5 @@
+Rev-2021121001 Zhai liangliang <zhailiangliang@loongson.cn>
+        * fix Error: libc not found on Loongnix LoongArch-64
 Rev-2021101001 Brian Davis <slimm609@gmail.com>
         * update to 2.5.0
         * split checksec into multiple files for easier maintenance and debugging
