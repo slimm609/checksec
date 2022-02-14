@@ -103,7 +103,7 @@ filecheck() {
   fi
 
   # check for stripped symbols in the binary
-  IFS=" " read -r -a SYM_cnt <<< "$(${readelf} --symbols "${1}" 2> /dev/null | grep '\.symtab' | cut -d' ' -f5 | cut -d: -f1))"
+  IFS=" " read -r -a SYM_cnt <<< "$(${readelf} --symbols "${1}" 2> /dev/null | grep '\.symtab' | cut -d' ' -f5 | cut -d: -f1)"
   if ${readelf} --symbols "${1}" 2> /dev/null | grep -q '\.symtab'; then
     echo_message "\033[31m${SYM_cnt[0]} Symbols\t\033[m  " 'Symbols,' ' symbols="yes"' '"symbols":"yes",'
   else
