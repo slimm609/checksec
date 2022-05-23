@@ -30,9 +30,7 @@ FS_cnt_checked=0
 FS_cnt_unchecked=0
 FS_libc=0
 
-if [[ $(id -u) != 0 ]]; then
-  export PATH=${PATH}:/sbin/:/usr/sbin/
-fi
+export PATH=${PATH}:/sbin/:/usr/sbin/
 
 # check if directory exists
 dir_exists() {
