@@ -12,7 +12,6 @@ jobs:
           curl -Lo ${HOME}/bin/shfmt https://github.com/mvdan/sh/releases/download/v3.4.0/shfmt_v3.4.0_linux_amd64
           chmod +x ${HOME}/bin/shfmt
           export PATH=${PATH}:${HOME}/bin
-          ./build.sh
           pre-commit run --all-files
           git status
           if [[ ! -z $(git status --porcelain) ]]; then
@@ -21,7 +20,5 @@ jobs:
           fi
       - name: ubuntu checksec
         run: docker-compose run checksec-ubuntu
-      - name: arch checksec
-        run: docker-compose run checksec-arch
       - name: photon checksec
         run: docker-compose run checksec-photon

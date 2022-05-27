@@ -1,6 +1,18 @@
 repos:
+- repo: local
+  hooks:
+  - id: build_checksec
+    name: build checksec script
+    entry: bash ./hack/build.sh
+    language: system
+    pass_filenames: false
+  - id: enable_hooks
+    name: enable git hooks
+    entry: bash ./hack/enable-git-hooks.sh
+    language: system
+    pass_filenames: false
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.0.1
+  rev: v4.2.0
   hooks:
   - id: end-of-file-fixer
   - id: trailing-whitespace
@@ -14,9 +26,9 @@ repos:
   - id: shfmt
     args: ["-sr", "-i", "2", "-ci", "-w"]
   - id: shellcheck
-    args: ["-e", "SC2154,SC2164,SC2129"]
+    args: ["-e", "SC2154,SC2164,SC2129,SC2028"]
 - repo: https://github.com/Lucas-C/pre-commit-hooks
-  rev: v1.1.10
+  rev: v1.2.0
   hooks:
   - id: forbid-crlf
   - id: remove-crlf

@@ -1,6 +1,6 @@
 The BSD License (http://www.opensource.org/licenses/bsd-license.php)
 specifies the terms and conditions of use for checksec.sh:
-Copyright (c) 2014-2015, Brian Davis
+Copyright (c) 2014-2022, Brian Davis
 Copyright (c) 2013, Robin David
 Copyright (c) 2009-2011, Tobias Klein
 All rights reserved.

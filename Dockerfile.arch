@@ -1,7 +1,0 @@
-FROM archlinux:latest
-
-# Install dependencies
-RUN pacman -Syu --noconfirm vim base-devel python-pip jq && ln -s $(command -v vim) /bin/vi && pip install demjson
-
-COPY .  /root
-WORKDIR /root
