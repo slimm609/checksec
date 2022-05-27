@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+#
+# An example hook script to verify what is about to be committed.
+# Called by "git commit" with no arguments.  The hook should
+# exit with non-zero status after issuing an appropriate message if
+# it wants to stop the commit.
+#
+# To enable this hook, rename this file to "pre-commit".
+
+# The git hooks repo
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null 2>&1 && pwd)"
+REPO_ROOT=$(cd "${DIR}" && git rev-parse --show-toplevel)
+# The current repo root, in case the repo is different from the hooks (this allows using a single pre-commit across multiple repos)
+CURRENT_REPO=$(git rev-parse --show-toplevel)
+
+# Redirect output to stderr.
+exec 1>&2
+
+# check to ensure all tools exist
+tools=('pre-commit' 'checkov' 'shfmt')
+for tool in "${tools[@]}"; do
+  if ! command -v "${tool}" > /dev/null 2>&1; then
+    cat << EOF
+    Error: ${tool} not found
+    Please install via brew or package manager
+    'brew install ${tool}'
+    or
+    install required tools
+    ${tools[*]}
+EOF
+    exit 2
+  fi
+done
+
+# run pre-commit checks
+pre-commit hook-impl --config="${REPO_ROOT}"/.pre-commit-config.yaml --hook-type=pre-commit --hook-dir "${CURRENT_REPO}" -- "$@"

@@ -3,7 +3,7 @@
 # in the src directory. Any updates to this file will be overwritten when generated
 
 # sanitize the environment before run
-[ "$(env | /bin/sed -r -e '/^(PWD|SHLVL|_)=/d')" ] && exec -c "$0" "$@"
+[[ "$(env | /bin/sed -r -e '/^(PWD|SHLVL|_)=/d')" ]] && exec -c "$0" "$@"
 
 # --- Modified Version ---
 # Name    : checksec.sh
@@ -29,7 +29,7 @@
 
 # The BSD License (http://www.opensource.org/licenses/bsd-license.php)
 # specifies the terms and conditions of use for checksec.sh:
-# Copyright (c) 2014-2015, Brian Davis
+# Copyright (c) 2014-2022, Brian Davis
 # Copyright (c) 2013, Robin David
 # Copyright (c) 2009-2011, Tobias Klein
 # All rights reserved.
@@ -86,9 +86,7 @@ FS_cnt_checked=0
 FS_cnt_unchecked=0
 FS_libc=0
 
-if [[ $(id -u) != 0 ]]; then
-  export PATH=${PATH}:/sbin/:/usr/sbin/
-fi
+PATH=${PATH}:/sbin/:/usr/sbin/
 
 # check if directory exists
 dir_exists() {
@@ -800,7 +798,7 @@ filecheck() {
   fi
 
   # check for stripped symbols in the binary
-  IFS=" " read -r -a SYM_cnt <<< "$(${readelf} --symbols "${1}" 2> /dev/null | grep '\.symtab' | cut -d' ' -f5 | cut -d: -f1))"
+  IFS=" " read -r -a SYM_cnt <<< "$(${readelf} --symbols "${1}" 2> /dev/null | grep '\.symtab' | cut -d' ' -f5 | cut -d: -f1)"
   if ${readelf} --symbols "${1}" 2> /dev/null | grep -q '\.symtab'; then
     echo_message "\033[31m${SYM_cnt[0]} Symbols\t\033[m  " 'Symbols,' ' symbols="yes"' '"symbols":"yes",'
   else
@@ -826,6 +824,8 @@ filecheck() {
     FS_libc=/lib/aarch64-linux-gnu/libc.so.6
   elif [[ -e /usr/x86_64-gentoo-linux-musl/bin/ld ]]; then
     FS_libc=/usr/x86_64-gentoo-linux-musl/bin/ld
+  elif [[ -e /usr/lib/loongarch64-linux-gnu/libc.so.6 ]]; then
+    FS_libc=/usr/lib/loongarch64-linux-gnu/libc.so.6
   else
     printf "\033[31mError: libc not found.\033[m\n\n"
     exit 1

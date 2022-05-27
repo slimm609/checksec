@@ -2,7 +2,12 @@
 # generate the checksec file from the src directory
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
-generated_file="${SCRIPT_DIR}/checksec"
+REPO_ROOT="$(cd "${SCRIPT_DIR}" && git rev-parse --show-toplevel)"
+cd "${REPO_ROOT}" || {
+  echo "error: directory does not exist"
+  exit 1
+}
+generated_file="${REPO_ROOT}/checksec"
 
 # add shebang line and edit line
 cat << 'EOF' > "${generated_file}"
@@ -11,28 +16,28 @@ cat << 'EOF' > "${generated_file}"
 # in the src directory. Any updates to this file will be overwritten when generated
 
 # sanitize the environment before run
-[ "$(env | /bin/sed -r -e '/^(PWD|SHLVL|_)=/d')" ] && exec -c "$0" "$@"
+[[ "$(env | /bin/sed -r -e '/^(PWD|SHLVL|_)=/d')" ]] && exec -c "$0" "$@"
 EOF
 
 # add the header
-sed -e '1,3d' "${SCRIPT_DIR}"/src/header.sh >> "${generated_file}"
+sed -e '1,3d' "${REPO_ROOT}"/src/header.sh >> "${generated_file}"
 
 # add the license
 echo -ne "\n" >> "${generated_file}"
-sed 's/^/# /' "${SCRIPT_DIR}"/LICENSE.txt >> "${generated_file}"
+sed 's/^/# /' "${REPO_ROOT}"/LICENSE.txt >> "${generated_file}"
 
 # add the core file
-sed -e '1,3d' "${SCRIPT_DIR}"/src/core.sh >> "${generated_file}"
+sed -e '1,3d' "${REPO_ROOT}"/src/core.sh >> "${generated_file}"
 
 # join all function files together in the middle
 while read -r file; do
   # remove the first 3 lines of each source file
   # shebang line is included to properly shellcheck and format
   sed -e '1,3d' "${file}" >> "${generated_file}"
-done < <(find "${SCRIPT_DIR}"/src/functions -type f -iname "*.sh" | sort)
+done < <(find "${REPO_ROOT}"/src/functions -type f -iname "*.sh" | sort)
 
 # add the footer
-sed -e '1,3d' "${SCRIPT_DIR}"/src/footer.sh >> "${generated_file}"
+sed -e '1,3d' "${REPO_ROOT}"/src/footer.sh >> "${generated_file}"
 
 # make it executable
 chmod 755 "${generated_file}"
