@@ -94,7 +94,7 @@ kernelcheck() {
   fi
 
   echo_message "  Vanilla Kernel ASLR:                    " "" "" ""
-  randomize_va=$(sysctl -b -e kernel.randomize_va_space)
+  randomize_va=$(sysctl -n kernel.randomize_va_space)
   if [[ "${randomize_va}" == "2" ]]; then
     echo_message "\033[32mFull\033[m\n" "Full," " randomize_va_space='full'" ', "randomize_va_space":"full"'
   elif [[ "${randomize_va}" == "1" ]]; then
@@ -120,7 +120,7 @@ kernelcheck() {
   fi
 
   echo_message "  Protected symlinks:                     " "" "" ""
-  symlink=$(sysctl -b -e fs.protected_symlinks)
+  symlink=$(sysctl -n fs.protected_symlinks)
   if [[ "${symlink}" == "1" ]]; then
     echo_message "\033[32mEnabled\033[m\n" "Enabled," " protect_symlinks='yes'" ', "protect_symlinks":"yes"'
   else
@@ -128,7 +128,7 @@ kernelcheck() {
   fi
 
   echo_message "  Protected hardlinks:                    " "" "" ""
-  hardlink=$(sysctl -b -e fs.protected_hardlinks)
+  hardlink=$(sysctl -n fs.protected_hardlinks)
   if [[ "${hardlink}" == "1" ]]; then
     echo_message "\033[32mEnabled\033[m\n" "Enabled," " protect_hardlinks='yes'" ', "protect_hardlinks":"yes"'
   else
@@ -136,7 +136,7 @@ kernelcheck() {
   fi
 
   echo_message "  Protected fifos:                        " "" "" ""
-  fifos=$(sysctl -b -e fs.protected_fifos)
+  fifos=$(sysctl -n fs.protected_fifos)
   if [[ -z "${fifos}" ]]; then
     echo_message "\033[33mUnsupported\033[m\n" "Unsupported," " protect_fifos='unsupported'" ', "protect_fifos":"unsupported"'
   elif [[ "${fifos}" == "1" ]]; then
@@ -148,7 +148,7 @@ kernelcheck() {
   fi
 
   echo_message "  Protected regular:                      " "" "" ""
-  regular=$(sysctl -b -e fs.protected_regular)
+  regular=$(sysctl -n fs.protected_regular)
   if [[ -z "${regular}" ]]; then
     echo_message "\033[33mUnsupported\033[m\n" "Unsupported," " protect_regular='unsupported'" ', "protect_regular":"unsupported"'
   elif [[ "${regular}" == "1" ]]; then
@@ -160,7 +160,7 @@ kernelcheck() {
   fi
 
   echo_message "  Ipv4 reverse path filtering:            " "" "" ""
-  ipv4_rpath=$(sysctl -b -e net.ipv4.conf.all.rp_filter)
+  ipv4_rpath=$(sysctl -n net.ipv4.conf.all.rp_filter)
   if [[ "${ipv4_rpath}" == "1" ]]; then
     echo_message "\033[32mEnabled\033[m\n" "Enabled," " ipv4_rpath='yes'" ', "ipv4_rpath":"yes"'
   else
@@ -263,7 +263,7 @@ kernelcheck() {
   fi
 
   echo_message "  Exec Shield:                            " """" ""
-  execshield=$(sysctl -b -e kernel.exec-shield)
+  execshield=$(sysctl -n kernel.exec-shield 2> /dev/null)
   if [[ -z "${execshield}" ]]; then
     echo_message '\033[32mUnsupported\033[m\n\n' '' '' ''
   elif [[ "${execshield}" == "1" ]]; then

@@ -23,3 +23,12 @@
 # Date    : November 2011
 # Download: http://www.trapkit.de/tools/checksec.html
 # Changes : http://www.trapkit.de/tools/checksec_changes.txt
+
+# set the common paths
+PATH=${PATH}:/sbin/:/usr/sbin/:/usr/bin/:/bin/
+
+# sanitize the environment before run
+[[ "$(env | sed -r -e '/^(PWD|SHLVL|_)=/d')" ]] && exec -c "$0" "$@"
+
+# License: BSD License
+# https://opensource.org/licenses/bsd-license.php
