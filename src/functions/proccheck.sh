@@ -7,7 +7,7 @@ proccheck() {
   # check for RELRO support
   if ${readelf} -l "${1}/exe" 2> /dev/null | grep -q 'Program Headers'; then
     if ${readelf} -l "${1}/exe" 2> /dev/null | grep -q 'GNU_RELRO'; then
-      if ${readelf} -d "${1}/exe" 2> /dev/null | grep -q 'BIND_NOW'; then
+      if ${readelf} -d "${1}/exe" 2> /dev/null | grep -q 'BIND_NOW' || ! ${readelf} -l "${1}" 2> /dev/null | grep -q '.got.plt'; then
         echo_message '\033[32mFull RELRO   \033[m   ' 'Full RELRO,' ' relro="full"' '"relro":"full",'
       else
         echo_message '\033[33mPartial RELRO\033[m   ' 'Partial RELRO,' ' relro="partial"' '"relro":"partial",'

@@ -28,9 +28,6 @@ FS_end=_chk
 FS_cnt_total=0
 FS_cnt_checked=0
 FS_cnt_unchecked=0
-FS_libc=0
-
-PATH=${PATH}:/sbin/:/usr/sbin/
 
 # check if directory exists
 dir_exists() {
@@ -43,7 +40,7 @@ dir_exists() {
 
 # check user privileges
 root_privs() {
-  if [[ $(/usr/bin/id -u) -eq 0 ]]; then
+  if [[ $(id -u) -eq 0 ]]; then
     return 0
   else
     return 1
@@ -68,13 +65,28 @@ if [[ ${commandsmissing} == true ]]; then
   sleep 2
 fi
 
-if (command_exists readelf); then
-  readelf="readelf -W"
-elif (command_exists eu-readelf); then
-  readelf="eu-readelf -W"
-elif (command_exists greadelf); then
-  readelf="greadelf -W"
+#FS_libc is used across multiple functions
+for libc in libc.so.6 libc.so.7 libc.so; do
+  if [[ -n $(find / -name ${libc}) ]]; then
+    read -r FS_libc < <(find / -name ${libc})
+    break
+  fi
+done
+if [[ -e ${FS_libc} ]]; then
+  export FS_libc
 else
+  printf "\033[31mError: libc not found.\033[m\n\n"
+  exit 1
+fi
+
+for command in readelf eu-readelf greadelf; do
+  if (command_exists ${command}); then
+    readelf="${command} -W"
+    break
+  fi
+done
+
+if [[ -z ${readelf} ]]; then
   echo -e "\n\e[31mERROR: readelf is a required tool for almost all tests. Aborting...\e[0m\n"
   exit
 fi
