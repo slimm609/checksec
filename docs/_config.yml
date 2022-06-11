@@ -1,0 +1,16 @@
+remote_theme: pages-themes/hacker@v0.2.0
+
+title: Checksec
+description: A tool used to quickly survey mitigation technologies in use by processes on a Linux system.
+
+repository: slimm609/checksec.sh
+
+plugins:
+- jekyll-remote-theme
+- jekyll-github-metadata
+- jekyll-mentions
+- jekyll-redirect-from
+- jekyll-sitemap
+- jemoji
+
+show_downloads: true
