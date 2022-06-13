@@ -265,11 +265,21 @@ kernelcheck() {
   echo_message "  Exec Shield:                            " """" ""
   execshield=$(sysctl -n kernel.exec-shield 2> /dev/null)
   if [[ -z "${execshield}" ]]; then
-    echo_message '\033[32mUnsupported\033[m\n\n' '' '' ''
+    echo_message '\033[32mUnsupported\033[m\n' '' '' ''
   elif [[ "${execshield}" == "1" ]]; then
-    echo_message '\033[32mEnabled\033[m\n\n' '' '' ''
+    echo_message '\033[32mEnabled\033[m\n' '' '' ''
   else
-    echo_message '\033[31mDisabled\033[m\n\n' '' '' ''
+    echo_message '\033[31mDisabled\033[m\n' '' '' ''
+  fi
+
+  echo_message "  YAMA:                                   " """" ""
+  yama_ptrace_scope=$(sysctl -n kernel.yama.ptrace_scope 2> /dev/null)
+  if [[ -z "${yama_ptrace_scope}" ]]; then
+    echo_message "\033[31mDisabled\033[m\n\n" "Disabled," " yama_ptrace_scope='disabled'" ', "yama_ptrace_scope":"disabled"'
+  elif [[ "${yama_ptrace_scope}" == "0" ]]; then
+    echo_message "\033[31mInactive\033[m\n\n" "Inactive," " yama_ptrace_scope='inactive'" ', "yama_ptrace_scope":"inactive"'
+  else
+    echo_message "\033[32mActive\033[m\n\n" "Active," " yama_ptrace_scope='active'" ', "yama_ptrace_scope":"active"'
   fi
 
   if ${kconfig} | grep -qi 'CONFIG_HARDENED_USERCOPY'; then
