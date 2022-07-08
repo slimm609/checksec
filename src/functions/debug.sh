@@ -48,7 +48,7 @@ debug_report() {
   echo "OS=${OS}"
   echo "VER=${VER}"
 
-  for command in cat awk sysctl uname mktemp openssl grep stat file find head ps readlink basename id which wget curl readelf eu-readelf; do
+  for command in cat awk sysctl uname objdump mktemp openssl grep stat file find head ps readlink basename id which wget curl readelf eu-readelf; do
     path="$(command -v ${command})"
     if [[ -e "${path}" ]]; then
       ls -l "${path}"
