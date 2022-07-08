@@ -23,8 +23,9 @@ filecheck() {
   fi
 
   # check for NX support
+  # shellcheck disable=SC2126
   if ${readelf} -l "${1}" 2> /dev/null | grep -q 'GNU_STACK'; then
-    if ${readelf} -l "${1}" 2> /dev/null | grep 'GNU_STACK' | grep -q 'RWE'; then
+    if [[ $(${readelf} -l "${1}" 2> /dev/null | grep -A 1 'GNU_STACK' | sed 'N;s/\n//g' grep -Eo "0x[0-9a-f]{16}" | grep -v 0x0000000000000000 | wc -l) -gt 0 ]]; then
       echo_message '\033[31mNX disabled\033[m   ' 'NX disabled,' ' nx="no"' '"nx":"no",'
     else
       echo_message '\033[32mNX enabled \033[m   ' 'NX enabled,' ' nx="yes"' '"nx":"yes",'

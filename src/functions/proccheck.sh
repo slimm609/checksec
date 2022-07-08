@@ -69,7 +69,8 @@ proccheck() {
   fi
 
   # first check for PaX support
-  if grep -q 'PaX:' "${1}/status" 2> /dev/null; then
+  # shellcheck disable=SC2126
+  if [[ $(grep -c 'PaX:' "${1}/status" 2> /dev/null) -gt 0 ]]; then
     pageexec=$(grep 'PaX:' "${1}/status" 2> /dev/null | cut -b6)
     segmexec=$(grep 'PaX:' "${1}/status" 2> /dev/null | cut -b10)
     mprotect=$(grep 'PaX:' "${1}/status" 2> /dev/null | cut -b8)
@@ -88,7 +89,7 @@ proccheck() {
       echo_message '\033[31mPaX disabled\033[m  ' 'Pax disabled,' ' pax="no"' '"pax":"no",'
     fi
     # fallback check for NX support
-  elif ${readelf} -l "${1}/exe" 2> /dev/null | grep 'GNU_STACK' | grep -q 'RWE'; then
+  elif [[ $(${readelf} -l "${1}/exe" 2> /dev/null | grep -A 1 'GNU_STACK' | sed 'N;s/\n//g' grep -Eo "0x[0-9a-f]{16}" | grep -v 0x0000000000000000 | wc -l) -gt 0 ]]; then
     echo_message '\033[31mNX disabled\033[m   ' 'NX disabled,' ' nx="no"' '"nx":"no",'
   else
     echo_message '\033[32mNX enabled \033[m   ' 'NX enabled,' ' pax="yes"' '"nx":"yes",'
