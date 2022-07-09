@@ -30,5 +30,7 @@ PATH=${PATH}:/sbin/:/usr/sbin/:/usr/bin/:/bin/
 # sanitize the environment before run
 [[ "$(env | sed -r -e '/^(PWD|SHLVL|_)=/d')" ]] && exec -c "$0" "$@"
 
+export PS4='+(${BASH_SOURCE##*/}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+
 # License: BSD License
 # https://opensource.org/licenses/bsd-license.php
