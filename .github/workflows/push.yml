@@ -1,8 +1,8 @@
-name: docker-compose-test
+name: checksec-release
 on:
   push:
     branches:
-      - master
+      - main
 jobs:
   test:
     runs-on: ubuntu-latest
