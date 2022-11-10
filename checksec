@@ -98,19 +98,34 @@ if [[ ${commandsmissing} == true ]]; then
   sleep 2
 fi
 
-#FS_libc is used across multiple functions
-for libc in libc.so.6 libc.so.7 libc.so; do
-  if [[ -n $(find / -name ${libc}) ]]; then
-    read -r FS_libc < <(find / -name ${libc})
-    break
+search_libc() {
+  if [[ -z ${FS_libc} ]]; then
+    LIBC_SEARCH_PATH=/
+    if [[ ! -z "${LIBC_FILE}" ]]; then
+      if [[ -f "${LIBC_FILE}" ]]; then
+        FS_libc=${LIBC_FILE}
+      elif [[ -d "${LIBC_FILE}" ]]; then
+        LIBC_SEARCH_PATH=${LIBC_FILE}
+      fi
+    fi
+
+    if [[ -z ${FS_libc} ]]; then
+      #FS_libc is used across multiple functions
+      for libc in libc.so.6 libc.so.7 libc.so; do
+        if [[ -n $(find ${LIBC_SEARCH_PATH} -name ${libc}) ]]; then
+          read -r FS_libc < <(find ${LIBC_SEARCH_PATH} -name ${libc})
+          break
+        fi
+      done
+    fi
+    if [[ -e ${FS_libc} ]]; then
+      export FS_libc
+    else
+      printf "\033[31mError: libc not found.\033[m\n\n"
+      exit 1
+    fi
   fi
-done
-if [[ -e ${FS_libc} ]]; then
-  export FS_libc
-else
-  printf "\033[31mError: libc not found.\033[m\n\n"
-  exit 1
-fi
+}
 
 for command in readelf eu-readelf greadelf; do
   if (command_exists ${command}); then
@@ -358,6 +373,8 @@ chk_fortify_file() {
     exit 1
   fi
 
+  search_libc
+
   FS_chk_func_libc=()
   FS_functions=()
   while IFS='' read -r line; do FS_chk_func_libc+=("$line"); done < <(${readelf} -s "${FS_libc}" 2> /dev/null | grep _chk@@ | awk '{ print $8 }' | cut -c 3- | sed -e 's/_chk@.*//')
@@ -396,6 +413,8 @@ chk_fortify_proc() {
     fi
     name=$(head -1 "${N}/status" | cut -b 7-)
     echo_message "* Process name (PID)                         : ${name} (${N})\n" "" "" ""
+
+    search_libc
 
     FS_chk_func_libc=()
     FS_functions=()
@@ -779,6 +798,8 @@ filecheck() {
     echo_message '\033[32mNo Symbols\t\033[m  ' 'No Symbols,' ' symbols="no"' '"symbols":"no",'
   fi
 
+  search_libc
+
   FS_filechk_func_libc="$(${readelf} -s "${FS_libc}" 2> /dev/null | sed -ne 's/.*__\(.*_chk\)@@.*/\1/p')"
   FS_func_libc="${FS_filechk_func_libc//_chk/}"
   FS_func="$(${readelf} --dyn-syms "${1}" 2> /dev/null | awk '{ print $8 }' | sed -e 's/_*//' -e 's/@.*//' -e '/^$/d')"
@@ -924,6 +945,7 @@ help() {
   echo " ## Checksec Options"
   echo "  --file={file}"
   echo "  --dir={directory}"
+  echo "  --libcfile={file or search path for libc}"
   echo "  --listfile={text file with one file per line}"
   echo "  --proc={process name}"
   echo "  --proc-all"
@@ -1718,6 +1740,10 @@ while getopts "${optspec}" optchar; do
           CHK_FILE_LIST=${OPTARG#*=}
           OPT=$((OPT + 1))
           CHK_FUNCTION="chk_file_list"
+          ;;
+        libcfile=*)
+          LIBC_FILE=${OPTARG#*=}
+          echo LIBC_FILE=${LIBC_FILE}
           ;;
         proc-all)
           OPT=$((OPT + 1))
