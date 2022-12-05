@@ -119,6 +119,8 @@ filecheck() {
     echo_message '\033[32mNo Symbols\t\033[m  ' 'No Symbols,' ' symbols="no"' '"symbols":"no",'
   fi
 
+  search_libc
+
   FS_filechk_func_libc="$(${readelf} -s "${FS_libc}" 2> /dev/null | sed -ne 's/.*__\(.*_chk\)@@.*/\1/p')"
   FS_func_libc="${FS_filechk_func_libc//_chk/}"
   FS_func="$(${readelf} --dyn-syms "${1}" 2> /dev/null | awk '{ print $8 }' | sed -e 's/_*//' -e 's/@.*//' -e '/^$/d')"

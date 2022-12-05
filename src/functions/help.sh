@@ -12,6 +12,7 @@ help() {
   echo " ## Checksec Options"
   echo "  --file={file}"
   echo "  --dir={directory}"
+  echo "  --libcfile={file or search path for libc}"
   echo "  --listfile={text file with one file per line}"
   echo "  --proc={process name}"
   echo "  --proc-all"

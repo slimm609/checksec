@@ -63,6 +63,10 @@ while getopts "${optspec}" optchar; do
           OPT=$((OPT + 1))
           CHK_FUNCTION="chk_file_list"
           ;;
+        libcfile=*)
+          LIBC_FILE=${OPTARG#*=}
+          echo LIBC_FILE=${LIBC_FILE}
+          ;;
         proc-all)
           OPT=$((OPT + 1))
           CHK_FUNCTION="chk_proc_all"

@@ -98,8 +98,11 @@ if [[ ${commandsmissing} == true ]]; then
   sleep 2
 fi
 
+# search for libc
+# shall be called before using variable FS_libc
 search_libc() {
   if [[ -z ${FS_libc} ]]; then
+    # if a specific search path is given, use it
     LIBC_SEARCH_PATH=/
     if [[ ! -z "${LIBC_FILE}" ]]; then
       if [[ -f "${LIBC_FILE}" ]]; then
