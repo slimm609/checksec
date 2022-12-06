@@ -102,7 +102,7 @@ fi
 
 #check json for listfile
 echo "starting listfile check - json"
-"${PARENT}/checksec" --format=json --listfile=<(printf '%s' "${test_file}") > "${DIR}/output.json"
+"${PARENT}/checksec" --format=json --listfile=<(printf "%b" "${test_file}\n${test_file}") > "${DIR}/output.json"
 "${jsonlint}" "${DIR}/output.json" > /dev/null
 RET=$?
 jq . < "${DIR}/output.json" &> /dev/null
