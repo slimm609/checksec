@@ -49,8 +49,11 @@ chk_file_list() {
     echo_message "RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH\tSymbols\t\tFORTIFY\tFortified\tFortifiable\tFILE\n" '' '' '{\n'
   fi
 
+  LAST_LINE_NUMBER=$(wc -l < "${CHK_FILE_LIST}")
+  CURRENT_LINE_NUMBER=0
   while IFS="" read -r p || [[ -n "${p}" ]]; do
     CHK_FILE="${p}"
+    CURRENT_LINE_NUMBER=$(($CURRENT_LINE_NUMBER + 1))
 
     if [[ -z "${CHK_FILE}" ]]; then
       printf "\033[31mError: Please provide a valid file.\033[m\n\n"
@@ -81,7 +84,11 @@ chk_file_list() {
     if [[ "$(find "${CHK_FILE}" \( -perm -004000 -o -perm -002000 \) -type f -print)" ]]; then
       echo_message "\033[37;41m${CHK_FILE}\033[m\n" ",${CHK_FILE}\n" " filename='${CHK_FILE}'/>\n" " } }"
     else
-      echo_message "${CHK_FILE}\n" ",${CHK_FILE}\n" " filename='${CHK_FILE}'/>\n" " },\n"
+      LINE_ENDING=" },\n"
+      if [[ $CURRENT_LINE_NUMBER -eq  $LAST_LINE_NUMBER ]]; then
+        LINE_ENDING=" }\n"
+      fi
+      echo_message "${CHK_FILE}\n" ",${CHK_FILE}\n" " filename='${CHK_FILE}'/>\n" "${LINE_ENDING}"
     fi
 
   done < "${CHK_FILE_LIST}"
