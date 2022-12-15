@@ -100,6 +100,19 @@ if [[ ${RET} != 0 ]] || [[ ${JQRET} != 0 ]]; then
   exit 1
 fi
 
+#check json for listfile
+echo "starting listfile check - json"
+"${PARENT}/checksec" --format=json --listfile=<(printf "%b" "${test_file}\n${test_file}") > "${DIR}/output.json"
+"${jsonlint}" "${DIR}/output.json" > /dev/null
+RET=$?
+jq . < "${DIR}/output.json" &> /dev/null
+JQRET=$?
+if [[ ${RET} != 0 ]] || [[ ${JQRET} != 0 ]]; then
+  cat "${DIR}/output.json"
+  echo "listfile json validation failed"
+  exit 1
+fi
+
 #check json for file extended
 echo "starting extended file check - json"
 "${PARENT}/checksec" --format=json --extended --file="${test_file}" > "${DIR}/output.json"
