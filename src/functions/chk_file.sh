@@ -53,7 +53,7 @@ chk_file_list() {
   CURRENT_LINE_NUMBER=0
   while IFS="" read -r p || [[ -n "${p}" ]]; do
     CHK_FILE="${p}"
-    CURRENT_LINE_NUMBER=$(($CURRENT_LINE_NUMBER + 1))
+    CURRENT_LINE_NUMBER=$((CURRENT_LINE_NUMBER + 1))
 
     if [[ -z "${CHK_FILE}" ]]; then
       printf "\033[31mError: Please provide a valid file.\033[m\n\n"
@@ -85,7 +85,7 @@ chk_file_list() {
       echo_message "\033[37;41m${CHK_FILE}\033[m\n" ",${CHK_FILE}\n" " filename='${CHK_FILE}'/>\n" " } }"
     else
       LINE_ENDING=" },\n"
-      if [[ $CURRENT_LINE_NUMBER -eq  $LAST_LINE_NUMBER ]]; then
+      if [[ $CURRENT_LINE_NUMBER -eq $LAST_LINE_NUMBER ]]; then
         LINE_ENDING=" }\n"
       fi
       echo_message "${CHK_FILE}\n" ",${CHK_FILE}\n" " filename='${CHK_FILE}'/>\n" "${LINE_ENDING}"
