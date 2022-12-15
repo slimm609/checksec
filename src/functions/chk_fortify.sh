@@ -31,6 +31,8 @@ chk_fortify_file() {
     exit 1
   fi
 
+  search_libc
+
   FS_chk_func_libc=()
   FS_functions=()
   while IFS='' read -r line; do FS_chk_func_libc+=("$line"); done < <(${readelf} -s "${FS_libc}" 2> /dev/null | grep _chk@@ | awk '{ print $8 }' | cut -c 3- | sed -e 's/_chk@.*//')
@@ -69,6 +71,8 @@ chk_fortify_proc() {
     fi
     name=$(head -1 "${N}/status" | cut -b 7-)
     echo_message "* Process name (PID)                         : ${name} (${N})\n" "" "" ""
+
+    search_libc
 
     FS_chk_func_libc=()
     FS_functions=()

@@ -65,19 +65,37 @@ if [[ ${commandsmissing} == true ]]; then
   sleep 2
 fi
 
-#FS_libc is used across multiple functions
-for libc in libc.so.6 libc.so.7 libc.so; do
-  if [[ -n $(find / -name ${libc}) ]]; then
-    read -r FS_libc < <(find / -name ${libc})
-    break
+# search for libc
+# shall be called before using variable FS_libc
+search_libc() {
+  if [[ -z ${FS_libc} ]]; then
+    # if a specific search path is given, use it
+    LIBC_SEARCH_PATH=/
+    if [[ -n "${LIBC_FILE}" ]]; then
+      if [[ -f "${LIBC_FILE}" ]]; then
+        FS_libc=${LIBC_FILE}
+      elif [[ -d "${LIBC_FILE}" ]]; then
+        LIBC_SEARCH_PATH=${LIBC_FILE}
+      fi
+    fi
+
+    if [[ -z ${FS_libc} ]]; then
+      #FS_libc is used across multiple functions
+      for libc in libc.so.6 libc.so.7 libc.so; do
+        if [[ -n $(find "${LIBC_SEARCH_PATH}" -name ${libc}) ]]; then
+          read -r FS_libc < <(find "${LIBC_SEARCH_PATH}" -name ${libc})
+          break
+        fi
+      done
+    fi
+    if [[ -e ${FS_libc} ]]; then
+      export FS_libc
+    else
+      printf "\033[31mError: libc not found.\033[m\n\n"
+      exit 1
+    fi
   fi
-done
-if [[ -e ${FS_libc} ]]; then
-  export FS_libc
-else
-  printf "\033[31mError: libc not found.\033[m\n\n"
-  exit 1
-fi
+}
 
 for command in readelf eu-readelf greadelf; do
   if (command_exists ${command}); then
