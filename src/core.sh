@@ -71,7 +71,7 @@ search_libc() {
   if [[ -z ${FS_libc} ]]; then
     # if a specific search path is given, use it
     LIBC_SEARCH_PATH=/
-    if [[ ! -z "${LIBC_FILE}" ]]; then
+    if [[ -n "${LIBC_FILE}" ]]; then
       if [[ -f "${LIBC_FILE}" ]]; then
         FS_libc=${LIBC_FILE}
       elif [[ -d "${LIBC_FILE}" ]]; then
@@ -82,8 +82,8 @@ search_libc() {
     if [[ -z ${FS_libc} ]]; then
       #FS_libc is used across multiple functions
       for libc in libc.so.6 libc.so.7 libc.so; do
-        if [[ -n $(find ${LIBC_SEARCH_PATH} -name ${libc}) ]]; then
-          read -r FS_libc < <(find ${LIBC_SEARCH_PATH} -name ${libc})
+        if [[ -n $(find "${LIBC_SEARCH_PATH}" -name ${libc}) ]]; then
+          read -r FS_libc < <(find "${LIBC_SEARCH_PATH}" -name ${libc})
           break
         fi
       done

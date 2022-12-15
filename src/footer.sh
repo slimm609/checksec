@@ -65,7 +65,7 @@ while getopts "${optspec}" optchar; do
           ;;
         libcfile=*)
           LIBC_FILE=${OPTARG#*=}
-          echo LIBC_FILE=${LIBC_FILE}
+          echo LIBC_FILE="${LIBC_FILE}"
           ;;
         proc-all)
           OPT=$((OPT + 1))
