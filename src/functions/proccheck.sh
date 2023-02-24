@@ -89,7 +89,7 @@ proccheck() {
       echo_message '\033[31mPaX disabled\033[m  ' 'Pax disabled,' ' pax="no"' '"pax":"no",'
     fi
     # fallback check for NX support
-  elif [[ $(${s_readelf} -l "${1}/exe" 2> /dev/null | grep -A 1 'GNU_STACK' | sed 'N;s/\n//g' | grep -Eo "0x[0-9a-f]{16}" | grep -v 0x0000000000000000 | wc -l) -gt 0 ]]; then
+  elif [[ $(${s_readelf} -l "${1}/exe" 2> /dev/null | grep -A 1 'GNU_STACK' | grep -Eo "0x[0-9a-f]{16}" | grep -v 0x0000000000000000 | wc -l) -gt 0 ]]; then
     echo_message '\033[31mNX disabled\033[m   ' 'NX disabled,' ' nx="no"' '"nx":"no",'
   else
     echo_message '\033[32mNX enabled \033[m   ' 'NX enabled,' ' pax="yes"' '"nx":"yes",'
