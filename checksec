@@ -111,8 +111,8 @@ search_libc() {
         LIBC_SEARCH_PATH=${LIBC_FILE}
       fi
     # otherwise use ldd to get the libc location
-    elif [[ -f $(ldd "$(command -v grep)" 2> /dev/null | grep "libc\.so" | cut -d' ' -f3) ]]; then
-      FS_libc=$(ldd "$(command -v grep)" 2> /dev/null | grep "libc\.so" | cut -d' ' -f3)
+    elif [[ -f $(ldd "$(command -v grep)" 2> /dev/null | grep 'libc\.so' | cut -d' ' -f3) ]]; then
+      FS_libc=$(ldd "$(command -v grep)" 2> /dev/null | grep 'libc\.so' | cut -d' ' -f3)
     fi
 
     # if a search path was specified or ldd failed, look for libc in LIBC_SEARCH_PATH
