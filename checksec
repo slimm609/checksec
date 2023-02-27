@@ -103,7 +103,6 @@ fi
 search_libc() {
   if [[ -z ${FS_libc} ]]; then
     # if a specific search path is given, use it
-    LIBC_SEARCH_PATH=/lib/
     if [[ -n "${LIBC_FILE}" ]]; then
       if [[ -f "${LIBC_FILE}" ]]; then
         FS_libc=${LIBC_FILE}
@@ -115,13 +114,18 @@ search_libc() {
       FS_libc=$(ldd "$(command -v grep)" 2> /dev/null | grep 'libc\.so' | cut -d' ' -f3)
     fi
 
-    # if a search path was specified or ldd failed, look for libc in LIBC_SEARCH_PATH
+    # if a search path was given or ldd failed we need to search for libc
     if [[ -z ${FS_libc} ]]; then
-      #FS_libc is used across multiple functions
-      if [[ -n $(find "${LIBC_SEARCH_PATH}" \( -name "libc.so.6" -o -name "libc.so.7" -o -name "libc.so" \) -print -quit) ]]; then
-        FS_libc=$(find "${LIBC_SEARCH_PATH}" \( -name "libc.so.6" -o -name "libc.so.7" -o -name "libc.so" \) -print -quit)
+      # if a search path was specified, look for libc in LIBC_SEARCH_PATH
+      if [[ -n "${LIBC_SEARCH_PATH}" ]]; then
+        FS_libc=$(find "${LIBC_SEARCH_PATH}" \( -name "libc.so.6" -o -name "libc.so.7" -o -name "libc.so" \) -print -quit 2> /dev/null)
+      # if ldd failed, then as a last resort search for libc in "/lib/", "/lib64/" and "/"
+      else
+        FS_libc=$(find /lib/ /lib64/ / \( -name "libc.so.6" -o -name "libc.so.7" -o -name "libc.so" \) -print -quit 2> /dev/null)
       fi
     fi
+    
+    #FS_libc is used across multiple functions
     if [[ -e ${FS_libc} ]]; then
       export FS_libc
     else
