@@ -86,7 +86,7 @@ command_exists() {
   type "${1}" > /dev/null 2>&1
 }
 
-for command in cat awk sed sysctl objdump uname mktemp openssl grep stat file find sort head ps readlink basename id which xargs; do
+for command in cat awk sed sysctl objdump uname mktemp openssl grep stat file find sort head ps readlink basename id which xargs ldd; do
   if ! (command_exists ${command}); then
     echo >&2 -e "\e[31mWARNING: '${command}' not found! It's required for most checks.\e[0m"
     commandsmissing=true
