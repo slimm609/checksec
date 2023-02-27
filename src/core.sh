@@ -91,7 +91,7 @@ search_libc() {
         FS_libc=$(find /lib/ /lib64/ / \( -name "libc.so.6" -o -name "libc.so.7" -o -name "libc.so" \) -print -quit 2> /dev/null)
       fi
     fi
-    
+
     #FS_libc is used across multiple functions
     if [[ -e ${FS_libc} ]]; then
       export FS_libc
