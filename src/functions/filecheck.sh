@@ -5,7 +5,9 @@
 # check file(s)
 filecheck() {
   # check for RELRO support
-  if ${readelf} -l "${1}" 2> /dev/null | grep -q 'GNU_RELRO'; then
+  if [[ $(${readelf} -l "${1}") =~ "no program headers" ]]; then
+    echo_message '\033[31mN/A          \033[m   ' 'N/A,' '<file relro="n/a"' " \"${1}\": { \"relro\":\"n/a\","
+  elif ${readelf} -l "${1}" 2> /dev/null | grep -q 'GNU_RELRO'; then
     if (${readelf} -d "${1}" 2> /dev/null | grep -q 'BIND_NOW' && ! ${readelf} -l "${1}" 2> /dev/null | grep -q '\.got\.plt') || ! ${readelf} -l "${1}" 2> /dev/null | grep -q '\.got\.plt'; then
       echo_message '\033[32mFull RELRO   \033[m   ' 'Full RELRO,' '<file relro="full"' " \"${1}\": { \"relro\":\"full\","
     else
@@ -24,7 +26,9 @@ filecheck() {
 
   # check for NX support
   # shellcheck disable=SC2126
-  if ${readelf} -l "${1}" 2> /dev/null | grep -q 'GNU_STACK'; then
+  if [[ $(${readelf} -l "${1}") =~ "no program headers" ]]; then
+    echo_message '\033[31mN/A        \033[m   ' 'N/A,' ' nx="n/a"' '"nx":"n/a",'
+  elif ${readelf} -l "${1}" 2> /dev/null | grep -q 'GNU_STACK'; then
     if [[ $(${s_readelf} -l "${1}" 2> /dev/null | grep -A 1 'GNU_STACK' | sed 'N;s/\n//g' | grep -Eo "0x[0-9a-f]{16}" | grep -v 0x0000000000000000 | wc -l) -gt 0 ]]; then
       echo_message '\033[31mNX disabled\033[m   ' 'NX disabled,' ' nx="no"' '"nx":"no",'
     else
