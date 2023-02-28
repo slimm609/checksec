@@ -8,7 +8,7 @@ filecheck() {
   if [[ $(${readelf} -l "${1}") =~ "no program headers" ]]; then
     echo_message '\033[31mN/A          \033[m   ' 'N/A,' '<file relro="n/a"' " \"${1}\": { \"relro\":\"n/a\","
   elif ${readelf} -l "${1}" 2> /dev/null | grep -q 'GNU_RELRO'; then
-    if (${readelf} -d "${1}" 2> /dev/null | grep -q 'BIND_NOW' && ! ${readelf} -l "${1}" 2> /dev/null | grep -q '.got.plt') || ! ${readelf} -l "${1}" 2> /dev/null | grep -q '.got.plt'; then
+    if (${readelf} -d "${1}" 2> /dev/null | grep -q 'BIND_NOW' && ! ${readelf} -l "${1}" 2> /dev/null | grep -q '\.got\.plt') || ! ${readelf} -l "${1}" 2> /dev/null | grep -q '\.got\.plt'; then
       echo_message '\033[32mFull RELRO   \033[m   ' 'Full RELRO,' '<file relro="full"' " \"${1}\": { \"relro\":\"full\","
     else
       echo_message '\033[33mPartial RELRO\033[m   ' 'Partial RELRO,' '<file relro="partial"' " \"${1}\": { \"relro\":\"partial\","
@@ -55,7 +55,7 @@ filecheck() {
 
   if ${extended_checks}; then
     # check for selfrando support
-    if ${readelf} -S "${1}" 2> /dev/null | grep -c txtrp | grep -q '1'; then
+    if ${readelf} -S "${1}" 2> /dev/null | grep -c 'txtrp' | grep -q '1'; then
       echo_message '\033[32mSelfrando enabled  \033[m   '
     else
       echo_message '\033[31mNo Selfrando       \033[m   '
@@ -65,7 +65,7 @@ filecheck() {
   if ${extended_checks}; then
     # check if compiled with Clang CFI
     #if $readelf -s "$1" 2>/dev/null | grep -Eq '\.cfi'; then
-    read -r cfifunc <<< "$($readelf -s "${1}" 2> /dev/null | grep .cfi | awk '{ print $8 }')"
+    read -r cfifunc <<< "$($readelf -s "${1}" 2> /dev/null | grep '\.cfi' | awk '{ print $8 }')"
     func=${cfifunc/.cfi/}
     if [ -n "$cfifunc" ] && $readelf -s "$1" 2> /dev/null | grep -q "$func$"; then
       echo_message '\033[32mClang CFI found   \033[m   ' 'with CFI,' ' clangcfi="yes"' '"clangcfi":"yes",'
