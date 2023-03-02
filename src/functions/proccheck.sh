@@ -7,7 +7,7 @@ proccheck() {
   # check for RELRO support
   if ${readelf} -l "${1}/exe" 2> /dev/null | grep -q 'Program Headers'; then
     if ${readelf} -l "${1}/exe" 2> /dev/null | grep -q 'GNU_RELRO'; then
-      if (${readelf} -d "${1}/exe" 2> /dev/null | grep -q 'BIND_NOW' && ! ${readelf} -l "${1}/exe" 2> /dev/null | grep -q '.got.plt') || ! ${readelf} -l "${1}/exe" 2> /dev/null | grep -q '.got.plt'; then
+      if (${readelf} -d "${1}/exe" 2> /dev/null | grep -q 'BIND_NOW' && ! ${readelf} -l "${1}/exe" 2> /dev/null | grep -q '\.got\.plt') || ! ${readelf} -l "${1}/exe" 2> /dev/null | grep -q '\.got\.plt'; then
         echo_message '\033[32mFull RELRO   \033[m   ' 'Full RELRO,' ' relro="full"' '"relro":"full",'
       else
         echo_message '\033[33mPartial RELRO\033[m   ' 'Partial RELRO,' ' relro="partial"' '"relro":"partial",'
@@ -39,7 +39,7 @@ proccheck() {
     # check if compiled with Clang CFI
     $debug && echo -e "\n***function proccheck->clangcfi"
     #if $readelf -s "$1" 2>/dev/null | grep -Eq '\.cfi'; then
-    read -r -a cfifunc <<< "$($readelf -s "$1/exe" 2> /dev/null | grep .cfi | awk '{ print $8 }')"
+    read -r -a cfifunc <<< "$($readelf -s "$1/exe" 2> /dev/null | grep '\.cfi' | awk '{ print $8 }')"
     func=${cfifunc/.cfi/}
     # TODO: fix this check properly, need more clang CFI files to be able to test properly
     # shellcheck disable=SC2128
@@ -110,7 +110,7 @@ proccheck() {
 
   if ${extended_checks}; then
     # check for selfrando support
-    if ${readelf} -S "${1}/exe" 2> /dev/null | grep -c txtrp | grep -q '1'; then
+    if ${readelf} -S "${1}/exe" 2> /dev/null | grep -c 'txtrp' | grep -q '1'; then
       echo_message '\033[32mSelfrando enabled    \033[m   '
     else
       echo_message '\033[31mNo Selfrando         \033[m   '
