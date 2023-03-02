@@ -5,7 +5,7 @@
 # check file(s)
 filecheck() {
   # check for RELRO support
-  if [[ $(${readelf} -l "${1}") =~ "no program headers" ]]; then
+  if [[ $(${readelf} -l "${1}" 2> /dev/null) =~ "no program headers" ]]; then
     echo_message '\033[32mN/A          \033[m   ' 'N/A,' '<file relro="n/a"' " \"${1}\": { \"relro\":\"n/a\","
   elif ${readelf} -l "${1}" 2> /dev/null | grep -q 'GNU_RELRO'; then
     if (${readelf} -d "${1}" 2> /dev/null | grep -q 'BIND_NOW' && ! ${readelf} -l "${1}" 2> /dev/null | grep -q '\.got\.plt') || ! ${readelf} -l "${1}" 2> /dev/null | grep -q '\.got\.plt'; then
@@ -26,7 +26,7 @@ filecheck() {
 
   # check for NX support
   # shellcheck disable=SC2126
-  if [[ $(${readelf} -l "${1}") =~ "no program headers" ]]; then
+  if [[ $(${readelf} -l "${1}" 2> /dev/null) =~ "no program headers" ]]; then
     echo_message '\033[32mN/A        \033[m   ' 'N/A,' ' nx="n/a"' '"nx":"n/a",'
   elif ${readelf} -l "${1}" 2> /dev/null | grep -q 'GNU_STACK'; then
     if [[ $(${s_readelf} -l "${1}" 2> /dev/null | grep -A 1 'GNU_STACK' | grep -Eo "0x[0-9a-f]{16}" | grep -v 0x0000000000000000 | wc -l) -gt 0 ]] || ${readelf} -l "${1}" 2> /dev/null | grep 'GNU_STACK' | grep -q 'RWE'; then
@@ -84,7 +84,7 @@ filecheck() {
   # check for rpath / run path
   # search for a line that matches RPATH and extract the colon-separated path list within brackets
   # example input: "0x000000000000000f (RPATH) Library rpath: [/lib/systemd:/lib/apparmor]"
-  if [[ $(${readelf} -d "${1}") =~ "no dynamic section" ]]; then
+  if [[ $(${readelf} -d "${1}" 2> /dev/null) =~ "no dynamic section" ]]; then
     echo_message '\033[32mN/A      \033[m  ' 'N/A,' ' rpath="n/a"' '"rpath":"n/a",'
   else
     IFS=: read -r -a rpath_array <<< "$(${readelf} -d "${1}" 2> /dev/null | awk -F'[][]' '/RPATH/ {print $2}')"
@@ -100,7 +100,7 @@ filecheck() {
   fi
 
   # search for a line that matches RUNPATH and extract the colon-separated path list within brackets
-  if [[ $(${readelf} -d "${1}") =~ "no dynamic section" ]]; then
+  if [[ $(${readelf} -d "${1}" 2> /dev/null) =~ "no dynamic section" ]]; then
     echo_message '\033[32mN/A        \033[m  ' 'N/A,' ' runpath="n/a"' '"runpath":"n/a",'
   else
     IFS=: read -r -a runpath_array <<< "$(${readelf} -d "${1}" 2> /dev/null | awk -F'[][]' '/RUNPATH/ {print $2}')"
