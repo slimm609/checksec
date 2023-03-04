@@ -14,17 +14,17 @@
 .Sh DESCRIPTION
 .Nm
 is a bash script used to check the properties of executables
-(like PIE, RELRO, PaX, Canaries, ASLR, Fortify Source) and kernel security
-options (like GRSecurity and SELinux).
+(like PIE, RELRO, PaX, Canaries, ASLR, Fortify Source), library calls (Fortify Source),
+and kernel security options (like GRSecurity and SELinux).
 .Sh Options
-Options specifying input:
+Options specifying input and action:
 .Bl -tag -width Ds
 .It Fl \-file Ns = Ns Ar filename
 Checks individual files for security features compiled into the executable
 .It Fl \-dir Ns = Ns Ar directory
 Recursively checks all executable files in the directory for security features compiled into the executables
 .It Fl \-listfile Ns = Ns Ar listfile
-Check all files specified in a newline-separeted text file
+Check all files specified in a newline-separeted text file for security features compiled into the executable
 .It Fl \-proc Ns = Ns Ar pid
 Checks the security features of a running process by name
 .It Fl \-proc-all
@@ -34,9 +34,9 @@ Checks the security features of the all libraries of a running process ID
 .It Fl \-kernel Ns Op = Ns Ar config
 Checks the security features of the running kernel or a specified kernel config
 .It Fl \-fortify-file Ns = Ns Ar filename
-Checks the fortifiability of a file and if any of the fortifiable features have already been compiled into the file
+Checks for the use of fortifiable and fortified library functions in a file
 .It Fl \-fortify-proc Ns = Ns Ar pid
-Checks the fortifiability of a running process and if any of the fortifiable features have already been compiled in
+Checks for the use of fortifiable and fortified library functions in a running process
 .El
 
 Options modifying behavior:
@@ -75,6 +75,12 @@ For most of the checks you must be root.
 .El
 .Sh SEE ALSO
 .Xr hardening-check 1
+.Ns ,
+.Xr feature_test_macros 7
+.Ns ,
+.Xr gcc 1
+.Ns ,
+.Xr ld 1
 .Sh HISTORY
 .Nm
 was originally written by
