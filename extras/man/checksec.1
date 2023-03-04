@@ -19,10 +19,12 @@ options (like GRSecurity and SELinux).
 .Sh Options
 Options specifying input:
 .Bl -tag -width Ds
-.It Fl \-file Ns = Ns Ar {filename}
+.It Fl \-file Ns = Ns Ar filename
 Checks individual files for security features compiled into the executable
-.It Fl \-dir Ns = Ns Ar {directory}
+.It Fl \-dir Ns = Ns Ar directory
 Recursively checks all executable files in the directory for security features compiled into the executables
+.It Fl \-listfile = Ns Ar listfile
+Check all files specified in a newline-separeted text file
 .It Fl \-proc Ns = Ns Ar pid
 Checks the security features of a running process by name
 .It Fl \-proc-all
@@ -31,20 +33,22 @@ Checks the security features of all running processes
 Checks the security features of the all libraries of a running process ID
 .It Fl \-kernel Ns Op = Ns Ar config
 Checks the security features of the running kernel or a specified kernel config
-.It Fl \-fortify-file Ns = Ns Ar {filename}
+.It Fl \-fortify-file Ns = Ns Ar filename
 Checks the fortifiability of a file and if any of the fortifiable features have already been compiled into the file
-.It Fl \-fortify-proc Ns = Ns Ar {pid}
+.It Fl \-fortify-proc Ns = Ns Ar pid
 Checks the fortifiability of a running process and if any of the fortifiable features have already been compiled in
 .El
 
 Options modifying behavior:
 .Bl -tag -width Ds
-.It Fl \-output Ns = Ns Ar (cli|csv|xml|json) No Ns , or Fl \-format Ns = Ns Ar (cli|csv|xml|json)
-Output the results in different formats for ingestion to other applications.
-.It Fl \-extended
-Check for additional security features (e.g. Clang CFI, SafeStack)
 .It Fl \-debug
 Enable debug-level output.
+.It Fl \-extended
+Check for additional security features (e.g. Clang CFI, SafeStack)
+.It Fl \-libcfile Ns = Ns Ar path
+Specify the libc file path or a search path
+.It Fl \-output Ns = Ns Ar (cli|csv|xml|json) No Ns , or Fl \-format Ns = Ns Ar (cli|csv|xml|json)
+Output the results in different formats for ingestion to other applications.
 .It Fl \-trace
 Enable bash tracing (set
 .Fl x No Ns ).
