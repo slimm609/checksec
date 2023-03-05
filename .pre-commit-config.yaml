@@ -26,7 +26,7 @@ repos:
   - id: shfmt
     args: ["-sr", "-i", "2", "-ci", "-w"]
   - id: shellcheck
-    args: ["-e", "SC2154,SC2164,SC2129,SC2028"]
+    files: ^checksec$
 - repo: https://github.com/Lucas-C/pre-commit-hooks
   rev: v1.2.0
   hooks:
