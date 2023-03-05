@@ -105,7 +105,6 @@ search_libc() {
 for command in readelf eu-readelf greadelf; do
   if (command_exists ${command}); then
     readelf="${command} -W"
-    s_readelf="${command}"
     break
   fi
 done
