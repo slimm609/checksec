@@ -35,8 +35,8 @@ chk_fortify_file() {
 
   FS_chk_func_libc=()
   FS_functions=()
-  while IFS='' read -r line; do FS_chk_func_libc+=("$line"); done < <(${readelf} -s "${FS_libc}" 2> /dev/null | grep _chk@@ | awk '{ print $8 }' | cut -c 3- | sed -e 's/_chk@.*//')
-  while IFS='' read -r line; do FS_functions+=("$line"); done < <(${readelf} -s "${CHK_FORTIFY_FILE}" 2> /dev/null | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//')
+  while IFS='' read -r line; do FS_chk_func_libc+=("$line"); done < <(${readelf} -s "${FS_libc}" 2> /dev/null | grep _chk@@ | awk '{ print $8 }' | cut -c 3- | sed -e 's/_chk@.*//' | sort -u)
+  while IFS='' read -r line; do FS_functions+=("$line"); done < <(${readelf} -s "${CHK_FORTIFY_FILE}" 2> /dev/null | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//' | sort -u)
   echo_message "" "" "<fortify-test name='${CHK_FORTIFY_FILE}' " "{ \"fortify-test\": { \"name\":\"${CHK_FORTIFY_FILE}\" "
   FS_libc_check
   FS_binary_check
@@ -76,8 +76,8 @@ chk_fortify_proc() {
 
     FS_chk_func_libc=()
     FS_functions=()
-    while IFS='' read -r line; do FS_chk_func_libc+=("$line"); done < <(${readelf} -s "${FS_libc}" 2> /dev/null | grep _chk@@ | awk '{ print $8 }' | cut -c 3- | sed -e 's/_chk@.*//')
-    while IFS='' read -r line; do FS_functions+=("$line"); done < <(${readelf} -s "${CHK_FORTIFY_PROC}/exe" 2> /dev/null | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//')
+    while IFS='' read -r line; do FS_chk_func_libc+=("$line"); done < <(${readelf} -s "${FS_libc}" 2> /dev/null | grep _chk@@ | awk '{ print $8 }' | cut -c 3- | sed -e 's/_chk@.*//' | sort -u)
+    while IFS='' read -r line; do FS_functions+=("$line"); done < <(${readelf} -s "${CHK_FORTIFY_PROC}/exe" 2> /dev/null | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//' | sort -u)
     echo_message "" "" "<fortify-test name='${name}' pid='${N}' " "{ \"fortify-test\": { \"name\":\"${name}\", \"pid\":\"${N}\" "
     FS_libc_check
     FS_binary_check
