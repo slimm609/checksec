@@ -1,66 +1,89 @@
-\" Process this file with
-.\" groff -man -Tascii foo.1
+.\" Process this file with
+.\" groff -mdoc -Tascii foo.1
 .\"
-.TH CHECKSEC 1 "FEBRUARY 2019" Linux "User Manuals"
-.SH NAME
-checksec \- check executables and kernel properties
-.SH SYNOPSIS
-.B checksec [options] [file]
-.SH DESCRIPTION
-.B checksec
+.Dd March 2023
+.Dt checksec 1
+.Os
+.Sh NAME
+.Nm checksec
+.Nd check executables and kernel properties
+.Sh SYNOPSIS
+.Nm checksec
+.Op Fl -options
+.Op Ar file
+.Sh DESCRIPTION
+.Nm
 is a bash script used to check the properties of executables
-(like PIE, RELRO, PaX, Canaries, ASLR, Fortify Source) and kernel security
-options (like GRSecurity and SELinux).
-.SH OPTIONS
-.TP
-\fB\--output=\fP or \fB\--format=\fP \fB{cli|csv|xml|json}\fP
-Output the results in different formats for ingestion to other applications.
-NOTE: This option must go before any other options currently
-.TP
-\fB\--help\fP
-Displays the help text
-.TP
-\fB\--file={filename}\fP
+(like PIE, RELRO, PaX, Canaries, ASLR, Fortify Source), library calls (Fortify Source),
+and kernel security options (like GRSecurity and SELinux).
+.Sh Options
+Options specifying input and action:
+.Bl -tag -width Ds
+.It Fl \-file Ns = Ns Ar filename
 Checks individual files for security features compiled into the executable
-.TP
-\fB\--dir={directory}\fP
+.It Fl \-dir Ns = Ns Ar directory
 Recursively checks all executable files in the directory for security features compiled into the executables
-.TP
-\fB\--proc={pid}\fP
+.It Fl \-listfile Ns = Ns Ar listfile
+Check all files specified in a newline-separeted text file for security features compiled into the executable
+.It Fl \-proc Ns = Ns Ar pid
 Checks the security features of a running process by name
-.TP
-\fB\--proc-all\fP
+.It Fl \-proc-all
 Checks the security features of all running processes
-.TP
-\fB\--proc-libs\fP
+.It Fl \-proc-libs
 Checks the security features of the all libraries of a running process ID
-.TP
-\fB\--kernel[=kconfig]\fP
+.It Fl \-kernel Ns Op = Ns Ar config
 Checks the security features of the running kernel or a specified kernel config
-.TP
-\fB\--fortify-file={filename}\fP
-Checks the fortifiability of a file and if any of the fortifiable features have already been compiled into the file
-.TP
-\fB\--fortify-proc={pid}\fP
-Checks the fortifiability of a running process and if any of the fortifiable features have already been compiled in
-.TP
-\fB\--version\fP
-Shows the current version of the running software
-.TP
-\fB\--update\fP or \fB\--upgrade\fP
-Checks source for a signed update and updates the application if available
+.It Fl \-fortify-file Ns = Ns Ar filename
+Checks for the use of fortifiable and fortified library functions in a file
+.It Fl \-fortify-proc Ns = Ns Ar pid
+Checks for the use of fortifiable and fortified library functions in a running process
+.El
 
-.SH DIAGNOSTICS
+Options modifying behavior:
+.Bl -tag -width Ds
+.It Fl \-debug
+Enable debug-level output.
+.It Fl \-extended
+Check for additional security features (e.g. Clang CFI, SafeStack)
+.It Fl \-libcfile Ns = Ns Ar path
+Specify the libc file path or a search path
+.It Fl \-output Ns = Ns Ar (cli|csv|xml|json) No Ns , or Fl \-format Ns = Ns Ar (cli|csv|xml|json)
+Output the results in different formats for ingestion to other applications.
+.It Fl \-trace
+Enable bash tracing (set
+.Fl x No Ns ).
+.El
+
+Miscellaneous options:
+.Bl -tag -width Ds
+.It Fl \-debug_report
+Generate a system report and exit.
+.It Fl h No or Fl \-help
+Displays the help text and exit
+.It Fl \-update No or Fl \-upgrade
+Checks source for a signed update and updates the application if available and exit
+.It Fl \-version
+Shows the current version of the running software and exit
+.El
+\".Sh EXAMPLES
+\" TODO
+.Sh DIAGNOSTICS
 The following diagnostics may be issued on stderr:
-
-Permission Denied.
-.RS
-For most of the checks you must be root..
-.RE
-Debugging
-.RS
-\fB\--debug\fP option can be specified for debug level output
-.SH AUTHORS
-Brian Davis <slimm609 at gmail dot com>
-.RE
-Checksec was originally written by Tobias Klein
+.Bl -tag -width Ds
+.It Permission Denied.
+For most of the checks you must be root.
+.El
+.Sh SEE ALSO
+.Xr hardening-check 1
+.Ns ,
+.Xr feature_test_macros 7
+.Ns ,
+.Xr gcc 1
+.Ns ,
+.Xr ld 1
+.Sh HISTORY
+.Nm
+was originally written by
+.An Tobias Klein .
+This version is expanded and maintained by
+.An Brian Davis Aq Mt slimm609@gmail.com
