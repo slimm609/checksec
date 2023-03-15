@@ -29,7 +29,7 @@ filecheck() {
   if [[ $(${readelf} -l "${1}" 2> /dev/null) =~ "no program headers" ]]; then
     echo_message '\033[32mN/A        \033[m   ' 'N/A,' ' nx="n/a"' '"nx":"n/a",'
   elif ${readelf} -l "${1}" 2> /dev/null | grep -q 'GNU_STACK'; then
-    if ${readelf} -l "${1}" 2> /dev/null | grep 'GNU_STACK' | grep -vq '0x000000 0x0000000000000000 0x0000000000000000 0x000000 0x000000 RW '; then
+    if [[ $(${readelf} -l "${1}" 2> /dev/null | grep 'GNU_STACK' | grep -oP '(?<=0x).*(?=RW )' | grep -o . | sort -u | tr -d '\n') != " 0x" ]]; then
       echo_message '\033[31mNX disabled\033[m   ' 'NX disabled,' ' nx="no"' '"nx":"no",'
     else
       echo_message '\033[32mNX enabled \033[m   ' 'NX enabled,' ' nx="yes"' '"nx":"yes",'

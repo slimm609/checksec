@@ -89,10 +89,10 @@ proccheck() {
       echo_message '\033[31mPaX disabled\033[m  ' 'Pax disabled,' ' pax="no"' '"pax":"no",'
     fi
     # fallback check for NX support
-  elif ${readelf} -l "${1}/exe" 2> /dev/null | grep 'GNU_STACK' | grep -vq '0x000000 0x0000000000000000 0x0000000000000000 0x000000 0x000000 RW '; then
+  elif [[ $(${readelf} -l "${1}/exe" 2> /dev/null | grep 'GNU_STACK' | grep -oP '(?<=0x).*(?=RW )' | grep -o . | sort -u | tr -d '\n') != " 0x" ]]; then
     echo_message '\033[31mNX disabled\033[m   ' 'NX disabled,' ' nx="no"' '"nx":"no",'
   else
-    echo_message '\033[32mNX enabled \033[m   ' 'NX enabled,' ' pax="yes"' '"nx":"yes",'
+    echo_message '\033[32mNX enabled \033[m   ' 'NX enabled,' ' nx="yes"' '"nx":"yes",'
   fi
 
   # check for PIE support

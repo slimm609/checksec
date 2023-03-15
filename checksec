@@ -86,7 +86,7 @@ command_exists() {
   type "${1}" > /dev/null 2>&1
 }
 
-for command in cat awk sed sysctl objdump uname mktemp openssl grep stat file find sort head ps readlink basename id which xargs ldd; do
+for command in cat awk sed sysctl objdump uname mktemp openssl grep stat file find sort head ps readlink basename id which xargs ldd tr; do
   if ! (command_exists ${command}); then
     echo >&2 -e "\e[31mWARNING: '${command}' not found! It's required for most checks.\e[0m"
     commandsmissing=true
@@ -723,7 +723,7 @@ filecheck() {
   if [[ $(${readelf} -l "${1}" 2> /dev/null) =~ "no program headers" ]]; then
     echo_message '\033[32mN/A        \033[m   ' 'N/A,' ' nx="n/a"' '"nx":"n/a",'
   elif ${readelf} -l "${1}" 2> /dev/null | grep -q 'GNU_STACK'; then
-    if ${readelf} -l "${1}" 2> /dev/null | grep 'GNU_STACK' | grep -vq '0x000000 0x0000000000000000 0x0000000000000000 0x000000 0x000000 RW '; then
+    if [[ $(${readelf} -l "${1}" 2> /dev/null | grep 'GNU_STACK' | grep -oP '(?<=0x).*(?=RW )' | grep -o . | sort -u | tr -d '\n') != " 0x" ]]; then
       echo_message '\033[31mNX disabled\033[m   ' 'NX disabled,' ' nx="no"' '"nx":"no",'
     else
       echo_message '\033[32mNX enabled \033[m   ' 'NX enabled,' ' nx="yes"' '"nx":"yes",'
@@ -1570,10 +1570,10 @@ proccheck() {
       echo_message '\033[31mPaX disabled\033[m  ' 'Pax disabled,' ' pax="no"' '"pax":"no",'
     fi
     # fallback check for NX support
-  elif ${readelf} -l "${1}/exe" 2> /dev/null | grep 'GNU_STACK' | grep -vq '0x000000 0x0000000000000000 0x0000000000000000 0x000000 0x000000 RW '; then
+  elif [[ $(${readelf} -l "${1}/exe" 2> /dev/null | grep 'GNU_STACK' | grep -oP '(?<=0x).*(?=RW )' | grep -o . | sort -u | tr -d '\n') != " 0x" ]]; then
     echo_message '\033[31mNX disabled\033[m   ' 'NX disabled,' ' nx="no"' '"nx":"no",'
   else
-    echo_message '\033[32mNX enabled \033[m   ' 'NX enabled,' ' pax="yes"' '"nx":"yes",'
+    echo_message '\033[32mNX enabled \033[m   ' 'NX enabled,' ' nx="yes"' '"nx":"yes",'
   fi
 
   # check for PIE support
