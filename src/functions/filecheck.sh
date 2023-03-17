@@ -8,7 +8,7 @@ filecheck() {
   if [[ $(${readelf} -l "${1}") =~ "no program headers" ]]; then
     echo_message '\033[31mN/A          \033[m   ' 'N/A,' '<file relro="n/a"' " \"${1}\": { \"relro\":\"n/a\","
   elif ${readelf} -l "${1}" 2> /dev/null | grep -q 'GNU_RELRO'; then
-    if (${readelf} -d "${1}" 2> /dev/null | grep -q 'BIND_NOW' && ! ${readelf} -l "${1}" 2> /dev/null | grep -q '\.got\.plt') || ! ${readelf} -l "${1}" 2> /dev/null | grep -q '\.got\.plt'; then
+    if ${readelf} -d "${1}" 2> /dev/null | grep -q 'BIND_NOW' || ! ${readelf} -l "${1}" 2> /dev/null | grep -q '\.got\.plt'; then
       echo_message '\033[32mFull RELRO   \033[m   ' 'Full RELRO,' '<file relro="full"' " \"${1}\": { \"relro\":\"full\","
     else
       echo_message '\033[33mPartial RELRO\033[m   ' 'Partial RELRO,' '<file relro="partial"' " \"${1}\": { \"relro\":\"partial\","
@@ -18,7 +18,7 @@ filecheck() {
   fi
 
   # check for stack canary support
-  if ${readelf} -s "${1}" 2> /dev/null | grep " 0000000000000000 " | grep " UND " | grep -Eq '__stack_chk_fail|__stack_chk_guard|__intel_security_cookie'; then
+  if ${readelf} -s "${1}" 2> /dev/null | grep " UND " | grep -Eq '__stack_chk_fail|__stack_chk_guard|__intel_security_cookie'; then
     echo_message '\033[32mCanary found   \033[m   ' 'Canary found,' ' canary="yes"' '"canary":"yes",'
   else
     echo_message '\033[31mNo canary found\033[m   ' 'No Canary found,' ' canary="no"' '"canary":"no",'
