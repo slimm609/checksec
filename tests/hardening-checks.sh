@@ -10,13 +10,13 @@ PARENT=$(
 )
 
 for bin in all all32 all_cl all_cl32 \
-cfi cfi32 sstack sstack32 \
-dso.so dso32.so dso_cl.so dso_cl32.so \
-none none32 none_cl none_cl32 \
-partial partial32 partial_cl partial_cl32 \
-rel.o rel32.o rel_cl.o rel_cl32.o \
-rpath rpath32 rpath_cl rpath_cl32 \
-runpath runpath32 runpath_cl runpath_cl32; do
+  cfi cfi32 sstack sstack32 \
+  dso.so dso32.so dso_cl.so dso_cl32.so \
+  none none32 none_cl none_cl32 \
+  partial partial32 partial_cl partial_cl32 \
+  rel.o rel32.o rel_cl.o rel_cl32.o \
+  rpath rpath32 rpath_cl rpath_cl32 \
+  runpath runpath32 runpath_cl runpath_cl32; do
   if [[ ! -f "${DIR}/binaries/${bin}" ]]; then
     echo "Could not find test file \"${bin}\". Run build_binaries.sh in the binaries folder to generate it."
     exit 255
@@ -271,7 +271,7 @@ echo "Fortify validation tests passed"
 echo "Starting RELRO process check"
 # Full RELRO
 for bin in all all32 all_cl all_cl32; do
-  "${DIR}"/binaries/${bin} > /dev/null &
+  "${DIR}"/binaries/${bin} >/dev/null &
   if [[ $("${PARENT}"/checksec --proc=${bin} --format=csv | cut -d, -f3) != "Full RELRO" ]]; then
     echo "Full RELRO process validation failed on \"${bin}\""
     exit 1
@@ -279,7 +279,7 @@ for bin in all all32 all_cl all_cl32; do
 done
 # Partial RELRO
 for bin in partial partial32 partial_cl partial_cl32; do
-  "${DIR}"/binaries/${bin} > /dev/null &
+  "${DIR}"/binaries/${bin} >/dev/null &
   if [[ $("${PARENT}"/checksec --proc=${bin} --format=csv | cut -d, -f3) != "Partial RELRO" ]]; then
     echo "Partial RELRO process validation failed on \"${bin}\""
     exit 1
@@ -287,7 +287,7 @@ for bin in partial partial32 partial_cl partial_cl32; do
 done
 # No RELRO
 for bin in none none32 none_cl none_cl32; do
-  "${DIR}"/binaries/${bin} > /dev/null &
+  "${DIR}"/binaries/${bin} >/dev/null &
   if [[ $("${PARENT}"/checksec --proc=${bin} --format=csv | cut -d, -f3) != "No RELRO" ]]; then
     echo "No RELRO process validation failed on \"${bin}\""
     exit 1
@@ -301,7 +301,7 @@ echo "RELRO process validation tests passed"
 echo "Starting Stack Canary process check"
 # Canary found
 for bin in all all32 all_cl all_cl32; do
-  "${DIR}"/binaries/${bin} > /dev/null &
+  "${DIR}"/binaries/${bin} >/dev/null &
   if [[ $("${PARENT}"/checksec --proc=${bin} --format=csv | cut -d, -f4) != "Canary found" ]]; then
     echo "Stack Canary process validation failed on \"${bin}\""
     exit 1
@@ -309,7 +309,7 @@ for bin in all all32 all_cl all_cl32; do
 done
 # No Canary found
 for bin in none none32 none_cl none_cl32; do
-  "${DIR}"/binaries/${bin} > /dev/null &
+  "${DIR}"/binaries/${bin} >/dev/null &
   if [[ $("${PARENT}"/checksec --proc=${bin} --format=csv | cut -d, -f4) != "No Canary found" ]]; then
     echo "No Stack Canary process validation failed on \"${bin}\""
     exit 1
@@ -323,7 +323,7 @@ echo "Stack Canary process validation tests passed"
 echo "Starting CFI process check"
 # with CFI
 for bin in cfi cfi32; do
-  "${DIR}"/binaries/${bin} > /dev/null &
+  "${DIR}"/binaries/${bin} >/dev/null &
   if [[ $("${PARENT}"/checksec --proc=${bin} --extended --format=csv | cut -d, -f5) != "with CFI" ]]; then
     echo "CFI process validation failed on \"${bin}\""
     exit 1
@@ -331,7 +331,7 @@ for bin in cfi cfi32; do
 done
 # without CFI
 for bin in none_cl none_cl32; do
-  "${DIR}"/binaries/${bin} > /dev/null &
+  "${DIR}"/binaries/${bin} >/dev/null &
   if [[ $("${PARENT}"/checksec --proc=${bin} --extended --format=csv | cut -d, -f5) != "without CFI" ]]; then
     echo "No CFI process validation failed on \"${bin}\""
     exit 1
@@ -344,14 +344,15 @@ echo "CFI process validation tests passed"
 
 echo "Starting SafeStack process check"
 # with SafeStack (omit 32-bit SafeStack because the binary does not work)
-"${DIR}"/binaries/sstack > /dev/null &
+bin=sstack
+"${DIR}"/binaries/${bin} >/dev/null &
 if [[ $("${PARENT}"/checksec --proc=${bin} --extended --format=csv | cut -d, -f6) != "with SafeStack" ]]; then
-echo "SafeStack process validation failed on \"${bin}\""
-exit 1
+  echo "SafeStack process validation failed on \"${bin}\""
+  exit 1
 fi
 # without SafeStack
 for bin in none_cl none_cl32; do
-  "${DIR}"/binaries/${bin} > /dev/null &
+  "${DIR}"/binaries/${bin} >/dev/null &
   if [[ $("${PARENT}"/checksec --proc=${bin} --extended --format=csv | cut -d, -f6) != "without SafeStack" ]]; then
     echo "No SafeStack process validation failed on \"${bin}\""
     exit 1
@@ -365,7 +366,7 @@ echo "SafeStack process validation tests passed"
 echo "Starting NX process check"
 # NX enabled
 for bin in all all32 all_cl all_cl32; do
-  "${DIR}"/binaries/${bin} > /dev/null &
+  "${DIR}"/binaries/${bin} >/dev/null &
   if [[ $("${PARENT}"/checksec --proc=${bin} --format=csv | cut -d, -f6) != "NX enabled" ]]; then
     echo "NX enabled process validation failed on \"${bin}\""
     exit 1
@@ -373,7 +374,7 @@ for bin in all all32 all_cl all_cl32; do
 done
 # NX disabled
 for bin in none none32 none_cl none_cl32; do
-  "${DIR}"/binaries/${bin} > /dev/null &
+  "${DIR}"/binaries/${bin} >/dev/null &
   if [[ $("${PARENT}"/checksec --proc=${bin} --format=csv | cut -d, -f6) != "NX disabled" ]]; then
     echo "NX disabled process validation failed on \"${bin}\""
     exit 1
@@ -387,7 +388,7 @@ echo "NX process validation tests passed"
 echo "Starting PIE process check"
 # PIE enabled
 for bin in all all32 all_cl all_cl32; do
-  "${DIR}"/binaries/${bin} > /dev/null &
+  "${DIR}"/binaries/${bin} >/dev/null &
   if [[ $("${PARENT}"/checksec --proc=${bin} --format=csv | cut -d, -f7) != "PIE enabled" ]]; then
     echo "PIE enabled process validation failed on \"${bin}\""
     exit 1
@@ -395,7 +396,7 @@ for bin in all all32 all_cl all_cl32; do
 done
 # No PIE
 for bin in none none32 none_cl none_cl32; do
-  "${DIR}"/binaries/${bin} > /dev/null &
+  "${DIR}"/binaries/${bin} >/dev/null &
   if [[ $("${PARENT}"/checksec --proc=${bin} --format=csv | cut -d, -f7) != "No PIE" ]]; then
     echo "No PIE process validation failed on \"${bin}\""
     exit 1
@@ -409,7 +410,7 @@ echo "PIE process validation tests passed"
 echo "Starting Foritfy process check"
 # Yes
 for bin in all all32 all_cl all_cl32; do
-  "${DIR}"/binaries/${bin} > /dev/null &
+  "${DIR}"/binaries/${bin} >/dev/null &
   if [[ $("${PARENT}"/checksec --proc=${bin} --format=csv | cut -d, -f8) != "Yes" ]]; then
     echo "Fortify process validation failed on \"${bin}\""
     exit 1
@@ -417,7 +418,7 @@ for bin in all all32 all_cl all_cl32; do
 done
 # No
 for bin in none none32 none_cl none_cl32; do
-  "${DIR}"/binaries/${bin} > /dev/null &
+  "${DIR}"/binaries/${bin} >/dev/null &
   if [[ $("${PARENT}"/checksec --proc=${bin} --format=csv | cut -d, -f8) != "No" ]]; then
     echo "No Fortify process validation failed on \"${bin}\""
     exit 1
