@@ -1651,7 +1651,6 @@ upgrade() {
     rm -f "${TMP_FILE}" "${SIG_FILE}" "${PUBKEY_FILE}" > /dev/null 2>&1
     exit 1
   fi
-  exit 0
 }
 
 # Version compare
