@@ -7,3 +7,4 @@ DIR=$(
 
 "${DIR}"/xml-checks.sh || exit 2
 "${DIR}"/json-checks.sh || exit 2
+"${DIR}"/hardening-checks.sh || exit 2
