@@ -17,7 +17,7 @@ gcc -shared -fPIC -o dso.so test.c -w -D_FORTIFY_SOURCE=2 -fstack-protector-stro
 # CFI and SafeStack
 clang -o cfi test.c -w -flto -fsanitize=cfi -fvisibility=default
 clang -o sstack test.c -w -fsanitize=safe-stack
-# clang instead of gcc 
+# clang instead of gcc
 clang -o all_cl test.c -w -D_FORTIFY_SOURCE=2 -fstack-protector-strong -fpie -O2 -z relro -z now -z noexecstack -pie -s
 clang -o partial_cl test.c -w -D_FORTIFY_SOURCE=2 -fstack-protector-strong -fpie -O2 -z relro -z lazy -z noexecstack -s
 clang -o rpath_cl test.c -w -D_FORTIFY_SOURCE=2 -fstack-protector-strong -fpie -O2 -z relro -z now -z noexecstack -pie -s -Wl,-rpath,./ -Wl,--disable-new-dtags
