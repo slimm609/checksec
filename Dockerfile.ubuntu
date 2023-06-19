@@ -5,6 +5,7 @@ RUN apt-get update && apt-get -y -q upgrade && DEBIAN_FRONTEND=noninteractive ap
   bc bison flex build-essential ccache git \
   libncurses-dev libssl-dev u-boot-tools wget \
   xz-utils vim xfce4 libxml2-utils python-demjson jq \
+  gcc-multilib clang \
  && apt-get clean
 
 COPY .  /root
