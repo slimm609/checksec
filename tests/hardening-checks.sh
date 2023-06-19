@@ -9,7 +9,10 @@ PARENT=$(
   pwd
 )
 
-(cd "${DIR}/binaries/"; ./build_binaries.sh)
+(
+  cd "${DIR}/binaries/"
+  ./build_binaries.sh
+)
 
 for bin in all all32 all_cl all_cl32 \
   cfi cfi32 sstack sstack32 \
