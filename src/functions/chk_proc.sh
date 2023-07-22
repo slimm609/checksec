@@ -59,19 +59,18 @@ chk_proc() {
     exit 1
   fi
   cd /proc || exit
-  if (isString "${CHK_PROC}"); then
-    IFS=" " read -r -a fpids <<< "$(pgrep -d ' ' "${CHK_PROC}")"
-  elif (isNumeric "${CHK_PROC}"); then
-    fpids=("${CHK_PROC}")
-  else
-    printf "\033[31mError: Please provide a valid process name or pid.\033[m\n\n"
-    exit 1
+  # assume a process name was given
+  IFS=" " read -r -a fpids <<< "$(pgrep -d ' ' "${CHK_PROC}")"
+  # if nothing was found check if it is a PID
+  if [[ ${#fpids} -eq 0 ]]; then
+    if (isNumeric "${CHK_PROC}") && [[ -n "$(ps -p "${CHK_PROC}" -o pid=)" ]]; then
+      fpids=("${CHK_PROC}")
+    else
+      printf "\033[31mError: Please provide a valid process name or pid.\033[m\n\n"
+      exit 1
+    fi
   fi
 
-  if [[ ${#fpids} -eq 0 ]]; then
-    printf "\033[31mError: No process with the given name or pid found.\033[m\n\n"
-    exit 1
-  fi
   echo_message "* System-wide ASLR" '' '' ''
   aslrcheck
   echo_message "* Does the CPU support NX: " '' '' ''

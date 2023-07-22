@@ -7,3 +7,7 @@ DIR=$(
 
 "${DIR}"/xml-checks.sh || exit 2
 "${DIR}"/json-checks.sh || exit 2
+
+if [ ! -f /etc/photon-release ]; then
+  "${DIR}"/hardening-checks.sh || exit 2
+fi

@@ -21,8 +21,8 @@ proccheck() {
   fi
 
   # check for stack canary support
-  if ${readelf} -W -s "${1}/exe" 2> /dev/null | grep -q 'Symbol table'; then
-    if ${readelf} -W -s "${1}/exe" 2> /dev/null | grep " UND " | grep -Eq '__stack_chk_fail|__stack_chk_guard|__intel_security_cookie'; then
+  if ${readelf} -s "${1}/exe" 2> /dev/null | grep -q 'Symbol table'; then
+    if ${readelf} -s "${1}/exe" 2> /dev/null | grep " UND " | grep -Eq '__stack_chk_fail|__stack_chk_guard|__intel_security_cookie'; then
       echo_message '\033[32mCanary found         \033[m   ' 'Canary found,' ' canary="yes"' '"canary":"yes",'
     else
       echo_message '\033[31mNo canary found      \033[m   ' 'No Canary found,' ' canary="no"' '"canary":"no",'
@@ -89,10 +89,10 @@ proccheck() {
       echo_message '\033[31mPaX disabled\033[m  ' 'Pax disabled,' ' pax="no"' '"pax":"no",'
     fi
     # fallback check for NX support
-  elif [[ $(${s_readelf} -l "${1}/exe" 2> /dev/null | grep -A 1 'GNU_STACK' | sed 'N;s/\n//g' | grep -Eo "0x[0-9a-f]{16}" | grep -v 0x0000000000000000 | wc -l) -gt 0 ]]; then
+  elif [[ $(${readelf} -l "${1}/exe" 2> /dev/null | grep 'GNU_STACK' | grep -oP '(?<=0x).*(?=RW )' | grep -o . | sort -u | tr -d '\n') != " 0x" ]]; then
     echo_message '\033[31mNX disabled\033[m   ' 'NX disabled,' ' nx="no"' '"nx":"no",'
   else
-    echo_message '\033[32mNX enabled \033[m   ' 'NX enabled,' ' pax="yes"' '"nx":"yes",'
+    echo_message '\033[32mNX enabled \033[m   ' 'NX enabled,' ' nx="yes"' '"nx":"yes",'
   fi
 
   # check for PIE support

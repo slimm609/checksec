@@ -18,8 +18,3 @@ echo_message() {
 isNumeric() {
   echo "$@" | grep -q -v "[^0-9]"
 }
-
-# check if input is a string
-isString() {
-  echo "$@" | grep -q -v "[^ A-Z_a-z]"
-}
