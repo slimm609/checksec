@@ -34,42 +34,41 @@ FS_comparison() {
   echo_message " Fortifiable library functions | Checked function names\n" "" "" ""
   echo_message " -------------------------------------------------------\n" "" "" ""
 
-  for ((FS_elem_libc = 0; FS_elem_libc < ${#FS_chk_func_libc[@]}; FS_elem_libc++)); do
-    for ((FS_elem_functions = 0; FS_elem_functions < ${#FS_functions[@]}; FS_elem_functions++)); do
-      FS_tmp_func=${FS_functions[$FS_elem_functions]}
-      FS_tmp_libc=${FS_chk_func_libc[$FS_elem_libc]}
+  # PRECONDITION. FS_chk_func_libc[] and FS_functions[] are both sorted to current locale and unique (sort -u).
+  for ((FS_elem_libc = 0, FS_elem_functions = 0;  \
+  FS_elem_libc < ${#FS_chk_func_libc[@]} && \
+  FS_elem_functions < ${#FS_functions[@]}; )); do
+    FS_tmp_func=${FS_functions[$FS_elem_functions]}
+    FS_tmp_libc=${FS_chk_func_libc[$FS_elem_libc]}
 
-      if [[ ${FS_tmp_func} =~ ^${FS_tmp_libc}$ ]]; then
-        if [[ ${format} == "cli" ]]; then
-          printf " \033[31m%-30s\033[m | __%s%s\n" "${FS_tmp_func}" "${FS_tmp_libc}" "${FS_end}"
-        else
-          if [[ $FS_elem_functions == 0 ]]; then
-            echo_message "" "${FS_tmp_func},${FS_tmp_libc},yes\n" "    <function name='${FS_tmp_func}' libc='${FS_tmp_libc}' fortifiable='yes' />\n" ", \"function\": { \"name\":\"${FS_tmp_func}\", \"libc\":\"${FS_tmp_libc}\", \"fortifiable\":\"yes\" }"
-          elif [[ $FS_elem_functions == $((${#FS_functions[@]} - 1)) ]]; then
-            echo_message "" "${FS_tmp_func},${FS_tmp_libc},yes\n" "    <function name='${FS_tmp_func}' libc='${FS_tmp_libc}' fortifiable='yes' />\n" ", \"function\": { \"name\":\"${FS_tmp_func}\", \"libc\":\"${FS_tmp_libc}\", \"fortifiable\":\"yes\" }"
-          else
-            echo_message "" "${FS_tmp_func},${FS_tmp_libc},yes\n" "    <function name='${FS_tmp_func}' libc='${FS_tmp_libc}' fortifiable='yes' />\n" ", \"function\": { \"name\":\"${FS_tmp_func}\", \"libc\":\"${FS_tmp_libc}\", \"fortifiable\":\"yes\" }"
-          fi
-        fi
-        ((FS_cnt_total++))
-        ((FS_cnt_unchecked++))
-      elif [[ ${FS_tmp_func} =~ ^${FS_tmp_libc}(_chk)$ ]]; then
-        if [[ ${format} == "cli" ]]; then
-          printf " \033[32m%-30s\033[m | __%s%s\n" "${FS_tmp_func}" "${FS_tmp_libc}" "${FS_end}"
-        else
-          if [[ $FS_elem_functions == 0 ]]; then
-            echo_message "" "${FS_tmp_func},${FS_tmp_libc},no\n" "    <function name='${FS_tmp_func}' libc='${FS_tmp_libc}' fortifiable='no' />\n" ", \"function\": { \"name\":\"${FS_tmp_func}\", \"libc\":\"${FS_tmp_libc}\", \"fortifiable\":\"no\" }"
-          elif [[ $FS_elem_functions == $((${#FS_functions[@]} - 1)) ]]; then
-            echo_message "" "${FS_tmp_func},${FS_tmp_libc},no\n" "    <function name='${FS_tmp_func}' libc='${FS_tmp_libc}' fortifiable='no' />\n" ", \"function\": { \"name\":\"${FS_tmp_func}\", \"libc\":\"${FS_tmp_libc}\", \"fortifiable\":\"no\" }"
-          else
-            echo_message "" "${FS_tmp_func},${FS_tmp_libc},no\n" "    <function name='${FS_tmp_func}' libc='${FS_tmp_libc}' fortifiable='no' />\n" ", \"function\": { \"name\":\"${FS_tmp_func}\", \"libc\":\"${FS_tmp_libc}\", \"fortifiable\":\"no\" }"
-          fi
-        fi
-        ((FS_cnt_total++))
-        ((FS_cnt_checked++))
+    if [[ ${FS_tmp_func} < ${FS_tmp_libc} ]]; then
+      ((FS_elem_functions++))
+    elif [[ ${FS_tmp_func} == "${FS_tmp_libc}" ]]; then
+      if [[ ${format} == "cli" ]]; then
+        printf " \033[31m%-30s\033[m | __%s%s\n" "${FS_tmp_func}" "${FS_tmp_libc}" "${FS_end}"
+      else
+        echo_message "" "${FS_tmp_func},${FS_tmp_libc},yes\n" "    <function name='${FS_tmp_func}' libc='${FS_tmp_libc}' fortifiable='yes' />\n" ", \"function\": { \"name\":\"${FS_tmp_func}\", \"libc\":\"${FS_tmp_libc}\", \"fortifiable\":\"yes\" }"
       fi
-
-    done
+      ((FS_cnt_total++))
+      ((FS_cnt_unchecked++))
+      ((FS_elem_functions++))
+      # HERE LIES DRAGONS. If you advance the libc pointer now, you will miss the _chk!
+    elif [[ ${FS_tmp_func} < ${FS_tmp_libc}_chk ]]; then
+      ((FS_elem_functions++))
+    elif [[ ${FS_tmp_func} == "${FS_tmp_libc}_chk" ]]; then
+      if [[ ${format} == "cli" ]]; then
+        printf " \033[32m%-30s\033[m | __%s%s\n" "${FS_tmp_func}" "${FS_tmp_libc}" "${FS_end}"
+      else
+        echo_message "" "${FS_tmp_func},${FS_tmp_libc},no\n" "    <function name='${FS_tmp_func}' libc='${FS_tmp_libc}' fortifiable='no' />\n" ", \"function\": { \"name\":\"${FS_tmp_func}\", \"libc\":\"${FS_tmp_libc}\", \"fortifiable\":\"no\" }"
+      fi
+      ((FS_cnt_total++))
+      ((FS_cnt_checked++))
+      ((FS_elem_functions++))
+      ((FS_elem_libc++))
+    else
+      #  [[ ${FS_tmp_func} > ${FS_tmp_libc}_chk ]]
+      ((FS_elem_libc++))
+    fi
   done
 }
 
