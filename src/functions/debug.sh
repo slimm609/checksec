@@ -65,7 +65,7 @@ debug_report() {
     fi
   done
 
-  if [[ ${failed} ]]; then
+  if ${failed}; then
     exit 1
   fi
 }
