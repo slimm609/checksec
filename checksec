@@ -174,7 +174,7 @@ aslrcheck() {
     fi
   else
     # standard Linux 'kernel.randomize_va_space' ASLR support
-    # (see the kernel file 'Documentation/sysctl/kernel.txt' for a detailed description)
+    # (see the kernel file 'Documentation/admin-guide/sysctl/kernel.rst' for a detailed description)
     echo_message " (kernel.randomize_va_space): " '' '' ''
     if sysctl -a 2> /dev/null | grep -q 'kernel\.randomize_va_space = 1'; then
       echo_message '\033[33mPartial (Setting: 1)\033[m\n\n' '' '' ''
@@ -192,7 +192,7 @@ aslrcheck() {
     else
       echo_message '\033[31mNot supported\033[m\n' '' '' ''
     fi
-    echo_message "  See the kernel file 'Documentation/sysctl/kernel.txt' for more details.\n\n" '' '' ''
+    echo_message "  See the kernel file 'Documentation/admin-guide/sysctl/kernel.rst' for more details.\n\n" '' '' ''
   fi
 }
 
