@@ -267,6 +267,13 @@ for bin in none none32 none_cl none_cl32; do
     exit 1
   fi
 done
+# N/A
+for bin in rel.o rel32.o rel_cl.o rel_cl32.o; do
+  if [[ $("${PARENT}"/checksec --file="${DIR}/binaries/${bin}" --format=csv | cut -d, -f8) != "N/A" ]]; then
+    echo "No Fortify validation failed on \"${bin}\": $("${PARENT}"/checksec --file="${DIR}/binaries/${bin}" --format=csv | cut -d, -f8)"
+    exit 1
+  fi
+done
 echo "Fortify validation tests passed"
 
 #============================================
