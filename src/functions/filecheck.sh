@@ -17,8 +17,14 @@ filecheck() {
     echo_message '\033[31mNo RELRO     \033[m   ' 'No RELRO,' '<file relro="no"' " \"${1}\": { \"relro\":\"no\","
   fi
 
+  # fallback on dynamic section to retrieve symbols when symbol table is unavailable
+  use_dynamic=
+  if [[ $(${readelf} -s "${1}" 2> /dev/null) =~ "Dynamic symbol information is not available" ]]; then
+    use_dynamic="--use-dynamic"
+  fi
+
   # check for stack canary support
-  if ${readelf} -s "${1}" 2> /dev/null | grep " UND " | grep -Eq '__stack_chk_fail|__stack_chk_guard|__intel_security_cookie'; then
+  if ${readelf} -s "${use_dynamic}" "${1}" 2> /dev/null | grep " UND " | grep -Eq '__stack_chk_fail|__stack_chk_guard|__intel_security_cookie'; then
     echo_message '\033[32mCanary found   \033[m   ' 'Canary found,' ' canary="yes"' '"canary":"yes",'
   else
     echo_message '\033[31mNo canary found\033[m   ' 'No Canary found,' ' canary="no"' '"canary":"no",'
@@ -65,16 +71,16 @@ filecheck() {
   if ${extended_checks}; then
     # check if compiled with Clang CFI
     #if $readelf -s "$1" 2>/dev/null | grep -Eq '\.cfi'; then
-    read -r cfifunc <<< "$($readelf -s "${1}" 2> /dev/null | grep '\.cfi' | awk '{ print $8 }')"
+    read -r cfifunc <<< "$($readelf -s "${use_dynamic}" "${1}" 2> /dev/null | grep '\.cfi' | awk '{ print $8 }')"
     func=${cfifunc/.cfi/}
-    if [ -n "$cfifunc" ] && $readelf -s "$1" 2> /dev/null | grep -q "$func$"; then
+    if [ -n "$cfifunc" ] && $readelf -s "${use_dynamic}" "$1" 2> /dev/null | grep -q "$func$"; then
       echo_message '\033[32mClang CFI found   \033[m   ' 'with CFI,' ' clangcfi="yes"' '"clangcfi":"yes",'
     else
       echo_message '\033[31mNo Clang CFI found\033[m   ' 'without CFI,' ' clangcfi="no"' '"clangcfi":"no",'
     fi
 
     # check if compiled with Clang SafeStack
-    if $readelf -s "$1" 2> /dev/null | grep -Eq '__safestack_init'; then
+    if $readelf -s "${use_dynamic}" "$1" 2> /dev/null | grep -Eq '__safestack_init'; then
       echo_message '\033[32mSafeStack found   \033[m   ' 'with SafeStack,' ' safestack="yes"' '"safestack":"yes",'
     else
       echo_message '\033[31mNo SafeStack found\033[m   ' 'without SafeStack,' ' safestack="no"' '"safestack":"no",'
@@ -120,14 +126,14 @@ filecheck() {
   if ${readelf} --symbols "${1}" 2> /dev/null | grep -q '\.symtab'; then
     echo_message "\033[31m${SYM_cnt[0]} Symbols\t\033[m  " 'Symbols,' ' symbols="yes"' '"symbols":"yes",'
   else
-    echo_message '\033[32mNo Symbols\t\033[m  ' 'No Symbols,' ' symbols="no"' '"symbols":"no",'
+    echo_message '\033[32mNo Symbols\t\033[m' 'No Symbols,' ' symbols="no"' '"symbols":"no",'
   fi
 
   search_libc
 
-  FS_filechk_func_libc="$(${readelf} -s "${FS_libc}" 2> /dev/null | sed -ne 's/.*__\(.*_chk\)@@.*/\1/p')"
+  FS_filechk_func_libc="$(${readelf} -s "${use_dynamic}" "${FS_libc}" 2> /dev/null | sed -ne 's/.*__\(.*_chk\)@@.*/\1/p')"
   FS_func_libc="${FS_filechk_func_libc//_chk/}"
-  FS_func="$(${readelf} --dyn-syms "${1}" 2> /dev/null | awk '{ print $8 }' | sed -e 's/_*//' -e 's/@.*//' -e '/^$/d')"
+  FS_func="$(${readelf} -s "${use_dynamic}" "${1}" 2> /dev/null | awk '{ print $8 }' | sed -e 's/_*//' -e 's/@.*//' -e '/^$/d')"
   FS_cnt_checked=$(grep -cFxf <(sort <<< "${FS_filechk_func_libc}") <(sort <<< "${FS_func}"))
   FS_cnt_unchecked=$(grep -cFxf <(sort <<< "${FS_func_libc}") <(sort <<< "${FS_func}"))
   FS_cnt_total=$((FS_cnt_unchecked + FS_cnt_checked))
