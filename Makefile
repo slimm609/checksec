@@ -1,4 +1,3 @@
-# ----------------------------------------------------------------------------
 SHELL = bash
 
 .PHONY: build
@@ -9,3 +8,8 @@ build:
 .PHONY: test
 test:
 	./tests/test-checksec.sh
+
+.PHONY: compose-test
+compose-test:
+	docker-compose build
+	docker-compose run

@@ -12,7 +12,7 @@ repos:
     language: system
     pass_filenames: false
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.2.0
+  rev: v4.5.0
   hooks:
   - id: end-of-file-fixer
   - id: trailing-whitespace
@@ -28,7 +28,7 @@ repos:
   - id: shellcheck
     files: ^checksec$
 - repo: https://github.com/Lucas-C/pre-commit-hooks
-  rev: v1.2.0
+  rev: v1.5.5
   hooks:
   - id: forbid-crlf
   - id: remove-crlf
