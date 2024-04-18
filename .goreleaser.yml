@@ -1,0 +1,35 @@
+project_name: checksec
+
+builds:
+  - id: linux
+    binary: checksec
+    main: ./main.go
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      #- amd64
+      - arm64
+
+  - id: darwin
+    binary: checksec
+    main: ./main.go
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+    goarch:
+      #- amd64
+      - arm64
+
+  # - id: windows
+  #   binary: checksec
+  #   main: ./main.go
+  #   goos:
+  #     - windows
+  #   goarch:
+  #     - amd64
+  #     - arm64
+  #   ldflags:
+  #     - -buildmode=exe
