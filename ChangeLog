@@ -1,3 +1,49 @@
+Rev-2024042101 Brian Davis <slimm609@gmail.com>
+  * Update to 2.7.0
+  * libc cleanup
+  * Added github pages
+  * Check kernel for YAMA
+    Thanks @cgzones
+  * Fix Nx checks
+  * Move github primary branch from master to main
+  * Update gitattributes
+    Thanks @calebTree
+  * Allow setting a libc file
+    Thanks @sreschke80
+  * Add tests for listfile
+    Thanks @ysmaoui
+  * Fix trailing comma with listfile
+    Thanks @ysmaoui
+  * Several shellcheck fixes
+    Thanks @ysmaoui
+  * If no header is present, return N/A for Relro and nx
+    Thanks @petervas
+  * Remove superfluous -W flags
+    Thanks @@petervas
+  * Fix broken Nx checks
+    Thanks @petervas
+  * change default libc search path from / to /lib
+    Thanks @petervas
+  * Cleanup grep
+    Thanks @petervas
+  * Rewrite man page in mdoc
+    Thanks @Artoria2e5
+  * Remove s_readelf
+    Thanks @petervas
+  * Fix stack protection and full relro check
+    Thanks @petervas
+  * Add tests suite for hardening checks
+    Thanks @petervas
+  * Speed up FS_comparison by 10x
+    Thanks @petervas
+  * Make shellcheck only run on final script
+    Thanks @petervas
+  * Fix debug exit check
+    Thanks @katexochen
+  * Use Dynamic Section if there is no symbols table
+    Thanks @ffontaine
+  * Check foritfy vs fortified
+    Thanks @azat
 Rev-2022052701 Brian Davis <slimm609@gmail.com>
   * update to 2.6.0
   * fix missing sysctl on fedora

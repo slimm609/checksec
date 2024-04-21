@@ -11,7 +11,7 @@ Updates
    - All options now require `--$option=$value` instead of `--$option $value`
    - --extended option now includes clang CFI and safe stack checks
 
-   Last Update: 2022-05-27
+   Last Update: 2024-04-20
 
 For OSX
 -------
