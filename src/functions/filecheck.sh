@@ -138,10 +138,18 @@ filecheck() {
   FS_cnt_unchecked=$(grep -cFxf <(sort <<< "${FS_func_libc}") <(sort <<< "${FS_func}"))
   FS_cnt_total=$((FS_cnt_unchecked + FS_cnt_checked))
 
-  if [[ $FS_cnt_checked -eq $FS_cnt_total ]]; then
-    echo_message '\033[32mYes\033[m' 'Yes,' ' fortify_source="yes" ' '"fortify_source":"yes",'
+  if [[ "${FS_cnt_total}" == "0" ]]; then
+    echo_message "\033[32mN/A\033[m" "N/A," ' fortify_source="n/a" ' '"fortify_source":"n/a",'
   else
-    echo_message "\033[31mNo\033[m" "No," ' fortify_source="no" ' '"fortify_source":"no",'
+    if [[ $FS_cnt_checked -eq $FS_cnt_total ]]; then
+      echo_message '\033[32mYes\033[m' 'Yes,' ' fortify_source="yes" ' '"fortify_source":"yes",'
+    else
+      if [[ "${FS_cnt_checked}" == "0" ]]; then
+        echo_message "\033[31mNo\033[m" "No," ' fortify_source="no" ' '"fortify_source":"no",'
+      else
+        echo_message "\033[33mPartial\033[m" "Partial," ' fortify_source="partial" ' '"fortify_source":"partial",'
+      fi
+    fi
   fi
   echo_message "\t${FS_cnt_checked}\t" "${FS_cnt_checked}", "fortified=\"${FS_cnt_checked}\" " "\"fortified\":\"${FS_cnt_checked}\","
   echo_message "\t${FS_cnt_total}\t\t" "${FS_cnt_total}" "fortify-able=\"${FS_cnt_total}\"" "\"fortify-able\":\"${FS_cnt_total}\""
