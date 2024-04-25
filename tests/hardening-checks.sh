@@ -252,7 +252,7 @@ echo "Symbols validation tests passed"
 
 #============================================
 
-echo "Starting Foritfy check"
+echo "Starting Fortify check"
 # Yes
 for bin in all all32 all_cl all_cl32; do
   if [[ $("${PARENT}"/checksec --file="${DIR}/binaries/${bin}" --format=csv | cut -d, -f8) != "Yes" ]]; then
@@ -264,6 +264,20 @@ done
 for bin in none none32 none_cl none_cl32; do
   if [[ $("${PARENT}"/checksec --file="${DIR}/binaries/${bin}" --format=csv | cut -d, -f8) != "No" ]]; then
     echo "No Fortify validation failed on \"${bin}\""
+    exit 1
+  fi
+done
+# N/A
+for bin in rel.o rel32.o rel_cl.o rel_cl32.o; do
+  if [[ $("${PARENT}"/checksec --file="${DIR}/binaries/${bin}" --format=csv | cut -d, -f8) != "N/A" ]]; then
+    echo "No Fortify validation failed on \"${bin}\": $("${PARENT}"/checksec --file="${DIR}/binaries/${bin}" --format=csv | cut -d, -f8)"
+    exit 1
+  fi
+done
+# Partial
+for bin in partial partial32 partial_cl partial_cl32; do
+  if [[ $("${PARENT}"/checksec --file="${DIR}/binaries/${bin}" --format=csv | cut -d, -f8) != "Partial" ]]; then
+    echo "No Fortify validation failed on \"${bin}\": $("${PARENT}"/checksec --file="${DIR}/binaries/${bin}" --format=csv | cut -d, -f8)"
     exit 1
   fi
 done
