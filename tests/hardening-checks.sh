@@ -275,7 +275,7 @@ for bin in rel.o rel32.o rel_cl.o rel_cl32.o; do
   fi
 done
 # Partial
-for bin in rel.o rel32.o rel_cl.o rel_cl32.o; do
+for bin in partial partial32 partial_cl partial_cl32; do
   if [[ $("${PARENT}"/checksec --file="${DIR}/binaries/${bin}" --format=csv | cut -d, -f8) != "Partial" ]]; then
     echo "No Fortify validation failed on \"${bin}\": $("${PARENT}"/checksec --file="${DIR}/binaries/${bin}" --format=csv | cut -d, -f8)"
     exit 1
