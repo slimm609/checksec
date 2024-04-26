@@ -2,9 +2,9 @@ FROM ubuntu:22.04
 
 # Install dependencies
 RUN apt-get update && apt-get -y -q upgrade && DEBIAN_FRONTEND=noninteractive apt-get -y -q install \
-  bc bison flex build-essential ccache git file \
+  bc bison flex build-essential git file \
   libncurses-dev libssl-dev u-boot-tools wget \
-  xz-utils vim xfce4 libxml2-utils python3 python3-pip jq \
+  xz-utils vim libxml2-utils python3 python3-pip jq \
   gcc clang gcc-multilib && apt-get clean \
   pip3 install --upgrade pip && pip3 install setuptools && \
   pip3 install demjson3 && mkdir -p /zig && \
