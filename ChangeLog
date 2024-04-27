@@ -42,7 +42,7 @@ Rev-2024042101 Brian Davis <slimm609@gmail.com>
     Thanks @katexochen
   * Use Dynamic Section if there is no symbols table
     Thanks @ffontaine
-  * Check foritfy vs fortified
+  * Check fortify vs fortified
     Thanks @azat
 Rev-2022052701 Brian Davis <slimm609@gmail.com>
   * update to 2.6.0
