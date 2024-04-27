@@ -19,17 +19,17 @@ build_config() {
   fi
 }
 
-#build configs for 3.x up to 3.18
-for i in {1..18}; do
-  build_config 3.x 3 "$i"
-done
-
 #build configs for 4.x up to 4.19
 for i in {0..19}; do
   build_config 4.x 4 "$i"
 done
 
-#build configs for 5.x up to 5.10
-for i in {1..10}; do
+#build configs for 5.x up to 5.15
+for i in {1..15}; do
   build_config 5.x 5 "$i"
+done
+
+#build configs for 6.x up to 6.8
+for i in {1..8}; do
+  build_config 6.x 6 "$i"
 done

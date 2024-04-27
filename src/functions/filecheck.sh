@@ -130,15 +130,18 @@ filecheck() {
   fi
 
   search_libc
-
+  libc_found="false"
+  if ${readelf} -d "${1}" 2> /dev/null | grep 'NEEDED' | grep -q 'libc\.so'; then
+    libc_found="true"
+  fi
   FS_filechk_func_libc="$(${readelf} -s "${use_dynamic}" "${FS_libc}" 2> /dev/null | sed -ne 's/.*__\(.*_chk\)@@.*/\1/p')"
   FS_func_libc="${FS_filechk_func_libc//_chk/}"
   FS_func="$(${readelf} -s "${use_dynamic}" "${1}" 2> /dev/null | awk '{ print $8 }' | sed -e 's/_*//' -e 's/@.*//' -e '/^$/d')"
-  FS_cnt_checked=$(grep -cFxf <(sort <<< "${FS_filechk_func_libc}") <(sort <<< "${FS_func}"))
-  FS_cnt_unchecked=$(grep -cFxf <(sort <<< "${FS_func_libc}") <(sort <<< "${FS_func}"))
+  FS_cnt_checked=$(grep -cFxf <(sort -u <<< "${FS_filechk_func_libc}") <(sort -u <<< "${FS_func}"))
+  FS_cnt_unchecked=$(grep -cFxf <(sort -u <<< "${FS_func_libc}") <(sort -u <<< "${FS_func}"))
   FS_cnt_total=$((FS_cnt_unchecked + FS_cnt_checked))
 
-  if [[ "${FS_cnt_total}" == "0" ]]; then
+  if [[ "${libc_found}" == "false" ]] || [[ "${FS_cnt_total}" == "0" ]]; then
     echo_message "\033[32mN/A\033[m" "N/A," ' fortify_source="n/a" ' '"fortify_source":"n/a",'
   else
     if [[ $FS_cnt_checked -eq $FS_cnt_total ]]; then

@@ -1,3 +1,5 @@
 sign-checksec.sh
 checksec.crt
 checksec.key
+tests/binaries/output/
+dist/
