@@ -117,7 +117,7 @@ proccheck() {
     fi
   fi
 
-  #check for forifty source support
+  #check for Fortify source support
   Proc_FS_functions="$(${readelf} -s "${1}/exe" 2> /dev/null | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//')"
   if grep -q '_chk$' <<< "$Proc_FS_functions"; then
     echo_message '\033[32mYes\033[m' 'Yes' " fortify_source='yes'>" '"fortify_source":"yes" }'
