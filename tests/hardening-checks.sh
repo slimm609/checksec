@@ -428,7 +428,7 @@ echo "PIE process validation tests passed"
 
 #============================================
 
-echo "Starting Foritfy process check"
+echo "Starting Fortify process check"
 # Yes
 for bin in all all32 all_cl all_cl32; do
   "${DIR}"/binaries/output/${bin} > /dev/null &
