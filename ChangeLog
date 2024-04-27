@@ -1,3 +1,9 @@
+Rev-2024042601 Brian Davis <slimm609@gmail.com>
+  * Update to 2.7.1
+  * checksec FORTIFY detection (#236)
+    Thanks @teoberi
+  * Fix duplicate entries in fortify count
+  * update tests
 Rev-2024042101 Brian Davis <slimm609@gmail.com>
   * Update to 2.7.0
   * libc cleanup
