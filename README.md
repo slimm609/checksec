@@ -17,7 +17,12 @@ For OSX
 -------
  Most of the tools do not work on mach-O binaries or the OSX kernel, so it is not supported
 
-Manually verify checksec
+**Cosign Verify Checksec**
+
+`cosign verify-blob --signature checksec_new.sig --certificate checksec_new.pub checksec --certificate-identity=slimm609@gmail.com --certificate-oidc-issuer=https://github.com/login/oauth`
+
+**Openssl Verify Checksec**
+Openssl verification is being deprecated in favor of Cosign Verification, which is backed by a hardware security module and provides a greater level of intergrity.
 
 `openssl dgst -sha256 -verify checksec.pub -signature checksec.sig checksec`
 
