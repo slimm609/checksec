@@ -39,7 +39,7 @@ export PS4='+(${BASH_SOURCE##*/}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
 export LC_ALL="C"
 
 # version
-SCRIPT_VERSION=2024042601
+SCRIPT_VERSION=2024042901
 SCRIPT_MAJOR=2
 SCRIPT_MINOR=7
 SCRIPT_REVISION=1
@@ -1608,7 +1608,7 @@ proccheck() {
     fi
   fi
 
-  #check for forifty source support
+  #check for Fortify source support
   Proc_FS_functions="$(${readelf} -s "${1}/exe" 2> /dev/null | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//')"
   if grep -q '_chk$' <<< "$Proc_FS_functions"; then
     echo_message '\033[32mYes\033[m' 'Yes' " fortify_source='yes'>" '"fortify_source":"yes" }'
