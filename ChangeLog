@@ -25,7 +25,7 @@ Rev-2024042101 Brian Davis <slimm609@gmail.com>
   * If no header is present, return N/A for Relro and nx
     Thanks @petervas
   * Remove superfluous -W flags
-    Thanks @@petervas
+    Thanks @petervas
   * Fix broken Nx checks
     Thanks @petervas
   * change default libc search path from / to /lib
@@ -41,9 +41,9 @@ Rev-2024042101 Brian Davis <slimm609@gmail.com>
   * Add tests suite for hardening checks
     Thanks @petervas
   * Speed up FS_comparison by 10x
-    Thanks @petervas
+    Thanks @Artoria2e5
   * Make shellcheck only run on final script
-    Thanks @petervas
+    Thanks @Artoria2e5
   * Fix debug exit check
     Thanks @katexochen
   * Use Dynamic Section if there is no symbols table
