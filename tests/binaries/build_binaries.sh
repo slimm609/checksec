@@ -52,11 +52,11 @@ clang -m32 -shared -fPIC -o output/dso_cl32.so test.c -w -D_FORTIFY_SOURCE=2 -fs
 
 # Fortify source
 set +x
-if  ! command -v nasm >/dev/null 2>&1 ; then
+if ! command -v nasm >/dev/null 2>&1; then
   printf "\033[31mError: This script requires Netwide Assembler (NASM) to be installed and on your PATH ...\033[m\n\n"
   exit 1
-else 
-set -x
+else
+  set -x
   nasm -f elf64 -o nolibc.o nolibc.asm
   nasm -f elf32 -o nolibc32.o nolibc32.asm
 fi
