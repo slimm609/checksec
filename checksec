@@ -1611,7 +1611,7 @@ proccheck() {
   #check for Fortify source support
   search_libc
   libc_found="false"
-  if ${readelf} -d "`readlink ${1}/exe`" 2> /dev/null | grep 'NEEDED' | grep -q 'libc\.so'; then
+  if ${readelf} -d "$(readlink "${1}"/exe)" 2> /dev/null | grep 'NEEDED' | grep -q 'libc\.so'; then
     libc_found="true"
   fi
   Proc_FS_filechk_func_libc="$(${readelf} -s "${use_dynamic}" "${FS_libc}" 2> /dev/null | sed -ne 's/.*__\(.*_chk\)@@.*/\1/p')"
