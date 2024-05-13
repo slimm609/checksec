@@ -50,12 +50,15 @@ clang -m32 -o output/none_cl32 test.c -w -D_FORTIFY_SOURCE=0 -fno-stack-protecto
 clang -m32 -c test.c -o output/rel_cl32.o
 clang -m32 -shared -fPIC -o output/dso_cl32.so test.c -w -D_FORTIFY_SOURCE=2 -fstack-protector-strong -O2 -z relro -z now -z noexecstack -s
 
-gcc -o output/nolibc main.c start.S hello.S -w -nostdlib -no-pie -s
-clang -o output/nolibc_cl main.c start.S hello.S -w -nostdlib -no-pie -s
-gcc -m32 -o output/nolibc32 main.c start.S hello.S -w -nostdlib -no-pie -s
-clang -m32 -o output/nolibc_cl32 main.c start.S hello.S -w -nostdlib -no-pie -s
+# Fortify source
+nasm -f elf64 -o nolibc.o nolibc.asm
+nasm -f elf32 -o nolibc32.o nolibc32.asm
+gcc -o output/nolibc nolibc.o -w -nostdlib -no-pie -s
+clang -o output/nolibc_cl nolibc.o -w -nostdlib -no-pie -s
+gcc -m32 -o output/nolibc32 nolibc32.o -w -nostdlib -no-pie -s
+clang -m32 -o output/nolibc_cl32 nolibc32.o -w -nostdlib -no-pie -s
 
-gcc -o output/fszero helloworld.c -w -D_FORTIFY_SOURCE=0 -O2 -s
-clang -o output/fszero_cl helloworld.c -w -D_FORTIFY_SOURCE=0 -O2 -s
-gcc -m32 -o output/fszero32 helloworld.c -w -D_FORTIFY_SOURCE=0 -O2 -s
-clang -m32 -o output/fszero_cl32 helloworld.c -w -D_FORTIFY_SOURCE=0 -O2 -s
+gcc -o output/fszero fszero.c -w -D_FORTIFY_SOURCE=0 -O2 -s
+clang -o output/fszero_cl fszero.c -w -D_FORTIFY_SOURCE=0 -O2 -s
+gcc -m32 -o output/fszero32 fszero.c -w -D_FORTIFY_SOURCE=0 -O2 -s
+clang -m32 -o output/fszero_cl32 fszero.c -w -D_FORTIFY_SOURCE=0 -O2 -s
