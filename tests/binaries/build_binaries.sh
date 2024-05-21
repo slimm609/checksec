@@ -50,7 +50,7 @@ clang -m32 -o output/none_cl32 test.c -w -D_FORTIFY_SOURCE=0 -fno-stack-protecto
 clang -m32 -c test.c -o output/rel_cl32.o
 clang -m32 -shared -fPIC -o output/dso_cl32.so test.c -w -D_FORTIFY_SOURCE=2 -fstack-protector-strong -O2 -z relro -z now -z noexecstack -s
 
-# Fortify source
+# Fortify source (installation of NASM assembler is recommended)
 nasm -f elf64 -o nolibc.o nolibc.asm
 nasm -f elf32 -o nolibc32.o nolibc32.asm
 gcc -o output/nolibc nolibc.o -w -nostdlib -no-pie -s
