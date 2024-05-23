@@ -1609,11 +1609,30 @@ proccheck() {
   fi
 
   #check for Fortify source support
-  Proc_FS_functions="$(${readelf} -s "${1}/exe" 2> /dev/null | awk '{ print $8 }' | sed 's/_*//' | sed -e 's/@.*//')"
-  if grep -q '_chk$' <<< "$Proc_FS_functions"; then
-    echo_message '\033[32mYes\033[m' 'Yes' " fortify_source='yes'>" '"fortify_source":"yes" }'
+  search_libc
+  libc_found="false"
+  if ${readelf} -d "$(readlink "${1}"/exe)" 2> /dev/null | grep 'NEEDED' | grep -q 'libc\.so'; then
+    libc_found="true"
+  fi
+  Proc_FS_filechk_func_libc="$(${readelf} -s "${use_dynamic}" "${FS_libc}" 2> /dev/null | sed -ne 's/.*__\(.*_chk\)@@.*/\1/p')"
+  Proc_FS_func_libc="${Proc_FS_filechk_func_libc//_chk/}"
+  Proc_FS_func="$(${readelf} -s "${use_dynamic}" "${1}/exe" 2> /dev/null | awk '{ print $8 }' | sed -e 's/_*//' -e 's/@.*//' -e '/^$/d')"
+  Proc_FS_cnt_checked=$(grep -cFxf <(sort -u <<< "${Proc_FS_filechk_func_libc}") <(sort -u <<< "${Proc_FS_func}"))
+  Proc_FS_cnt_unchecked=$(grep -cFxf <(sort -u <<< "${Proc_FS_func_libc}") <(sort -u <<< "${Proc_FS_func}"))
+  Proc_FS_cnt_total=$((Proc_FS_cnt_unchecked + Proc_FS_cnt_checked))
+
+  if [[ "${libc_found}" == "false" ]] || [[ "${Proc_FS_cnt_total}" == "0" ]]; then
+    echo_message "\033[32mN/A\033[m" "N/A," ' fortify_source="n/a">' '"fortify_source":"n/a" }'
   else
-    echo_message "\033[31mNo\033[m" "No" " fortify_source='no'>" '"fortify_source":"no" }'
+    if [[ $Proc_FS_cnt_checked -eq $Proc_FS_cnt_total ]]; then
+      echo_message '\033[32mYes\033[m' 'Yes,' ' fortify_source="yes">' '"fortify_source":"yes" }'
+    else
+      if [[ "${Proc_FS_cnt_checked}" == "0" ]]; then
+        echo_message "\033[31mNo\033[m" "No," ' fortify_source="no">' '"fortify_source":"no" }'
+      else
+        echo_message "\033[33mPartial\033[m" "Partial," ' fortify_source="partial">' '"fortify_source":"partial" }'
+      fi
+    fi
   fi
 }
 
