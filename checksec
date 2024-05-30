@@ -110,8 +110,8 @@ search_libc() {
         LIBC_SEARCH_PATH=${LIBC_FILE}
       fi
     # otherwise use ldconfig to get the libc location
-    elif [[ -f $(ldconfig -p | grep libc.so | awk '{print $4}' | head -n 1) ]]; then
-      FS_libc=$(ldconfig -p | grep libc.so | awk '{print $4}' | head -n 1)
+    elif [[ -f $(ldconfig -p | grep 'libc\.so' | awk '{print $4}' | head -n 1) ]]; then
+      FS_libc=$(ldconfig -p | grep 'libc\.so' | awk '{print $4}' | head -n 1)
     fi
 
     # if a search path was given or ldconfig failed we need to search for libc
