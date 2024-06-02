@@ -53,7 +53,7 @@ command_exists() {
   type "${1}" > /dev/null 2>&1
 }
 
-for command in cat awk sed sysctl objdump uname mktemp openssl grep stat file find sort head ps readlink basename id which xargs ldd tr; do
+for command in cat awk sed sysctl objdump uname mktemp openssl grep stat file find sort head ps readlink basename id which xargs ldconfig tr; do
   if ! (command_exists ${command}); then
     echo >&2 -e "\e[31mWARNING: '${command}' not found! It's required for most checks.\e[0m"
     commandsmissing=true
@@ -76,17 +76,17 @@ search_libc() {
       elif [[ -d "${LIBC_FILE}" ]]; then
         LIBC_SEARCH_PATH=${LIBC_FILE}
       fi
-    # otherwise use ldd to get the libc location
-    elif [[ -f $(ldd "$(command -v grep)" 2> /dev/null | grep 'libc\.so' | cut -d' ' -f3) ]]; then
-      FS_libc=$(ldd "$(command -v grep)" 2> /dev/null | grep 'libc\.so' | cut -d' ' -f3)
+    # otherwise use ldconfig to get the libc location
+    elif [[ -f $(ldconfig -p | grep 'libc\.so' | awk '{print $4}' | head -n 1) ]]; then
+      FS_libc=$(ldconfig -p | grep 'libc\.so' | awk '{print $4}' | head -n 1)
     fi
 
-    # if a search path was given or ldd failed we need to search for libc
+    # if a search path was given or ldconfig failed we need to search for libc
     if [[ -z ${FS_libc} ]]; then
       # if a search path was specified, look for libc in LIBC_SEARCH_PATH
       if [[ -n "${LIBC_SEARCH_PATH}" ]]; then
         FS_libc=$(find "${LIBC_SEARCH_PATH}" \( -name "libc.so.6" -o -name "libc.so.7" -o -name "libc.so" \) -print -quit 2> /dev/null)
-      # if ldd failed, then as a last resort search for libc in "/lib/", "/lib64/" and "/"
+      # if ldconfig failed, then as a last resort search for libc in "/lib/", "/lib64/" and "/"
       else
         FS_libc=$(find /lib/ /lib64/ / \( -name "libc.so.6" -o -name "libc.so.7" -o -name "libc.so" \) -print -quit 2> /dev/null)
       fi
