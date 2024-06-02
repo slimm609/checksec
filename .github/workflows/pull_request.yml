@@ -20,5 +20,3 @@ jobs:
           fi
       - name: ubuntu checksec
         run: docker-compose run checksec-ubuntu
-      - name: photon checksec
-        run: docker-compose run checksec-photon

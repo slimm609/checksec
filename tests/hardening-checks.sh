@@ -276,13 +276,6 @@ for bin in nolibc nolibc_cl nolibc32 nolibc_cl32 fszero fszero_cl fszero32 fszer
     exit 1
   fi
 done
-# Partial
-for bin in partial partial32 partial_cl partial_cl32; do
-  if [[ $("${PARENT}"/checksec --file="${DIR}/binaries/output/${bin}" --format=csv | cut -d, -f8) != "Partial" ]]; then
-    echo "No Fortify validation failed on \"${bin}\": $("${PARENT}"/checksec --file="${DIR}/binaries/${bin}" --format=csv | cut -d, -f8)"
-    exit 1
-  fi
-done
 echo "Fortify validation tests passed"
 
 #============================================
@@ -449,14 +442,6 @@ done
 for bin in nolibc nolibc_cl nolibc32 nolibc_cl32 fszero fszero_cl fszero32 fszero_cl32; do
   "${DIR}"/binaries/output/${bin} > /dev/null &
   if [[ $("${PARENT}"/checksec --proc=${bin} --format=csv | cut -d, -f8) != "N/A" ]]; then
-    echo "No Fortify process validation failed on \"${bin}\": $("${PARENT}"/checksec --proc=${bin} --format=csv | cut -d, -f8)"
-    exit 1
-  fi
-done
-# Partial
-for bin in partial partial32 partial_cl partial_cl32; do
-  "${DIR}"/binaries/output/${bin} > /dev/null &
-  if [[ $("${PARENT}"/checksec --proc=${bin} --format=csv | cut -d, -f8) != "Partial" ]]; then
     echo "No Fortify process validation failed on \"${bin}\": $("${PARENT}"/checksec --proc=${bin} --format=csv | cut -d, -f8)"
     exit 1
   fi

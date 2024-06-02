@@ -130,17 +130,11 @@ proccheck() {
   Proc_FS_cnt_unchecked=$(grep -cFxf <(sort -u <<< "${Proc_FS_func_libc}") <(sort -u <<< "${Proc_FS_func}"))
   Proc_FS_cnt_total=$((Proc_FS_cnt_unchecked + Proc_FS_cnt_checked))
 
-  if [[ "${libc_found}" == "false" ]] || [[ "${Proc_FS_cnt_total}" == "0" ]]; then
+  if [[ "${libc_found}" == "false" ]] || [[ "${Proc_FS_cnt_total}" -eq "0" ]]; then
     echo_message "\033[32mN/A\033[m" "N/A," ' fortify_source="n/a">' '"fortify_source":"n/a" }'
+  elif [[ "${Proc_FS_cnt_checked}" -eq "0" ]]; then
+    echo_message "\033[31mNo\033[m" "No," ' fortify_source="no">' '"fortify_source":"no" }'
   else
-    if [[ $Proc_FS_cnt_checked -eq $Proc_FS_cnt_total ]]; then
-      echo_message '\033[32mYes\033[m' 'Yes,' ' fortify_source="yes">' '"fortify_source":"yes" }'
-    else
-      if [[ "${Proc_FS_cnt_checked}" == "0" ]]; then
-        echo_message "\033[31mNo\033[m" "No," ' fortify_source="no">' '"fortify_source":"no" }'
-      else
-        echo_message "\033[33mPartial\033[m" "Partial," ' fortify_source="partial">' '"fortify_source":"partial" }'
-      fi
-    fi
+    echo_message '\033[32mYes\033[m' 'Yes,' ' fortify_source="yes">' '"fortify_source":"yes" }'
   fi
 }

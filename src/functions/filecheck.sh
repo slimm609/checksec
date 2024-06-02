@@ -124,7 +124,7 @@ filecheck() {
   # check for stripped symbols in the binary
   IFS=" " read -r -a SYM_cnt <<< "$(${readelf} --symbols "${1}" 2> /dev/null | grep '\.symtab' | cut -d' ' -f5 | cut -d: -f1)"
   if ${readelf} --symbols "${1}" 2> /dev/null | grep -q '\.symtab'; then
-    echo_message "\033[31m${SYM_cnt[0]} Symbols\t\033[m  " 'Symbols,' ' symbols="yes"' '"symbols":"yes",'
+    echo_message "\033[31m${SYM_cnt[0]} Symbols\t\033[m" 'Symbols,' ' symbols="yes"' '"symbols":"yes",'
   else
     echo_message '\033[32mNo Symbols\t\033[m' 'No Symbols,' ' symbols="no"' '"symbols":"no",'
   fi
@@ -141,18 +141,12 @@ filecheck() {
   FS_cnt_unchecked=$(grep -cFxf <(sort -u <<< "${FS_func_libc}") <(sort -u <<< "${FS_func}"))
   FS_cnt_total=$((FS_cnt_unchecked + FS_cnt_checked))
 
-  if [[ "${libc_found}" == "false" ]] || [[ "${FS_cnt_total}" == "0" ]]; then
+  if [[ "${libc_found}" == "false" ]] || [[ "${FS_cnt_total}" -eq "0" ]]; then
     echo_message "\033[32mN/A\033[m" "N/A," ' fortify_source="n/a" ' '"fortify_source":"n/a",'
+  elif [[ "${FS_cnt_checked}" -eq "0" ]]; then
+    echo_message "\033[31mNo\033[m" "No," ' fortify_source="no" ' '"fortify_source":"no",'
   else
-    if [[ $FS_cnt_checked -eq $FS_cnt_total ]]; then
-      echo_message '\033[32mYes\033[m' 'Yes,' ' fortify_source="yes" ' '"fortify_source":"yes",'
-    else
-      if [[ "${FS_cnt_checked}" == "0" ]]; then
-        echo_message "\033[31mNo\033[m" "No," ' fortify_source="no" ' '"fortify_source":"no",'
-      else
-        echo_message "\033[33mPartial\033[m" "Partial," ' fortify_source="partial" ' '"fortify_source":"partial",'
-      fi
-    fi
+    echo_message '\033[32mYes\033[m' 'Yes,' ' fortify_source="yes" ' '"fortify_source":"yes",'
   fi
   echo_message "\t${FS_cnt_checked}\t" "${FS_cnt_checked}", "fortified=\"${FS_cnt_checked}\" " "\"fortified\":\"${FS_cnt_checked}\","
   echo_message "\t${FS_cnt_total}\t\t" "${FS_cnt_total}" "fortify-able=\"${FS_cnt_total}\"" "\"fortify-able\":\"${FS_cnt_total}\""

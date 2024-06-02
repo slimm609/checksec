@@ -18,6 +18,9 @@ format="cli"
 SCRIPT_NAME="checksec"
 SCRIPT_URL="https://github.com/slimm609/checksec.sh/raw/master/${SCRIPT_NAME}"
 SIG_URL="https://github.com/slimm609/checksec.sh/raw/master/$(basename ${SCRIPT_NAME} .sh).sig"
+# Currently unused, adding for reference
+# https://github.com/gcc-mirror/gcc/blob/master/gcc/builtins.def#L1112
+# FORTIFY_FUNCTIONS=(memcpy_chk memmove_chk mempcpy_chk memset_chk stpcpy_chk stpncpy_chk strcat_chk strcpy_chk strncat_chk strncpy_chk snprintf_chk sprintf_chk vsnprintf_chk vsprintf_chk fprintf_chk printf_chk vfprintf_chk vprintf_chk)
 
 pkg_release=false
 commandsmissing=false
