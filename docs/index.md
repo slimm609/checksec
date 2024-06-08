@@ -71,6 +71,15 @@ SUMMARY:
 * Number of unchecked functions in the executable    : 6
 ```
 
+Note on Fortify results. There is not currently a known way to determine if the binary was compiled with FORTIFY_SOURCE level 1, 2, or 3 in a reliable manner.
+
+Some binaries include some details about how it was compiled. For example, VIM on ubuntu is compiled with `-D_FORTIFY_SOURCE=1`. This can be identified with strings on the binary. Most binaries do not include this data, but some do.
+
+```
+$ strings vim | grep FORTIFY
+gcc -c -I. -Iproto -DHAVE_CONFIG_H -Wdate-time -g -O2 -ffile-prefix-map=/build/vim-CSyBG7/vim-8.2.3995=. -flto=auto -ffat-lto-objects -flto=auto -ffat-lto-objects -fstack-protector-strong -Wformat -Werror=format-security -D_REENTRANT -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=1
+```
+
 #### **Kernel test in Cli**
 ```bash
 $ checksec --kernel
