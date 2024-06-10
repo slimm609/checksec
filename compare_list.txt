@@ -1,0 +1,4 @@
+compare list
+
+/usr/bin/aarch64-linux-gnu-gcov-11
+/usr/bin/systemd-notify

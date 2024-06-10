@@ -32,9 +32,14 @@ repos:
   hooks:
   - id: forbid-crlf
   - id: remove-crlf
-  - id: remove-tabs
-  - id: forbid-tabs
 - repo: https://github.com/sirosen/fix-smartquotes
   rev: 0.2.0
   hooks:
   - id: fix-smartquotes
+- repo: https://github.com/dnephin/pre-commit-golang
+  rev: v0.5.1
+  hooks:
+    - id: go-fmt
+    - id: go-vet
+    # - id: go-lint
+    - id: go-mod-tidy
