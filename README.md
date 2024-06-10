@@ -1,7 +1,7 @@
 checksec
 ========
 
-**Bash version entering feature freeze**
+## Bash version entering feature freeze
 
 Checksec is a bash script to check the properties of executables (like PIE, RELRO, Canaries, ASLR, Fortify Source).
 It has been originally written by Tobias Klein and the original source is available here: http://www.trapkit.de/tools/checksec.html
@@ -10,6 +10,7 @@ It has been originally written by Tobias Klein and the original source is availa
 Updates
 -------
   ** Version 2.7.x should be the last version of checksec in bash
+
   Version 3.x will be released as a golang static binary
   Checksec was originally released with 1.0 in early 2009 and has been used for validating binary checks of Linux systems for over a decade. Over time as more checks were supported and Linux distributions have changed, this has brought more dependencies into checksec. Adding more and more dependenies to be able to check the security flags of files, it not an ideal solution for systems with minor dependencies including embedded systems, distroless containers, and cross platform checks.
   - Feature partial between the bash version and the golang version will be mostly supported.
@@ -21,14 +22,14 @@ Updates
       - golang: real    0m0.691s
   - Adds recursive directory support
   TODO:
-  [] Fix Partial RELRO
-  [] Add fortify file function results
-  [] Add fortifyPorc
-  [] Add ProcLibs
-  [] Add selinux checks
-  [] Add additional kernel flag checks
-  [] Update and Validate all current tests
-  [] Enable golint validation
+  - [ ] Fix Partial RELRO
+  - [ ] Add fortify file function results
+  - [ ] Add fortifyProc
+  - [ ] Add ProcLibs
+  - [ ] Add selinux checks
+  - [ ] Add additional kernel flag checks
+  - [ ] Update and Validate all current tests
+  - [ ] Enable golint validation
 
 For OSX
 -------
