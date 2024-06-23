@@ -25,8 +25,14 @@ func RELRO(name string) *relro {
 	}
 	defer file.Close()
 
-	bind, _ := file.DynValue(24)
-	if len(bind) > 0 && bind[0] == 0 {
+	// check both bind and bind_flag.
+	// if DT_BIND_NOW == 0, then it is set
+	// if DT_FLAGS == 8, then DF_BIND_NOW is set
+	// this is depending on the compiler version used.
+	bind, _ := file.DynValue(elf.DT_BIND_NOW)
+	bind_flag, _ := file.DynValue(elf.DT_FLAGS)
+
+	if (len(bind) > 0 && bind[0] == 0) || (len(bind_flag) > 0 && bind_flag[0] == 8) {
 		bindNow = true
 	}
 
