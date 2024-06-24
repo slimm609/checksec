@@ -37,14 +37,7 @@ func Fortify(name string, binary *elf.File) *fortify {
 
 	ldd := GetLdd(name)
 
-	if ldd == "none" {
-		res.Output = "N/A"
-		res.Color = "green"
-		res.Fortified = "0"
-		res.Fortifiable = "0"
-		res.LibcSupport = "N/A"
-		return &res
-	} else if ldd == "unk" {
+	if ldd == "none" || ldd == "unk" {
 		res.Output = "N/A"
 		res.Color = "unset"
 		res.Fortified = "0"

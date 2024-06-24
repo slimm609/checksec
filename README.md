@@ -22,7 +22,7 @@ Updates
       - golang: real    0m0.691s
   - Adds recursive directory support
   TODO:
-  - [ ] Fix Partial RELRO
+  - [X] Fix Partial RELRO
   - [ ] Add fortify file function results
   - [ ] Add fortifyProc
   - [ ] Add ProcLibs
