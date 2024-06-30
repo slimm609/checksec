@@ -5,7 +5,7 @@ import (
 )
 
 func PrintLogo() {
-	Red := color.New(color.FgHiRed, color.Bold)
+	Red := color.New(color.FgHiGreen, color.Bold)
 	asciiLogo := `
   _____ _    _ ______ _____ _  __ _____ ______ _____
  / ____| |  | |  ____/ ____| |/ // ____|  ____/ ____|
