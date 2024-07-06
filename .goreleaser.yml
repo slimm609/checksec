@@ -4,23 +4,27 @@ builds:
   - id: linux
     binary: checksec
     main: ./main.go
+    flags: -buildmode=pie
+    ldflags: -s -w
     env:
       - CGO_ENABLED=0
     goos:
       - linux
     goarch:
-      #- amd64
+    #  - amd64
       - arm64
 
   - id: darwin
     binary: checksec
     main: ./main.go
+    flags: -buildmode=pie
+    ldflags: -s -w
     env:
       - CGO_ENABLED=0
     goos:
       - darwin
     goarch:
-      #- amd64
+    #  - amd64
       - arm64
 
   # - id: windows

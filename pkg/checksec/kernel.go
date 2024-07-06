@@ -8,11 +8,18 @@ import (
 	"log"
 	"os"
 	"strings"
+
+	"github.com/opencontainers/selinux/go-selinux"
 )
 
 func KernelConfig(name string) ([]interface{}, []interface{}) {
 	var Results []interface{}
 	var ColorResults []interface{}
+	var Secolor string
+	var SelinuxStatus string
+	var Seres []interface{}
+	var Secolors []interface{}
+
 	kernelChecks := []map[string]interface{}{
 		{"name": "CONFIG_COMPAT_BRK", "values": map[string]string{"arch": "all", "expect": "y", "desc": "Kernel Heap Randomization"}},
 		{"name": "CONFIG_STACKPROTECTOR", "values": map[string]string{"arch": "all", "expect": "is not set", "desc": "Stack Protector"}},
@@ -91,6 +98,36 @@ func KernelConfig(name string) ([]interface{}, []interface{}) {
 
 		}
 	}
+
+	sestatus := selinux.GetEnabled()
+	if sestatus {
+		Secolor = "green"
+		SelinuxStatus = "Enabled"
+	} else {
+		Secolor = "red"
+		SelinuxStatus = "Disabled"
+	}
+
+	Seres = []interface{}{
+		map[string]interface{}{
+			"name":  "SELinux",
+			"value": SelinuxStatus,
+			"desc":  "SELinux Enabled",
+			"type":  "SELinux",
+		},
+	}
+	Secolors = []interface{}{
+		map[string]interface{}{
+			"name":  "SELinux",
+			"value": SelinuxStatus,
+			"color": Secolor,
+			"desc":  "SELinux Enabled",
+			"type":  "SELinux",
+		},
+	}
+	Results = append(Results, Seres...)
+	ColorResults = append(ColorResults, Secolors...)
+
 	return Results, ColorResults
 }
 
