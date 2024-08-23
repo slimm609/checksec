@@ -3,6 +3,8 @@ package cmd
 import (
 	"checksec/pkg/checksec"
 	"checksec/pkg/utils"
+	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -12,6 +14,10 @@ var fortifyFileCmd = &cobra.Command{
 	Use:   "fortifyFile",
 	Short: "Check Fortify for binary file",
 	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) != 1 {
+			fmt.Printf("Error: no filename provided")
+			os.Exit(1)
+		}
 		file := args[0]
 
 		utils.CheckElfExists(file)
