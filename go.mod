@@ -3,7 +3,7 @@ module checksec
 go 1.21.4
 
 require (
-	github.com/fatih/color v1.16.0
+	github.com/fatih/color v1.17.0
 	github.com/lorenzosaino/go-sysctl v0.3.1
 	github.com/opencontainers/selinux v1.11.0
 	github.com/shirou/gopsutil/v3 v3.24.5
