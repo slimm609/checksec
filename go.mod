@@ -7,7 +7,7 @@ require (
 	github.com/lorenzosaino/go-sysctl v0.3.1
 	github.com/opencontainers/selinux v1.11.0
 	github.com/shirou/gopsutil/v3 v3.24.5
-	github.com/spf13/cobra v1.8.0
+	github.com/spf13/cobra v1.8.1
 	github.com/u-root/u-root v0.14.0
 	sigs.k8s.io/yaml v1.4.0
 )
