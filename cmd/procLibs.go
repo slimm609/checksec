@@ -10,6 +10,8 @@ import (
 var procLibsCmd = &cobra.Command{
 	Use:   "procLibs",
 	Short: "check process libraries",
+	// hide until refactored
+	Hidden: true,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("procLibs called")
 	},

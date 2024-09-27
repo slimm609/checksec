@@ -1,9 +1,10 @@
 package cmd
 
 import (
-	"checksec/pkg/utils"
 	"fmt"
 	"os"
+
+	"github.com/slimm609/checksec/pkg/utils"
 
 	"path/filepath"
 

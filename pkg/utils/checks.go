@@ -1,8 +1,9 @@
 package utils
 
 import (
-	"checksec/pkg/checksec"
 	"reflect"
+
+	"github.com/slimm609/checksec/pkg/checksec"
 )
 
 // RunFileChecks - Run the file checks

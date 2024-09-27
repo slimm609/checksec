@@ -1,10 +1,11 @@
 package cmd
 
 import (
-	"checksec/pkg/utils"
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/slimm609/checksec/pkg/utils"
 
 	"github.com/shirou/gopsutil/v3/process"
 	"github.com/spf13/cobra"
