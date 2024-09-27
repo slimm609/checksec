@@ -4,6 +4,7 @@
 # if condition becomes more difficult.
 
 set -eou pipefail
+set -x
 
 apt-get update
 apt-get -y -q upgrade
