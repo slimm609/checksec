@@ -1,6 +1,6 @@
 module github.com/slimm609/checksec
 
-go 1.21.4
+go 1.23.1
 
 require (
 	github.com/fatih/color v1.17.0
