@@ -21,4 +21,4 @@ fi
 apt-get clean
 
 pip3 install --upgrade pip
-pip3 install setuptools demjson3
+pip3 install setuptools demjson3 --break-system-packages
