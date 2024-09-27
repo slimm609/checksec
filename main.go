@@ -1,6 +1,6 @@
 package main
 
-import "checksec/cmd"
+import "github.com/slimm609/checksec/cmd"
 
 func main() {
 	cmd.Execute()

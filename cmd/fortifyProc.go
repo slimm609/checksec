@@ -1,11 +1,12 @@
 package cmd
 
 import (
-	"checksec/pkg/checksec"
-	"checksec/pkg/utils"
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/slimm609/checksec/pkg/checksec"
+	"github.com/slimm609/checksec/pkg/utils"
 
 	"github.com/spf13/cobra"
 )

@@ -1,4 +1,4 @@
-module checksec
+module github.com/slimm609/checksec
 
 go 1.21.4
 

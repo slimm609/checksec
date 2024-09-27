@@ -9,10 +9,9 @@ build:
 test:
 	./tests/test-checksec.sh
 
-.PHONY: compose-test
-compose-test: go
-	docker-compose build
-	docker-compose run
+.PHONY: build-image
+build-image:
+	docker build -t slimm609/checksec .
 
 .PHONY: go
 go:
