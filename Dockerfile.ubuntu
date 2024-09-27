@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 # install the build script and run it.
 # this is to give more flexiblity to the build process
