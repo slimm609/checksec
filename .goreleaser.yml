@@ -4,8 +4,11 @@ builds:
   - id: linux
     binary: checksec
     main: ./main.go
-    flags: -buildmode=pie
-    ldflags: -s -w
+    ldflags:
+      - -s -w
+      - -X "main.version={{ .Version }}"
+      - -X "main.commit={{ .Commit }}"
+      - -X "main.date={{ .Date }}"
     env:
       - CGO_ENABLED=0
     goos:
@@ -17,8 +20,11 @@ builds:
   - id: darwin
     binary: checksec
     main: ./main.go
-    flags: -buildmode=pie
-    ldflags: -s -w
+    ldflags:
+      - -s -w
+      - -X "main.version={{ .Version }}"
+      - -X "main.commit={{ .Commit }}"
+      - -X "main.date={{ .Date }}"
     env:
       - CGO_ENABLED=0
     goos:
@@ -30,6 +36,13 @@ builds:
   # - id: windows
   #   binary: checksec
   #   main: ./main.go
+  #   ldflags:
+  #     - -s -w
+  #     - -X "main.version={{ .Version }}"
+  #     - -X "main.commit={{ .Commit }}"
+  #     - -X "main.date={{ .Date }}"
+  #   env:
+  #     - CGO_ENABLED=0
   #   goos:
   #     - windows
   #   goarch:
