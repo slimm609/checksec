@@ -170,7 +170,7 @@ aslrcheck() {
   fi
 
   if grep -q 'PaX:' /proc/1/status 2> /dev/null; then
-    if grep -q 'PaX:' /proc/1/status 2> /dev/null | grep -q 'R'; then
+    if grep 'PaX:' /proc/1/status 2> /dev/null | grep -q 'R'; then
       echo_message '\033[32mPaX ASLR enabled\033[m\n\n' '' '' ''
     else
       echo_message '\033[31mPaX ASLR disabled\033[m\n\n' '' '' ''
