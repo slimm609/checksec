@@ -1,23 +1,32 @@
+version: 2
 project_name: checksec
 
+release:
+  prerelease: auto
+
+env:
+  - DOCKER_CLI_EXPERIMENTAL=enabled
+  - CGO_ENABLED=0
+
 builds:
-  - id: linux
+  - id: core
     binary: checksec
     main: ./main.go
+    buildmode: "pie"
     ldflags:
       - -s -w
       - -X "main.version={{ .Version }}"
       - -X "main.commit={{ .Commit }}"
       - -X "main.date={{ .Date }}"
-    env:
-      - CGO_ENABLED=0
+      - -extldflags "-Wl,-z,relro,-z,now,-z,noexecstack"
     goos:
       - linux
+      - darwin
     goarch:
-    #  - amd64
+      - amd64
       - arm64
 
-  - id: darwin
+  - id: windows
     binary: checksec
     main: ./main.go
     ldflags:
@@ -28,25 +37,9 @@ builds:
     env:
       - CGO_ENABLED=0
     goos:
-      - darwin
+      - windows
     goarch:
-    #  - amd64
+      - amd64
       - arm64
-
-  # - id: windows
-  #   binary: checksec
-  #   main: ./main.go
-  #   ldflags:
-  #     - -s -w
-  #     - -X "main.version={{ .Version }}"
-  #     - -X "main.commit={{ .Commit }}"
-  #     - -X "main.date={{ .Date }}"
-  #   env:
-  #     - CGO_ENABLED=0
-  #   goos:
-  #     - windows
-  #   goarch:
-  #     - amd64
-  #     - arm64
-  #   ldflags:
-  #     - -buildmode=exe
+    ldflags:
+      - -buildmode=exe

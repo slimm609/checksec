@@ -11,6 +11,7 @@ type runpath struct {
 	Color  string
 }
 
+// Detect runpath in binary
 func RUNPATH(name string) *runpath {
 	res := runpath{}
 	file, err := elf.Open(name)
