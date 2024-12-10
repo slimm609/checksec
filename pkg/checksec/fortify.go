@@ -35,7 +35,7 @@ func Fortify(name string, binary *elf.File) *fortify {
 	checked := 0
 	total := 0
 
-	ldd := GetLdd(name)
+	ldd := getLdd(name)
 
 	if ldd == "none" || ldd == "unk" {
 		res.Output = "N/A"
@@ -134,7 +134,7 @@ func Fortify(name string, binary *elf.File) *fortify {
 
 }
 
-func GetLdd(filename string) string {
+func getLdd(filename string) string {
 	dynamic := false
 	file, err := elf.Open(filename)
 	if err != nil {

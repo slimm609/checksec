@@ -1,11 +1,6 @@
 repos:
 - repo: local
   hooks:
-  - id: build_checksec
-    name: build checksec script
-    entry: bash ./hack/build.sh
-    language: system
-    pass_filenames: false
   - id: enable_hooks
     name: enable git hooks
     entry: bash ./hack/enable-git-hooks.sh

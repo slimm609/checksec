@@ -11,6 +11,7 @@ type symbols struct {
 	Color  string
 }
 
+// SYMBOLS detects usage of elf symbols
 func SYMBOLS(name string) *symbols {
 	res := symbols{}
 	file, err := elf.Open(name)
