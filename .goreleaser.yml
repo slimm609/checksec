@@ -34,6 +34,7 @@ builds:
       - -X "main.version={{ .Version }}"
       - -X "main.commit={{ .Commit }}"
       - -X "main.date={{ .Date }}"
+      - -buildmode=exe
     env:
       - CGO_ENABLED=0
     goos:
@@ -41,5 +42,3 @@ builds:
     goarch:
       - amd64
       - arm64
-    ldflags:
-      - -buildmode=exe
