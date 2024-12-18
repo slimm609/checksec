@@ -1,8 +1,11 @@
 package cmd
 
 import (
-	"github.com/slimm609/checksec/pkg/utils"
+	"fmt"
+	"os"
+	"strings"
 
+	"github.com/slimm609/checksec/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -14,8 +17,27 @@ var kernelCmd = &cobra.Command{
 		var configFile string
 		if len(args) > 0 {
 			configFile = args[0]
-		} else {
+		} else if _, err := os.Stat("/proc/config.gz"); err == nil {
 			configFile = "/proc/config.gz"
+		} else {
+			osReleaseFile := "/proc/sys/kernel/osrelease"
+			_, err := os.Stat(osReleaseFile)
+			if err != nil {
+				fmt.Println("Error: could not find kernel config")
+				os.Exit(1)
+			}
+			osReleaseVersion, err := os.ReadFile(osReleaseFile)
+			if err != nil {
+				fmt.Println("Error: could not find kernel config")
+				os.Exit(1)
+			}
+			content := strings.ReplaceAll(string(osReleaseVersion), "\n", "")
+			configFile = fmt.Sprintf("%s-%s", "/boot/config", content)
+			_, err = os.Stat(configFile)
+			if err != nil {
+				fmt.Println("Error: could not find kernel config")
+				os.Exit(1)
+			}
 		}
 
 		utils.CheckFileExists(configFile)
