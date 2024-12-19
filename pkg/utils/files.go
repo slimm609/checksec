@@ -90,6 +90,9 @@ func GetAllFilesFromDir(dirName string, recursive bool) []string {
 		fileList, _ = filepath.Glob(fmt.Sprintf("%s/*", dirName))
 		for _, j := range fileList {
 			dirInfo, _ := os.Stat(j)
+			if dirInfo == nil {
+				continue
+			}
 			if j != "." && !dirInfo.IsDir() && CheckIfElf(j) {
 				results = append(results, j)
 			}
