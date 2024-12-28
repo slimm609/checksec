@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/slimm609/checksec/pkg/utils"
 
@@ -22,11 +23,15 @@ var procAllCmd = &cobra.Command{
 		processes, _ := process.Processes()
 		for _, process := range processes {
 			proc := process.Pid
+			// skip checksec
+			if proc == int32(os.Getpid()) {
+				continue
+			}
 			filePath := filepath.Join("/proc", fmt.Sprint(proc), "exe")
 			file, err := os.Readlink(filePath)
+			file = strings.Split(file, " ")[0]
 			if err != nil {
-				fmt.Printf("Error: Pid %d not found", proc)
-				os.Exit(1)
+				continue
 			}
 			data, color := utils.RunFileChecks(file)
 			Elements = append(Elements, data...)
