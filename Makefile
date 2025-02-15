@@ -1,9 +1,5 @@
 SHELL = bash
-
-.PHONY: build
-build:
-	@echo "Building checksec"
-	./hack/build.sh
+VERSION ?= 3.0.1
 
 .PHONY: test
 test:
@@ -13,6 +9,11 @@ test:
 build-image:
 	docker build -t slimm609/checksec .
 
-.PHONY: go
-go:
+.PHONY: build
+build:
 	goreleaser build --snapshot --clean
+
+.PHONY: release
+release:
+	git tag $(VERSION) -m "release of $(VERSION)"
+	goreleaser release --clean
