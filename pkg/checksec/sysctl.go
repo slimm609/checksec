@@ -23,8 +23,8 @@ func SysctlCheck() ([]interface{}, []interface{}) {
 		{"name": "fs.protected_fifos", "desc": "Protected fifos", "values": map[string]map[string]string{"0": {"res": "Disabled", "color": "red"}, "1": {"res": "Partial", "color": "yellow"}, "2": {"res": "Enabled", "color": "green"}}},
 		{"name": "fs.protected_regular", "desc": "Protected regular", "values": map[string]map[string]string{"0": {"res": "Disabled", "color": "red"}, "1": {"res": "Partial", "color": "yellow"}, "2": {"res": "Enabled", "color": "green"}}},
 		{"name": "kernel.perf_event_paranoid", "desc": "Performance events by normal users", "values": map[string]map[string]string{"-1": {"res": "Disabled", "color": "red"}, "0": {"res": "Disabled", "color": "red"}, "1": {"res": "Partial", "color": "yellow"}, "2": {"res": "Enabled", "color": "green"}}},
-		{"name": "dev.tty.ldisc_autoload", "desc": "Disbale Autoload TTY Line Disciplines", "values": map[string]map[string]string{"1": {"res": "Disabled", "color": "red"}, "0": {"res": "Enabled", "color": "green"}}},
-		{"name": "dev.tty.legacy_tiocsti", "desc": "Disbale Legacy TIOCSTI", "values": map[string]map[string]string{"1": {"res": "Disabled", "color": "red"}, "0": {"res": "Enabled", "color": "green"}}},
+		{"name": "dev.tty.ldisc_autoload", "desc": "Disable Autoload TTY Line Disciplines", "values": map[string]map[string]string{"1": {"res": "Disabled", "color": "red"}, "0": {"res": "Enabled", "color": "green"}}},
+		{"name": "dev.tty.legacy_tiocsti", "desc": "Disable Legacy TIOCSTI", "values": map[string]map[string]string{"1": {"res": "Disabled", "color": "red"}, "0": {"res": "Enabled", "color": "green"}}},
 	}
 
 	for _, s := range sysctlChecks {
