@@ -3,6 +3,9 @@ project_name: checksec
 
 release:
   prerelease: auto
+  extra_files:
+    - glob: dist/*.sig
+    - glob: dist/*.pub
 
 env:
   - DOCKER_CLI_EXPERIMENTAL=enabled
@@ -25,3 +28,11 @@ builds:
     goarch:
       - amd64
       - arm64
+
+sboms:
+- id: checksec
+  documents:
+    - "${artifact}.spdx.sbom.json"
+  cmd: syft
+  args: ["$artifact", "--output", "cyclonedx-json=$document"]
+  artifacts: binary
