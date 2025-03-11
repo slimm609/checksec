@@ -6,6 +6,8 @@ release:
   extra_files:
     - glob: dist/*.sig
     - glob: dist/*.pub
+    - glob: dist/*.yaml
+    - glob: dist/*.txt
 
 env:
   - DOCKER_CLI_EXPERIMENTAL=enabled
@@ -32,7 +34,13 @@ builds:
 sboms:
 - id: checksec
   documents:
-    - "${artifact}.spdx.sbom.json"
+    - "${artifact}-{{ .Os }}-{{ .Arch }}.spdx.sbom.json"
   cmd: syft
-  args: ["$artifact", "--output", "cyclonedx-json=$document"]
+  args: ["${artifact}", "--output", "cyclonedx-json=${document}"]
   artifacts: binary
+
+checksum:
+  name_template: "{{ .ProjectName }}_checksums.sha512"
+  algorithm: sha512
+
+report_sizes: true
