@@ -78,7 +78,7 @@ func GetAllFilesFromDir(dirName string, recursive bool) []string {
 	if recursive {
 		filepath.WalkDir(dirName, func(path string, file fs.DirEntry, err error) error {
 			if err != nil {
-				return err
+				return fs.SkipDir
 			}
 			if !file.IsDir() && CheckIfElf(path) && file.Type().IsRegular() {
 				results = append(results, path)
