@@ -7,7 +7,7 @@ import (
 )
 
 // RunFileChecks - Run the file checks
-func RunFileChecks(filename string) ([]interface{}, []interface{}) {
+func RunFileChecks(filename string, libc string) ([]interface{}, []interface{}) {
 
 	binary := GetBinary(filename)
 	relro := checksec.RELRO(filename)
@@ -17,7 +17,7 @@ func RunFileChecks(filename string) ([]interface{}, []interface{}) {
 	rpath := checksec.RPATH(filename)
 	runpath := checksec.RUNPATH(filename)
 	symbols := checksec.SYMBOLS(filename)
-	fortify := checksec.Fortify(filename, binary)
+	fortify := checksec.Fortify(filename, binary, libc)
 
 	data := []interface{}{
 		map[string]interface{}{

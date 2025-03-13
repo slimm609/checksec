@@ -18,7 +18,7 @@ var dirCmd = &cobra.Command{
 		var Elements []interface{}
 		var ElementColors []interface{}
 		for _, file := range utils.GetAllFilesFromDir(dir, recursive) {
-			data, color := utils.RunFileChecks(file)
+			data, color := utils.RunFileChecks(file, libc)
 			Elements = append(Elements, data...)
 			ElementColors = append(ElementColors, color...)
 		}

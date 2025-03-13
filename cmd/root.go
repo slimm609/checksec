@@ -8,6 +8,7 @@ import (
 )
 
 var (
+	libc string
 	outputFormat string
 )
 
@@ -26,6 +27,7 @@ func SetVersionInfo(version, commit, date string) {
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	rootCmd.PersistentFlags().StringVarP(&outputFormat, "output", "o", "table", "Output format (table, xml, json or yaml)")
+	rootCmd.PersistentFlags().StringVarP(&libc, "libc", "l", "", "Set libc location (useful for FORTIFY check on offline embedded file-system)")
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
