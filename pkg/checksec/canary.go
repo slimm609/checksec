@@ -20,12 +20,17 @@ const StackChk = "__stack_chk_fail"
 func Canary(name string) *canary {
 	// To get the dynamic values
 	// Open the ELF binary file
-	file, err := elf.Open(name)
+	f, err := os.Open(name)
 	if err != nil {
 		fmt.Println("Error:", err)
 		os.Exit(1)
 	}
-	defer file.Close()
+	defer f.Close()
+	file, err := elf.NewFile(f)
+	if err != nil {
+		fmt.Println("Error parsing ELF file:", err)
+		os.Exit(1)
+	}
 	res := canary{}
 	if symbols, err := file.Symbols(); err == nil {
 		for _, symbol := range symbols {
@@ -40,6 +45,16 @@ func Canary(name string) *canary {
 	if importedSymbols, err := file.ImportedSymbols(); err == nil {
 		for _, imp := range importedSymbols {
 			if bytes.HasPrefix([]byte(imp.Name), []byte(StackChk)) {
+				res.Output = "Canary Found"
+				res.Color = "green"
+				return &res
+			}
+		}
+	}
+
+	if dynamicFunctions, err := FunctionsFromSymbolTable(f); err == nil {
+		for _, symbol := range dynamicFunctions {
+			if bytes.HasPrefix([]byte(symbol.Name), []byte(StackChk)) {
 				res.Output = "Canary Found"
 				res.Color = "green"
 				return &res

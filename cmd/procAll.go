@@ -33,7 +33,7 @@ var procAllCmd = &cobra.Command{
 			if err != nil {
 				continue
 			}
-			data, color := utils.RunFileChecks(file)
+			data, color := utils.RunFileChecks(file, libc)
 			Elements = append(Elements, data...)
 			ElementColors = append(ElementColors, color...)
 		}

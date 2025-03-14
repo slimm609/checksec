@@ -23,7 +23,7 @@ type fortify struct {
 	NumFileFunc      string
 }
 
-func Fortify(name string, binary *elf.File) *fortify {
+func Fortify(name string, binary *elf.File, ldd string) *fortify {
 	res := fortify{}
 	var chkFuncLibs []string
 	var funcLibs []string
@@ -35,7 +35,9 @@ func Fortify(name string, binary *elf.File) *fortify {
 	checked := 0
 	total := 0
 
-	ldd := getLdd(name)
+	if ldd == "" {
+		ldd = getLdd(name)
+	}
 
 	if ldd == "none" || ldd == "unk" {
 		res.Output = "N/A"
@@ -46,17 +48,21 @@ func Fortify(name string, binary *elf.File) *fortify {
 		return &res
 	}
 
-	libc, err := elf.Open(ldd)
+	libcfile, err := os.Open(ldd)
 	if err != nil {
 		fmt.Println("Error:", err)
 		os.Exit(1)
 	}
-	defer libc.Close()
+	defer libcfile.Close()
+	libc, err := elf.NewFile(libcfile)
 
 	libcDynSymbols, err := libc.DynamicSymbols()
 	if err != nil {
-		fmt.Println("Error:", err)
-		os.Exit(1)
+		libcDynSymbols, err = FunctionsFromSymbolTable(libcfile);
+		if err != nil {
+			fmt.Println("Error:", err)
+			os.Exit(1)
+		}
 	}
 
 	// Iterate through dynamic symbols and print their information
@@ -79,17 +85,26 @@ func Fortify(name string, binary *elf.File) *fortify {
 		res.NumLibcFunc = "0"
 	}
 
-	file, err := elf.Open(name)
+	f, err := os.Open(name)
 	if err != nil {
 		fmt.Println("Error:", err)
 		os.Exit(1)
 	}
-	defer file.Close()
+	defer f.Close()
+
+	file, err := elf.NewFile(f)
+	if err != nil {
+		fmt.Println("Error parsing ELF file:", err)
+		os.Exit(1)
+	}
 
 	dynSymbols, err := file.DynamicSymbols()
 	if err != nil {
-		fmt.Println("Error:", err)
-		os.Exit(1)
+		dynSymbols, err = FunctionsFromSymbolTable(f)
+		if err != nil {
+			fmt.Println("Error:", err)
+			os.Exit(1)
+		}
 	}
 
 	// Iterate through dynamic symbols and print their information

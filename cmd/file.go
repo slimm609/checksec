@@ -15,7 +15,7 @@ var fileCmd = &cobra.Command{
 		file := args[0]
 
 		utils.CheckElfExists(file)
-		data, color := utils.RunFileChecks(file)
+		data, color := utils.RunFileChecks(file, libc)
 		utils.FilePrinter(outputFormat, data, color)
 	},
 }
