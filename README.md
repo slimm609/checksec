@@ -222,7 +222,7 @@ Using with Cross-compiled Systems
 The checksec tool can be used against cross-compiled target file-systems offline.  Key limitations to note:
 * Kernel tests - require you to execute the script on the running system you'd like to check as they directly access kernel resources to identify system configuration/state. You can specify the config file for the kernel after the -k option.
 
-* File check -  the offline testing works for all the checks but the Fortify feature.  Fortify, uses the running system's libraries vs those in the offline file-system. There are ways to workaround this (chroot) but at the moment, the ideal configuration would have this script executing on the running system when checking the files.
+* File check -  the offline testing works for all the checks but the Fortify feature.  By default, Fortify, uses the running system's libraries vs those in the offline file-system. There are ways to workaround this (chroot) but at the moment, the ideal configuration would have this script executing on the running system when checking the files. An other option is to specify where the cross-compiled libc is located through the -libc option.
 
 The checksec tool's normal use case is for runtime checking of the systems configuration.  If the system is an embedded target, the native binutils tools like readelf may not be present.  This would restrict which parts of the script will work.
 
