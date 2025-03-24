@@ -25,6 +25,12 @@ func RELRO(name string) *relro {
 	}
 	defer file.Close()
 
+	if len(file.Progs) == 0 {
+		res.Color = "italic"
+		res.Output = "N/A"
+		return &res
+	}
+
 	// check both bind and bind_flag.
 	// if DT_BIND_NOW == 0, then it is set
 	// if DT_FLAGS == 8, then DF_BIND_NOW is set
