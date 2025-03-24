@@ -5,7 +5,7 @@ go 1.23.1
 require (
 	github.com/fatih/color v1.18.0
 	github.com/lorenzosaino/go-sysctl v0.3.1
-	github.com/opencontainers/selinux v1.11.1
+	github.com/opencontainers/selinux v1.12.0
 	github.com/shirou/gopsutil/v3 v3.24.5
 	github.com/spf13/cobra v1.9.1
 	github.com/u-root/u-root v0.14.0
