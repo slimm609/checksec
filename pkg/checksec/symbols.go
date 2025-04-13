@@ -86,6 +86,10 @@ func FunctionsFromSymbolTable(file *os.File) ([]elf.Symbol, error) {
 	strTabOffset, _ := DynValueFromPTDynamic(f, elf.DT_STRTAB)
 	strTabSize, _ := DynValueFromPTDynamic(f, elf.DT_STRSZ)
 
+	if symTabOffset == nil || strTabSize == nil || strTabOffset == nil {
+		return functions, err
+	}
+
 	// Read the symbol table
 	symData := make([]byte, symTabOffset[0])
 	_, err = file.ReadAt(symData, int64(symTabOffset[0]))
