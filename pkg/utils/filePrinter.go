@@ -49,7 +49,7 @@ type SecurityCheckColor struct {
 	} `json:"checks"`
 }
 
-func FilePrinter(outputFormat string, data interface{}, colors interface{}) {
+func FilePrinter(outputFormat string, data interface{}, colors interface{}, noBanner bool, noHeader bool) {
 
 	formatted, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
@@ -81,7 +81,7 @@ func FilePrinter(outputFormat string, data interface{}, colors interface{}) {
 		}
 		fmt.Println(string(xmlData))
 	} else {
-		PrintLogo()
+		PrintLogo(noBanner)
 		var securityChecksColors []SecurityCheckColor
 
 		// Unmarshal JSON data
@@ -89,20 +89,21 @@ func FilePrinter(outputFormat string, data interface{}, colors interface{}) {
 			fmt.Println("Error:", err)
 			return
 		}
-
-		fmt.Printf("%-24s%-26s%-22s%-24s%-19s%-21s%-24s%-19s%-20s%-25s%-40s\n",
-			colorPrinter("RELRO", "unset"),
-			colorPrinter("Stack Canary", "unset"),
-			colorPrinter("NX", "unset"),
-			colorPrinter("PIE", "unset"),
-			colorPrinter("RPATH", "unset"),
-			colorPrinter("RUNPATH", "unset"),
-			colorPrinter("Symbols", "unset"),
-			colorPrinter("FORTIFY", "unset"),
-			colorPrinter("Fortified", "unset"),
-			colorPrinter("Fortifiable", "unset"),
-			colorPrinter("Name", "unset"),
-		)
+		if !noHeader {
+			fmt.Printf("%-24s%-26s%-22s%-24s%-19s%-21s%-24s%-19s%-20s%-25s%-40s\n",
+				colorPrinter("RELRO", "unset"),
+				colorPrinter("Stack Canary", "unset"),
+				colorPrinter("NX", "unset"),
+				colorPrinter("PIE", "unset"),
+				colorPrinter("RPATH", "unset"),
+				colorPrinter("RUNPATH", "unset"),
+				colorPrinter("Symbols", "unset"),
+				colorPrinter("FORTIFY", "unset"),
+				colorPrinter("Fortified", "unset"),
+				colorPrinter("Fortifiable", "unset"),
+				colorPrinter("Name", "unset"),
+			)
+		}
 		for _, check := range securityChecksColors {
 			fmt.Printf("%-25s%-27s%-23s%-25s%-20s%-22s%-25s%-20s%-20s%-25s%-40s\n",
 				colorPrinter(check.Checks.Relro, check.Checks.RelroColor),

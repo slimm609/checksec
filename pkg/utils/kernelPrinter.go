@@ -24,7 +24,7 @@ type KernelCheck struct {
 	CheckType   string `json:"type"`
 }
 
-func KernelPrinter(outputFormat string, kernel any, kernelColors any) {
+func KernelPrinter(outputFormat string, kernel any, kernelColors any, noBanner bool, noHeader bool) {
 
 	formattedKernel, err := json.MarshalIndent(kernel, "", "  ")
 	if err != nil {
@@ -65,14 +65,16 @@ func KernelPrinter(outputFormat string, kernel any, kernelColors any) {
 		}
 		fmt.Println(string(xmlData))
 	} else {
-		PrintLogo()
-		fmt.Println("Kernel configs only print what is supported by the specific kernel/kernel config")
-		fmt.Printf("%-70s%-25s%-30s%-30s\n",
-			colorPrinter("Description", "unset"),
-			colorPrinter("Value", "unset"),
-			colorPrinter("Check Type", "unset"),
-			colorPrinter("Config Key", "unset"),
-		)
+		PrintLogo(noBanner)
+		if !noHeader {
+			fmt.Println("Kernel configs only print what is supported by the specific kernel/kernel config")
+			fmt.Printf("%-70s%-25s%-30s%-30s\n",
+				colorPrinter("Description", "unset"),
+				colorPrinter("Value", "unset"),
+				colorPrinter("Check Type", "unset"),
+				colorPrinter("Config Key", "unset"),
+			)
+		}
 		for _, check := range KernelCheckColor {
 			fmt.Printf("%-70s%-26s%-30s%-30s\n",
 				colorPrinter(check.Description, "unset"),

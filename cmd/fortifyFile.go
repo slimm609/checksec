@@ -56,7 +56,7 @@ var fortifyFileCmd = &cobra.Command{
 				},
 			},
 		}
-		utils.FortifyPrinter(outputFormat, output, color)
+		utils.FortifyPrinter(outputFormat, output, color, noBanner, noHeader)
 	},
 }
 

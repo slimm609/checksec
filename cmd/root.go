@@ -8,8 +8,10 @@ import (
 )
 
 var (
-	libc string
+	libc         string
 	outputFormat string
+	noBanner     bool
+	noHeader     bool
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -28,6 +30,8 @@ func SetVersionInfo(version, commit, date string) {
 func Execute() {
 	rootCmd.PersistentFlags().StringVarP(&outputFormat, "output", "o", "table", "Output format (table, xml, json or yaml)")
 	rootCmd.PersistentFlags().StringVarP(&libc, "libc", "l", "", "Set libc location (useful for FORTIFY check on offline embedded file-system)")
+	rootCmd.PersistentFlags().BoolVarP(&noBanner, "no-banner", "", false, "disable the banner")
+	rootCmd.PersistentFlags().BoolVarP(&noHeader, "no-headers", "", false, "disable the headers")
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
