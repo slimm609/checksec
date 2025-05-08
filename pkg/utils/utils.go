@@ -4,8 +4,8 @@ import (
 	"github.com/fatih/color"
 )
 
-func PrintLogo() {
-	Red := color.New(color.FgHiGreen, color.Bold)
+func PrintLogo(noBanner bool) {
+	green := color.New(color.FgHiGreen, color.Bold)
 	asciiLogo := `
   _____ _    _ ______ _____ _  __ _____ ______ _____
  / ____| |  | |  ____/ ____| |/ // ____|  ____/ ____|
@@ -14,7 +14,9 @@ func PrintLogo() {
 | |____| |  | | |___| |____| . \ ____) | |___| |____
  \_____|_|  |_|______\_____|_|\_\_____/|______\_____|
 `
-	Red.Println(asciiLogo)
+	if !noBanner {
+		green.Println(asciiLogo)
+	}
 }
 
 func colorPrinter(result string, resultColor string) string {

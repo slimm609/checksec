@@ -43,7 +43,7 @@ var kernelCmd = &cobra.Command{
 		utils.CheckFileExists(configFile)
 
 		kernel, kernelColors := utils.ParseKernel(configFile)
-		utils.KernelPrinter(outputFormat, kernel, kernelColors)
+		utils.KernelPrinter(outputFormat, kernel, kernelColors, noBanner, noHeader)
 	},
 }
 

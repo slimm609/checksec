@@ -37,7 +37,7 @@ var procAllCmd = &cobra.Command{
 			Elements = append(Elements, data...)
 			ElementColors = append(ElementColors, color...)
 		}
-		utils.FilePrinter(outputFormat, Elements, ElementColors)
+		utils.FilePrinter(outputFormat, Elements, ElementColors, noBanner, noHeader)
 	},
 }
 

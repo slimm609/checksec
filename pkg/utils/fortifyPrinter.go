@@ -41,7 +41,7 @@ type FortifyCheckColor struct {
 }
 
 // FortifyPrinter - Print the output from FortifyFile function
-func FortifyPrinter(outputFormat string, data interface{}, colors interface{}) {
+func FortifyPrinter(outputFormat string, data interface{}, colors interface{}, noBanner bool, noHeader bool) {
 
 	formatted, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
@@ -73,7 +73,7 @@ func FortifyPrinter(outputFormat string, data interface{}, colors interface{}) {
 		}
 		fmt.Println(string(xmlData))
 	} else {
-		PrintLogo()
+		PrintLogo(noBanner)
 		var fortifyChecksColors []FortifyCheckColor
 
 		// Unmarshal JSON data
