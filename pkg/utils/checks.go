@@ -12,6 +12,7 @@ func RunFileChecks(filename string, libc string) ([]interface{}, []interface{}) 
 	binary := GetBinary(filename)
 	relro := checksec.RELRO(filename)
 	canary := checksec.Canary(filename)
+	cfi := checksec.Cfi(filename)
 	nx := checksec.NX(filename, binary)
 	pie := checksec.PIE(filename, binary)
 	rpath := checksec.RPATH(filename)
@@ -25,6 +26,7 @@ func RunFileChecks(filename string, libc string) ([]interface{}, []interface{}) 
 			"checks": map[string]interface{}{
 				"relro":          relro.Output,
 				"canary":         canary.Output,
+				"cfi":            cfi.Output,
 				"nx":             nx.Output,
 				"pie":            pie.Output,
 				"rpath":          rpath.Output,
@@ -43,6 +45,8 @@ func RunFileChecks(filename string, libc string) ([]interface{}, []interface{}) 
 			"checks": map[string]interface{}{
 				"canary":              canary.Output,
 				"canaryColor":         canary.Color,
+				"cfi":                 cfi.Output,
+				"cfiColor":            cfi.Color,
 				"fortified":           fortify.Fortified,
 				"fortifiedColor":      "unset",
 				"fortifyable":         fortify.Fortifiable,
