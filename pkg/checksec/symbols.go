@@ -51,7 +51,7 @@ func DynValueFromPTDynamic(file *elf.File, tag elf.DynTag) ([]uint64, error) {
 					if i+8 > len(data) {
 						break
 					}
-					if elf.DynTag(binary.LittleEndian.Uint64(data[i : i+8])) == tag {
+					if elf.DynTag(binary.LittleEndian.Uint64(data[i:i+8])) == tag {
 						value := binary.LittleEndian.Uint64(data[i+8 : i+16])
 						return append(res, value), err
 					}
@@ -61,7 +61,7 @@ func DynValueFromPTDynamic(file *elf.File, tag elf.DynTag) ([]uint64, error) {
 					if i+4 > len(data) {
 						break
 					}
-					if elf.DynTag(binary.LittleEndian.Uint32(data[i : i+4])) == tag {
+					if elf.DynTag(binary.LittleEndian.Uint32(data[i:i+4])) == tag {
 						value := uint64(binary.LittleEndian.Uint32(data[i+4 : i+8]))
 						return append(res, value), err
 					}
