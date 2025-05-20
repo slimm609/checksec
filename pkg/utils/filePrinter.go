@@ -30,6 +30,8 @@ type SecurityCheckColor struct {
 	Checks struct {
 		Canary             string `json:"canary"`
 		CanaryColor        string `json:"canaryColor"`
+		Cfi                string `json:"cfi"`
+		CfiColor           string `json:"cfiColor"`
 		Fortified          string `json:"fortified"`
 		FortifyAble        string `json:"fortifyable"`
 		FortifySource      string `json:"fortify_source"`
@@ -90,9 +92,10 @@ func FilePrinter(outputFormat string, data interface{}, colors interface{}, noBa
 			return
 		}
 		if !noHeader {
-			fmt.Printf("%-24s%-26s%-22s%-24s%-19s%-21s%-24s%-19s%-20s%-25s%-40s\n",
+			fmt.Printf("%-24s%-26s%-26s%-22s%-24s%-19s%-21s%-24s%-19s%-20s%-25s%-40s\n",
 				colorPrinter("RELRO", "unset"),
 				colorPrinter("Stack Canary", "unset"),
+				colorPrinter("CFI", "unset"),
 				colorPrinter("NX", "unset"),
 				colorPrinter("PIE", "unset"),
 				colorPrinter("RPATH", "unset"),
@@ -105,9 +108,10 @@ func FilePrinter(outputFormat string, data interface{}, colors interface{}, noBa
 			)
 		}
 		for _, check := range securityChecksColors {
-			fmt.Printf("%-25s%-27s%-23s%-25s%-20s%-22s%-25s%-20s%-20s%-25s%-40s\n",
+			fmt.Printf("%-25s%-27s%-27s%-23s%-25s%-20s%-22s%-25s%-20s%-20s%-25s%-40s\n",
 				colorPrinter(check.Checks.Relro, check.Checks.RelroColor),
 				colorPrinter(check.Checks.Canary, check.Checks.CanaryColor),
+				colorPrinter(check.Checks.Cfi, check.Checks.CfiColor),
 				colorPrinter(check.Checks.NX, check.Checks.NXColor),
 				colorPrinter(check.Checks.PIE, check.Checks.PIEColor),
 				colorPrinter(check.Checks.RPath, check.Checks.RPathColor),
