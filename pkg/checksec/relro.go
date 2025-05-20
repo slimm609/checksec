@@ -36,11 +36,11 @@ func RELRO(name string) *relro {
 	// if DT_FLAGS == 8, then DF_BIND_NOW is set
 	// this is depending on the compiler version used.
 	bind, _ := file.DynValue(elf.DT_BIND_NOW)
-	if (len(bind) == 0) {
+	if len(bind) == 0 {
 		bind, _ = DynValueFromPTDynamic(file, elf.DT_BIND_NOW)
 	}
 	bind_flag, _ := file.DynValue(elf.DT_FLAGS)
-	if (len(bind_flag) == 0) {
+	if len(bind_flag) == 0 {
 		bind_flag, _ = DynValueFromPTDynamic(file, elf.DT_FLAGS)
 	}
 
