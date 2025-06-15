@@ -58,7 +58,7 @@ func Fortify(name string, binary *elf.File, ldd string) *fortify {
 
 	libcDynSymbols, err := libc.DynamicSymbols()
 	if err != nil {
-		libcDynSymbols, err = FunctionsFromSymbolTable(libcfile);
+		libcDynSymbols, err = FunctionsFromSymbolTable(libcfile)
 		if err != nil {
 			fmt.Println("Error:", err)
 			os.Exit(1)
