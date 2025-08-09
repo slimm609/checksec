@@ -1,0 +1,97 @@
+---
+alwaysApply: true
+---
+
+# Checksec Security Rules
+
+Checksec is an open source Go tool that analyzes security properties of executables (PIE, RELRO, Canaries, ASLR, Fortify Source, etc.). This tool parses ELF binaries, kernel configurations, and system settings - all security-critical operations requiring defensive programming.
+
+- **ALWAYS** make a checklist of your actions
+
+## CRITICAL SECURITY REQUIREMENTS
+
+### Input Validation & File Handling
+- **NEVER** trust user-provided file paths without validation
+- **ALWAYS** validate file existence and type before parsing
+- **ALWAYS** use `filepath.Clean()` on user paths to prevent directory traversal
+- **ALWAYS** check file permissions and ownership before opening sensitive files
+- **NEVER** follow symlinks without explicit validation for security tools
+- **ALWAYS** limit file size before reading to prevent DoS attacks
+- **ALWAYS** use timeouts for file operations that could hang
+
+### ELF Binary Parsing Security
+- **ALWAYS** validate ELF headers before processing
+- **ALWAYS** check bounds when reading binary sections to prevent buffer overflows
+- **NEVER** assume dynamic sections contain valid data
+- **ALWAYS** handle corrupted or malformed ELF files gracefully
+- **ALWAYS** limit recursion depth when parsing nested structures
+- **NEVER** execute or load analyzed binaries - analysis only
+
+### Error Handling & Information Disclosure
+- **NEVER** use `os.Exit()` in library functions - return errors instead
+- **ALWAYS** sanitize error messages to prevent information disclosure
+- **NEVER** log full file paths in production error messages
+- **ALWAYS** handle panics gracefully in public API functions
+- **NEVER** expose internal implementation details in error messages
+
+### Memory Safety & Resource Management
+- **ALWAYS** close file handles and free resources in defer statements
+- **ALWAYS** limit memory allocation for user-provided data
+- **ALWAYS** validate array/slice bounds before access
+- **NEVER** assume unlimited memory availability
+- **ALWAYS** use context with timeouts for long-running operations
+
+### Kernel Interface Security
+- **ALWAYS** validate sysctl parameters before reading
+- **ALWAYS** handle missing kernel features gracefully
+- **NEVER** assume kernel interfaces are stable across versions
+- **ALWAYS** validate kernel config file format before parsing
+- **NEVER** trust kernel-provided data without validation
+
+### Output Security
+- **ALWAYS** sanitize output data to prevent injection attacks
+- **NEVER** include sensitive system information in default output
+- **ALWAYS** validate JSON/XML output structure before serialization
+- **NEVER** execute shell commands from parsed data
+
+## CODE QUALITY REQUIREMENTS
+
+### Testing & Verification
+- **ALWAYS** create comprehensive tests for security-critical functions
+- **ALWAYS** test error paths and edge cases
+- **ALWAYS** use table-driven tests for multiple input scenarios
+- **ALWAYS** mock external dependencies for reliable testing
+- **ALWAYS** validate that tests cover both positive and negative cases
+
+### Documentation & Maintenance
+- **ALWAYS** document security assumptions and constraints
+- **ALWAYS** comment complex binary parsing logic
+- **ALWAYS** maintain a security changelog for releases
+- **ALWAYS** document threat model and attack vectors
+
+### Performance & DoS Prevention
+- **ALWAYS** implement resource limits to prevent DoS
+- **NEVER** allow unbounded loops on user input
+- **ALWAYS** use streaming parsers for large files
+- **ALWAYS** implement early termination for expensive operations
+
+## IMPLEMENTATION CHECKLIST
+
+Before any commit:
+- [ ] Input validation implemented for all user-provided data
+- [ ] Error handling returns errors instead of calling `os.Exit()`
+- [ ] Resource cleanup implemented with defer statements
+- [ ] Bounds checking implemented for all array/slice access
+- [ ] Tests cover both success and failure scenarios
+- [ ] No sensitive information exposed in error messages
+- [ ] Memory usage bounded for all operations
+- [ ] Security implications reviewed and documented
+
+## FINAL VERIFICATION
+
+- **ALWAYS** run security-focused code review as final step
+- **ALWAYS** verify no new attack vectors introduced
+- **ALWAYS** ensure defensive programming principles followed
+- **ALWAYS** validate that error paths are secure
+
+- **ALWAYS** review your code and changes as the final action in the checklist

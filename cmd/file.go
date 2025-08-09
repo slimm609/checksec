@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/slimm609/checksec/pkg/utils"
+	"github.com/slimm609/checksec/v3/pkg/utils"
 
 	"github.com/spf13/cobra"
 )

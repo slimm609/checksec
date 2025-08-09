@@ -1,40 +1,79 @@
 package utils
 
 import (
+	"debug/elf"
 	"reflect"
 
-	"github.com/slimm609/checksec/pkg/checksec"
+	"github.com/slimm609/checksec/v3/pkg/checksec"
 )
+
+// Function indirections for testability
+var (
+	getBinaryFn = GetBinary
+
+	relroFn  = func(filename string) interface{} { return checksec.RELRO(filename) }
+	canaryFn = func(filename string) interface{} { return checksec.Canary(filename) }
+	cfiFn    = func(filename string) interface{} { return checksec.Cfi(filename) }
+	nxFn     = func(filename string, binary interface{}) interface{} {
+		return checksec.NX(filename, binary.(*elf.File))
+	}
+	pieFn = func(filename string, binary interface{}) interface{} {
+		return checksec.PIE(filename, binary.(*elf.File))
+	}
+	rpathFn   = func(filename string) interface{} { return checksec.RPATH(filename) }
+	runpathFn = func(filename string) interface{} { return checksec.RUNPATH(filename) }
+	symbolsFn = func(filename string) interface{} { return checksec.SYMBOLS(filename) }
+	fortifyFn = func(filename string, binary interface{}, libc string) interface{} {
+		return checksec.Fortify(filename, binary.(*elf.File), libc)
+	}
+
+	kernelConfigFn = checksec.KernelConfig
+	sysctlCheckFn  = checksec.SysctlCheck
+)
+
+func getStringField(v interface{}, fieldName string) string {
+	rv := reflect.ValueOf(v)
+	if rv.Kind() == reflect.Ptr {
+		rv = rv.Elem()
+	}
+	if rv.IsValid() && rv.Kind() == reflect.Struct {
+		f := rv.FieldByName(fieldName)
+		if f.IsValid() && f.Kind() == reflect.String {
+			return f.String()
+		}
+	}
+	return ""
+}
 
 // RunFileChecks - Run the file checks
 func RunFileChecks(filename string, libc string) ([]interface{}, []interface{}) {
 
-	binary := GetBinary(filename)
-	relro := checksec.RELRO(filename)
-	canary := checksec.Canary(filename)
-	cfi := checksec.Cfi(filename)
-	nx := checksec.NX(filename, binary)
-	pie := checksec.PIE(filename, binary)
-	rpath := checksec.RPATH(filename)
-	runpath := checksec.RUNPATH(filename)
-	symbols := checksec.SYMBOLS(filename)
-	fortify := checksec.Fortify(filename, binary, libc)
+	binary := getBinaryFn(filename)
+	relro := relroFn(filename)
+	canary := canaryFn(filename)
+	cfi := cfiFn(filename)
+	nx := nxFn(filename, binary)
+	pie := pieFn(filename, binary)
+	rpath := rpathFn(filename)
+	runpath := runpathFn(filename)
+	symbols := symbolsFn(filename)
+	fortify := fortifyFn(filename, binary, libc)
 
 	data := []interface{}{
 		map[string]interface{}{
 			"name": filename,
 			"checks": map[string]interface{}{
-				"relro":          relro.Output,
-				"canary":         canary.Output,
-				"cfi":            cfi.Output,
-				"nx":             nx.Output,
-				"pie":            pie.Output,
-				"rpath":          rpath.Output,
-				"runpath":        runpath.Output,
-				"symbols":        symbols.Output,
-				"fortify_source": fortify.Output,
-				"fortified":      fortify.Fortified,
-				"fortifyable":    fortify.Fortifiable,
+				"relro":          getStringField(relro, "Output"),
+				"canary":         getStringField(canary, "Output"),
+				"cfi":            getStringField(cfi, "Output"),
+				"nx":             getStringField(nx, "Output"),
+				"pie":            getStringField(pie, "Output"),
+				"rpath":          getStringField(rpath, "Output"),
+				"runpath":        getStringField(runpath, "Output"),
+				"symbols":        getStringField(symbols, "Output"),
+				"fortify_source": getStringField(fortify, "Output"),
+				"fortified":      getStringField(fortify, "Fortified"),
+				"fortifyable":    getStringField(fortify, "Fortifiable"),
 			},
 		},
 	}
@@ -43,28 +82,28 @@ func RunFileChecks(filename string, libc string) ([]interface{}, []interface{}) 
 		map[string]interface{}{
 			"name": filename,
 			"checks": map[string]interface{}{
-				"canary":              canary.Output,
-				"canaryColor":         canary.Color,
-				"cfi":                 cfi.Output,
-				"cfiColor":            cfi.Color,
-				"fortified":           fortify.Fortified,
+				"canary":              getStringField(canary, "Output"),
+				"canaryColor":         getStringField(canary, "Color"),
+				"cfi":                 getStringField(cfi, "Output"),
+				"cfiColor":            getStringField(cfi, "Color"),
+				"fortified":           getStringField(fortify, "Fortified"),
 				"fortifiedColor":      "unset",
-				"fortifyable":         fortify.Fortifiable,
+				"fortifyable":         getStringField(fortify, "Fortifiable"),
 				"fortifyableColor":    "unset",
-				"fortify_source":      fortify.Output,
-				"fortify_sourceColor": fortify.Color,
-				"nx":                  nx.Output,
-				"nxColor":             nx.Color,
-				"pie":                 pie.Output,
-				"pieColor":            pie.Color,
-				"relro":               relro.Output,
-				"relroColor":          relro.Color,
-				"rpath":               rpath.Output,
-				"rpathColor":          rpath.Color,
-				"runpath":             runpath.Output,
-				"runpathColor":        runpath.Color,
-				"symbols":             symbols.Output,
-				"symbolsColor":        symbols.Color,
+				"fortify_source":      getStringField(fortify, "Output"),
+				"fortify_sourceColor": getStringField(fortify, "Color"),
+				"nx":                  getStringField(nx, "Output"),
+				"nxColor":             getStringField(nx, "Color"),
+				"pie":                 getStringField(pie, "Output"),
+				"pieColor":            getStringField(pie, "Color"),
+				"relro":               getStringField(relro, "Output"),
+				"relroColor":          getStringField(relro, "Color"),
+				"rpath":               getStringField(rpath, "Output"),
+				"rpathColor":          getStringField(rpath, "Color"),
+				"runpath":             getStringField(runpath, "Output"),
+				"runpathColor":        getStringField(runpath, "Color"),
+				"symbols":             getStringField(symbols, "Output"),
+				"symbolsColor":        getStringField(symbols, "Color"),
 			},
 		},
 	}
@@ -75,8 +114,8 @@ func RunFileChecks(filename string, libc string) ([]interface{}, []interface{}) 
 // ParseKernel - Parses the kernel config and runs the checks
 func ParseKernel(filename string) (any, any) {
 
-	kernelCheckResults, kernelCheckResultsColors := checksec.KernelConfig(filename)
-	sysctlCheckResults, sysctlCheckResultsColors := checksec.SysctlCheck()
+	kernelCheckResults, kernelCheckResultsColors := kernelConfigFn(filename)
+	sysctlCheckResults, sysctlCheckResultsColors := sysctlCheckFn()
 
 	data := reflect.AppendSlice(reflect.ValueOf(kernelCheckResults), reflect.ValueOf(sysctlCheckResults)).Interface()
 	dataColors := reflect.AppendSlice(reflect.ValueOf(kernelCheckResultsColors), reflect.ValueOf(sysctlCheckResultsColors)).Interface()

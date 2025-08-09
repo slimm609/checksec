@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/slimm609/checksec/pkg/utils"
+	"github.com/slimm609/checksec/v3/pkg/utils"
 
 	"github.com/shirou/gopsutil/v3/process"
 	"github.com/spf13/cobra"
