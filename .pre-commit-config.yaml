@@ -6,8 +6,28 @@ repos:
     entry: bash ./hack/enable-git-hooks.sh
     language: system
     pass_filenames: false
+  - id: go-test
+    name: Run Go tests
+    entry: go test ./...
+    language: system
+    pass_filenames: false
+  - id: go-fmt
+    name: gofmt (write)
+    entry: bash -c 'gofmt -s -w "$@"'
+    language: system
+    types: [go]
+  - id: go-vet
+    name: go vet
+    entry: bash -c 'go vet ./...'
+    language: system
+    pass_filenames: false
+  - id: go-mod-tidy
+    name: go mod tidy
+    entry: bash -c 'go mod tidy -v'
+    language: system
+    pass_filenames: false
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.5.0
+  rev: v6.0.0
   hooks:
   - id: end-of-file-fixer
   - id: trailing-whitespace
@@ -31,10 +51,3 @@ repos:
   rev: 0.2.0
   hooks:
   - id: fix-smartquotes
-- repo: https://github.com/dnephin/pre-commit-golang
-  rev: v0.5.1
-  hooks:
-    - id: go-fmt
-    - id: go-vet
-    # - id: go-lint
-    - id: go-mod-tidy

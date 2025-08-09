@@ -1,6 +1,6 @@
 package main
 
-import "github.com/slimm609/checksec/cmd"
+import "github.com/slimm609/checksec/v3/cmd"
 
 var (
 	version = "dev"

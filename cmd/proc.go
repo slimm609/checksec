@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/slimm609/checksec/pkg/utils"
+	"github.com/slimm609/checksec/v3/pkg/utils"
 
 	"path/filepath"
 

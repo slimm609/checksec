@@ -4,6 +4,7 @@ import (
 	"debug/elf"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -162,6 +163,8 @@ func getLdd(filename string) string {
 			dynamic = true
 		}
 	}
+
+	filename, _ = filepath.Abs(filename)
 
 	files, _ := uroot.FList(filename)
 	if dynamic && len(files) == 0 {

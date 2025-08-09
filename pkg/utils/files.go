@@ -9,13 +9,19 @@ import (
 	"path/filepath"
 )
 
+// Indirections for testability
+var (
+	checkFileExistsFn = CheckFileExists
+	checkIfElfFn      = CheckIfElf
+)
+
 // CheckElfExists - Check if file exists and is an Elf file
 func CheckElfExists(fileName string) bool {
-	if !CheckFileExists(fileName) {
+	if !checkFileExistsFn(fileName) {
 		fmt.Println("File not found:", fileName)
 		os.Exit(1)
 	}
-	if !CheckIfElf(fileName) {
+	if !checkIfElfFn(fileName) {
 		fmt.Println("File is not an ELF file:", fileName)
 		os.Exit(1)
 	}
@@ -80,7 +86,7 @@ func GetAllFilesFromDir(dirName string, recursive bool) []string {
 			if err != nil {
 				return fs.SkipDir
 			}
-			if !file.IsDir() && CheckIfElf(path) && file.Type().IsRegular() {
+			if !file.IsDir() && checkIfElfFn(path) && file.Type().IsRegular() {
 				results = append(results, path)
 			}
 
@@ -93,7 +99,7 @@ func GetAllFilesFromDir(dirName string, recursive bool) []string {
 			if dirInfo == nil {
 				continue
 			}
-			if j != "." && !dirInfo.IsDir() && CheckIfElf(j) {
+			if j != "." && !dirInfo.IsDir() && checkIfElfFn(j) {
 				results = append(results, j)
 			}
 		}
