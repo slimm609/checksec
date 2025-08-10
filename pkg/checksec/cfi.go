@@ -1,12 +1,15 @@
 package checksec
 
 import (
+	"context"
 	"debug/elf"
 	"fmt"
 	"os"
+	"path/filepath"
+	"time"
 )
 
-type cfi struct {
+type CfiResult struct {
 	Output string
 	Color  string
 }
@@ -34,29 +37,56 @@ const (
 	GnuPropertyArmFeaturePAC
 )
 
-func Cfi(name string) *cfi {
-	f, err := os.Open(name)
+// Cfi - Check for Control Flow Integrity features
+func Cfi(name string) (*CfiResult, error) {
+	// Input validation
+	if name == "" {
+		return nil, fmt.Errorf("filename cannot be empty")
+	}
+
+	// Clean the file path to prevent directory traversal
+	cleanPath := filepath.Clean(name)
+
+	// Check file exists and is accessible
+	if _, err := os.Stat(cleanPath); err != nil {
+		return nil, fmt.Errorf("cannot access file: %w", err)
+	}
+
+	// Open with timeout context to prevent hanging operations
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// Use context for file operations
+	select {
+	case <-ctx.Done():
+		return nil, fmt.Errorf("operation timed out")
+	default:
+	}
+
+	f, err := os.Open(cleanPath)
 	if err != nil {
-		fmt.Println("Error:", err)
-		os.Exit(1)
+		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
 	defer f.Close()
+
 	file, err := elf.NewFile(f)
 	if err != nil {
-		fmt.Println("Error parsing ELF file:", err)
-		os.Exit(1)
+		return nil, fmt.Errorf("invalid ELF file: %w", err)
 	}
-	res := cfi{}
+
+	res := &CfiResult{}
+	var hwOutput string
+	var hwColor string
 	notes := file.Section(".note.gnu.property")
 	if notes == nil {
-		resUnknown(&res)
-		return &res
+		resUnknown(res)
+		return res, nil
 	}
 
 	propertyData, err := notes.Data()
 	if err != nil {
-		resUnknown(&res)
-		return &res
+		resUnknown(res)
+		return res, nil
 	}
 
 	// Property data layout of the relevant sections in ELFCLASS64
@@ -72,12 +102,24 @@ func Cfi(name string) *cfi {
 		var parsedSupport x86CET
 		i := 0
 		for i < len(propertyData) {
+			// Bounds checking for note type and data size
+			if i+8 > len(propertyData) {
+				break
+			}
+
 			notetype := file.ByteOrder.Uint32(propertyData[i : i+4])
 			datasz := file.ByteOrder.Uint32(propertyData[i+4 : i+8])
 			i += 8
+
 			if datasz != 4 {
 				continue
 			}
+
+			// Bounds checking for bitmask
+			if i+4 > len(propertyData) {
+				break
+			}
+
 			bitmask := file.ByteOrder.Uint32(propertyData[i : i+4])
 			if notetype == GnuPropertyX86Feature1Flag {
 				parsedSupport = parseBitmaskForx86CET(bitmask)
@@ -86,17 +128,17 @@ func Cfi(name string) *cfi {
 		}
 
 		if parsedSupport.shstk && parsedSupport.ibt {
-			res.Color = "green"
-			res.Output = "SHSTK & IBT"
+			hwColor = "green"
+			hwOutput = "SHSTK & IBT"
 		} else if parsedSupport.shstk {
-			res.Color = "yellow"
-			res.Output = "SHSTK & NO IBT"
+			hwColor = "yellow"
+			hwOutput = "SHSTK & NO IBT"
 		} else if parsedSupport.ibt {
-			res.Color = "yellow"
-			res.Output = " NO SHSTK & IBT"
+			hwColor = "yellow"
+			hwOutput = "NO SHSTK & IBT"
 		} else {
-			res.Color = "red"
-			res.Output = "NO SHSTK & NO IBT"
+			hwColor = "red"
+			hwOutput = "NO SHSTK & NO IBT"
 		}
 	} else if file.Class == elf.ELFCLASS64 && file.Machine == elf.EM_AARCH64 {
 		// AARCH64, check for PAC and BTI
@@ -105,12 +147,24 @@ func Cfi(name string) *cfi {
 		var parsedSupport armPACBTI
 		i := 0
 		for i < len(propertyData) {
+			// Bounds checking for note type and data size
+			if i+8 > len(propertyData) {
+				break
+			}
+
 			notetype := file.ByteOrder.Uint32(propertyData[i : i+4])
 			datasz := file.ByteOrder.Uint32(propertyData[i+4 : i+8])
 			i += 8
+
 			if datasz != 4 {
 				continue
 			}
+
+			// Bounds checking for bitmask
+			if i+4 > len(propertyData) {
+				break
+			}
+
 			bitmask := file.ByteOrder.Uint32(propertyData[i : i+4])
 			if notetype == GnuPropertyArmFeature1Flag {
 				parsedSupport = parseBitmaskForArmPACBTI(bitmask)
@@ -119,23 +173,63 @@ func Cfi(name string) *cfi {
 		}
 
 		if parsedSupport.pac && parsedSupport.bti {
-			res.Color = "green"
-			res.Output = "PAC & BTI"
+			hwColor = "green"
+			hwOutput = "PAC & BTI"
 		} else if parsedSupport.pac {
-			res.Color = "yellow"
-			res.Output = "PAC & NO BTI"
+			hwColor = "yellow"
+			hwOutput = "PAC & NO BTI"
 		} else if parsedSupport.bti {
-			res.Color = "yellow"
-			res.Output = "NO PAC & BTI"
+			hwColor = "yellow"
+			hwOutput = "NO PAC & BTI"
 		} else {
-			res.Color = "red"
-			res.Output = "NO PAC & NO BTI"
+			hwColor = "red"
+			hwOutput = "NO PAC & NO BTI"
 		}
 	} else {
-		resUnknown(&res)
+		// Leave hwOutput empty; fallback to Unknown unless Clang CFI is detected
 	}
 
-	return &res
+	// Detect Clang CFI presence and classify Single-Module vs Multi-Module
+	clangMode := "none"
+	// Errors from reading symbols are treated as absence of Clang CFI
+	var allSyms []elf.Symbol
+	if syms, err := file.Symbols(); err == nil {
+		allSyms = syms
+	}
+	var dynSyms []elf.Symbol
+	if dsyms, err := file.DynamicSymbols(); err == nil {
+		dynSyms = dsyms
+	}
+	clangMode = classifyClangCFIMode(allSyms, dynSyms)
+
+	// Build output string
+	if hwOutput == "" {
+		// No known HW CFI parsed
+		if clangMode == "none" {
+			resUnknown(res)
+			return res, nil
+		}
+		// Only Clang CFI detected
+		res.Color = "green"
+		if clangMode == "multi" {
+			res.Output = "Clang CFI: Multi-Module"
+		} else {
+			res.Output = "Clang CFI: Single-Module"
+		}
+		return res, nil
+	}
+
+	// Combine HW and Clang CFI info
+	res.Color = hwColor
+	if clangMode == "none" {
+		res.Output = hwOutput
+	} else if clangMode == "multi" {
+		res.Output = hwOutput + " | Clang CFI: Multi-Module"
+	} else {
+		res.Output = hwOutput + " | Clang CFI: Single-Module"
+	}
+
+	return res, nil
 }
 
 func parseBitmaskForx86CET(bitmask uint32) x86CET {
@@ -176,7 +270,49 @@ func parseBitmaskForArmPACBTI(bitmask uint32) armPACBTI {
 	return result
 }
 
-func resUnknown(emptyCfi *cfi) {
+func resUnknown(emptyCfi *CfiResult) {
 	emptyCfi.Color = "yellow"
 	emptyCfi.Output = "Unknown"
+}
+
+// classifyClangCFIMode determines presence and scope of Clang CFI.
+// Returns one of: "multi" (cross-DSO), "single" (intra-module only), "none".
+// Heuristic based on symbol tables:
+//   - Multi-module: a defined, exported (global/default visibility) __cfi_check in .dynsym
+//   - Single-module: defined __cfi_check that is not exported, or presence of
+//     local CFI helpers like __cfi_slowpath/__cfi_slowpath_diag/__cfi_fail
+func classifyClangCFIMode(allSymbols []elf.Symbol, dynSymbols []elf.Symbol) string {
+	// Check for exported __cfi_check in dynamic symbol table
+	for _, s := range dynSymbols {
+		if s.Name == "__cfi_check" {
+			if s.Section != elf.SHN_UNDEF {
+				bind := elf.ST_BIND(s.Info)
+				vis := elf.ST_VISIBILITY(s.Other)
+				if (bind == elf.STB_GLOBAL || bind == elf.STB_WEAK) && vis == elf.STV_DEFAULT {
+					return "multi"
+				}
+			}
+		}
+	}
+
+	hasLocalCFI := false
+	for _, s := range allSymbols {
+		if s.Section == elf.SHN_UNDEF {
+			continue
+		}
+		switch s.Name {
+		case "__cfi_check":
+			// defined but not seen as exported in dynsym => treat as single-module
+			hasLocalCFI = true
+		case "__cfi_slowpath", "__cfi_slowpath_diag", "__cfi_fail", "__cfi_check_fail":
+			hasLocalCFI = true
+		}
+		if hasLocalCFI {
+			break
+		}
+	}
+	if hasLocalCFI {
+		return "single"
+	}
+	return "none"
 }

@@ -11,19 +11,103 @@ import (
 var (
 	getBinaryFn = GetBinary
 
-	relroFn  = func(filename string) interface{} { return checksec.RELRO(filename) }
-	canaryFn = func(filename string) interface{} { return checksec.Canary(filename) }
-	cfiFn    = func(filename string) interface{} { return checksec.Cfi(filename) }
-	nxFn     = func(filename string, binary interface{}) interface{} {
+	relroFn = func(filename string) (result interface{}) {
+		defer func() {
+			if r := recover(); r != nil {
+				result = &struct {
+					Output string
+					Color  string
+				}{Output: "Error checking RELRO", Color: "red"}
+			}
+		}()
+		return checksec.RELRO(filename)
+	}
+	canaryFn = func(filename string) interface{} {
+		result, err := checksec.Canary(filename)
+		if err != nil {
+			return &checksec.CanaryResult{
+				Output: "Error checking canary",
+				Color:  "red",
+			}
+		}
+		return result
+	}
+	cfiFn = func(filename string) interface{} {
+		result, err := checksec.Cfi(filename)
+		if err != nil {
+			return &checksec.CfiResult{
+				Output: "Error checking CFI",
+				Color:  "red",
+			}
+		}
+		return result
+	}
+	nxFn = func(filename string, binary interface{}) (result interface{}) {
+		defer func() {
+			if r := recover(); r != nil {
+				result = &struct {
+					Output string
+					Color  string
+				}{Output: "Error checking NX", Color: "red"}
+			}
+		}()
 		return checksec.NX(filename, binary.(*elf.File))
 	}
-	pieFn = func(filename string, binary interface{}) interface{} {
+	pieFn = func(filename string, binary interface{}) (result interface{}) {
+		defer func() {
+			if r := recover(); r != nil {
+				result = &struct {
+					Output string
+					Color  string
+				}{Output: "Error checking PIE", Color: "red"}
+			}
+		}()
 		return checksec.PIE(filename, binary.(*elf.File))
 	}
-	rpathFn   = func(filename string) interface{} { return checksec.RPATH(filename) }
-	runpathFn = func(filename string) interface{} { return checksec.RUNPATH(filename) }
-	symbolsFn = func(filename string) interface{} { return checksec.SYMBOLS(filename) }
-	fortifyFn = func(filename string, binary interface{}, libc string) interface{} {
+	rpathFn = func(filename string) (result interface{}) {
+		defer func() {
+			if r := recover(); r != nil {
+				result = &struct {
+					Output string
+					Color  string
+				}{Output: "Error checking RPATH", Color: "red"}
+			}
+		}()
+		return checksec.RPATH(filename)
+	}
+	runpathFn = func(filename string) (result interface{}) {
+		defer func() {
+			if r := recover(); r != nil {
+				result = &struct {
+					Output string
+					Color  string
+				}{Output: "Error checking RUNPATH", Color: "red"}
+			}
+		}()
+		return checksec.RUNPATH(filename)
+	}
+	symbolsFn = func(filename string) (result interface{}) {
+		defer func() {
+			if r := recover(); r != nil {
+				result = &struct {
+					Output string
+					Color  string
+				}{Output: "Error checking SYMBOLS", Color: "red"}
+			}
+		}()
+		return checksec.SYMBOLS(filename)
+	}
+	fortifyFn = func(filename string, binary interface{}, libc string) (result interface{}) {
+		defer func() {
+			if r := recover(); r != nil {
+				result = &struct {
+					Output      string
+					Color       string
+					Fortified   string
+					Fortifiable string
+				}{Output: "Error checking Fortify", Color: "red", Fortified: "", Fortifiable: ""}
+			}
+		}()
 		return checksec.Fortify(filename, binary.(*elf.File), libc)
 	}
 
