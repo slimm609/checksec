@@ -28,10 +28,17 @@ var procAllCmd = &cobra.Command{
 				continue
 			}
 			filePath := filepath.Join("/proc", fmt.Sprint(proc), "exe")
-			file, err := os.Readlink(filePath)
-			file = strings.Split(file, " ")[0]
-			if err != nil {
-				continue
+
+			file := filePath
+			if target, err := os.Readlink(filePath); err == nil {
+				file = strings.Split(target, " ")[0]
+				if _, statErr := os.Stat(file); statErr != nil {
+					// Fall back to /proc/<pid>/exe when target is not accessible
+					file = filePath
+				}
+			} else {
+				// If we cannot read the link, try using the symlink path
+				file = filePath
 			}
 			data, color := utils.RunFileChecks(file, libc)
 			Elements = append(Elements, data...)

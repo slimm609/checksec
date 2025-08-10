@@ -22,8 +22,14 @@ var fortifyProcCmd = &cobra.Command{
 		}
 		proc := args[0]
 
-		file, err := os.Readlink(filepath.Join("/proc", proc, "exe"))
-		if err != nil {
+		filePath := filepath.Join("/proc", proc, "exe")
+		file := filePath
+		if target, err := os.Readlink(filePath); err == nil {
+			file = target
+			if _, statErr := os.Stat(file); statErr != nil {
+				file = filePath
+			}
+		} else {
 			fmt.Printf("Error: Pid %s not found", proc)
 			os.Exit(1)
 		}
