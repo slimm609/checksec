@@ -8,9 +8,12 @@ import (
 
 // fileCmd represents the file command
 var fileCmd = &cobra.Command{
-	Use:   "file",
+	Use:   "file <file>",
 	Short: "Check a single binary file",
 	Args:  cobra.ExactArgs(1),
+	Example: `
+  checksec file /usr/bin/ls
+  checksec file /usr/bin/ls --no-banner`,
 	Run: func(cmd *cobra.Command, args []string) {
 		file := args[0]
 
