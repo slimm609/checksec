@@ -31,28 +31,28 @@ func RELRO(name string) *relro {
 		return &res
 	}
 
-	// check both bind and bind_flag.
+	// check bind and flags and flags1.
 	// if DT_BIND_NOW == 0, then it is set
-	// if DT_FLAGS == 8, then DF_BIND_NOW is set
-	// if DT_FLAGS_1 == 1, then DF_1_NOW is set
+	// if (DT_FLAGS & 0x8) > 0, then DF_BIND_NOW is set
+	// if (DT_FLAGS_1 & 0x1) > 1, then DF_1_NOW is set
 	// this is depending on the compiler version used.
 	bind, _ := file.DynValue(elf.DT_BIND_NOW)
 	if len(bind) == 0 {
 		bind, _ = DynValueFromPTDynamic(file, elf.DT_BIND_NOW)
 	}
-	bindFlag, _ := file.DynValue(elf.DT_FLAGS)
-	if len(bindFlag) == 0 {
-		bindFlag, _ = DynValueFromPTDynamic(file, elf.DT_FLAGS)
+	flags, _ := file.DynValue(elf.DT_FLAGS)
+	if len(flags) == 0 {
+		flags, _ = DynValueFromPTDynamic(file, elf.DT_FLAGS)
 	}
 
-	bindFlag1, _ := file.DynValue(elf.DT_FLAGS_1)
-	if len(bindFlag1) == 0 {
-		bindFlag1, _ = DynValueFromPTDynamic(file, elf.DT_FLAGS_1)
+	flags1, _ := file.DynValue(elf.DT_FLAGS_1)
+	if len(flags1) == 0 {
+		flags1, _ = DynValueFromPTDynamic(file, elf.DT_FLAGS_1)
 	}
 
 	if (len(bind) > 0 && bind[0] == 0) ||
-		(len(bindFlag) > 0 && (bindFlag[0]&uint64(elf.DF_BIND_NOW)) != 0) ||
-		(len(bindFlag1) > 0 && (bindFlag1[0]&uint64(elf.DF_1_NOW)) != 0) {
+		(len(flags) > 0 && (flags[0]&uint64(elf.DF_BIND_NOW)) != 0) ||
+		(len(flags1) > 0 && (flags1[0]&uint64(elf.DF_1_NOW)) != 0) {
 		bindNow = true
 	}
 
