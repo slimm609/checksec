@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/opencontainers/selinux/go-selinux"
+	"github.com/slimm609/checksec/v3/pkg/output"
 )
 
 func KernelConfig(name string) ([]interface{}, []interface{}) {
@@ -78,8 +79,7 @@ func KernelConfig(name string) ([]interface{}, []interface{}) {
 
 	data, err := parseKernelConfig(name)
 	if err != nil {
-		fmt.Println("Error:", err)
-		os.Exit(1)
+		output.Fatalf("Error parsing kernel config: %v", err)
 	}
 	for configKey, configVal := range data {
 		for _, k := range kernelChecks {

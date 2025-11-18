@@ -2,8 +2,8 @@ package checksec
 
 import (
 	"debug/elf"
-	"fmt"
-	"os"
+
+	"github.com/slimm609/checksec/v3/pkg/output"
 )
 
 type relro struct {
@@ -20,8 +20,7 @@ func RELRO(name string) *relro {
 	// Open the ELF binary file
 	file, err := elf.Open(name)
 	if err != nil {
-		fmt.Println("Error:", err)
-		os.Exit(1)
+		output.Fatalf("Error opening ELF file: %v", err)
 	}
 	defer file.Close()
 
@@ -45,7 +44,7 @@ func RELRO(name string) *relro {
 	}
 
 	const DF_BIND_NOW = 0x8
-	if (len(bind) > 0 && bind[0] == 0) || (len(flags) > 0 && (flags[0] & DF_BIND_NOW) > 0) {
+	if (len(bind) > 0 && bind[0] == 0) || (len(flags) > 0 && (flags[0]&DF_BIND_NOW) > 0) {
 		bindNow = true
 	}
 

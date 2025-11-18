@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/slimm609/checksec/v3/pkg/output"
 	"sigs.k8s.io/yaml"
 )
 
@@ -83,7 +84,7 @@ func FilePrinter(outputFormat string, data interface{}, colors interface{}, noBa
 		}
 		fmt.Println(string(xmlData))
 	} else {
-		PrintLogo(noBanner)
+		output.PrintLogo(noBanner)
 		var securityChecksColors []SecurityCheckColor
 
 		// Unmarshal JSON data
@@ -93,34 +94,34 @@ func FilePrinter(outputFormat string, data interface{}, colors interface{}, noBa
 		}
 		if !noHeader {
 			fmt.Printf("%-24s%-26s%-26s%-22s%-24s%-19s%-21s%-24s%-19s%-20s%-25s%-40s\n",
-				colorPrinter("RELRO", "unset"),
-				colorPrinter("Stack Canary", "unset"),
-				colorPrinter("CFI", "unset"),
-				colorPrinter("NX", "unset"),
-				colorPrinter("PIE", "unset"),
-				colorPrinter("RPATH", "unset"),
-				colorPrinter("RUNPATH", "unset"),
-				colorPrinter("Symbols", "unset"),
-				colorPrinter("FORTIFY", "unset"),
-				colorPrinter("Fortified", "unset"),
-				colorPrinter("Fortifiable", "unset"),
-				colorPrinter("Name", "unset"),
+				output.ColorPrinter("RELRO", "unset"),
+				output.ColorPrinter("Stack Canary", "unset"),
+				output.ColorPrinter("CFI", "unset"),
+				output.ColorPrinter("NX", "unset"),
+				output.ColorPrinter("PIE", "unset"),
+				output.ColorPrinter("RPATH", "unset"),
+				output.ColorPrinter("RUNPATH", "unset"),
+				output.ColorPrinter("Symbols", "unset"),
+				output.ColorPrinter("FORTIFY", "unset"),
+				output.ColorPrinter("Fortified", "unset"),
+				output.ColorPrinter("Fortifiable", "unset"),
+				output.ColorPrinter("Name", "unset"),
 			)
 		}
 		for _, check := range securityChecksColors {
 			fmt.Printf("%-25s%-27s%-27s%-23s%-25s%-20s%-22s%-25s%-20s%-20s%-25s%-40s\n",
-				colorPrinter(check.Checks.Relro, check.Checks.RelroColor),
-				colorPrinter(check.Checks.Canary, check.Checks.CanaryColor),
-				colorPrinter(check.Checks.Cfi, check.Checks.CfiColor),
-				colorPrinter(check.Checks.NX, check.Checks.NXColor),
-				colorPrinter(check.Checks.PIE, check.Checks.PIEColor),
-				colorPrinter(check.Checks.RPath, check.Checks.RPathColor),
-				colorPrinter(check.Checks.RunPath, check.Checks.RunPathColor),
-				colorPrinter(check.Checks.Symbols, check.Checks.SymbolsColor),
-				colorPrinter(check.Checks.FortifySource, check.Checks.FortifySourceColor),
-				colorPrinter(check.Checks.Fortified, "unset"),
-				colorPrinter(check.Checks.FortifyAble, "unset"),
-				colorPrinter(check.Name, "unset"),
+				output.ColorPrinter(check.Checks.Relro, check.Checks.RelroColor),
+				output.ColorPrinter(check.Checks.Canary, check.Checks.CanaryColor),
+				output.ColorPrinter(check.Checks.Cfi, check.Checks.CfiColor),
+				output.ColorPrinter(check.Checks.NX, check.Checks.NXColor),
+				output.ColorPrinter(check.Checks.PIE, check.Checks.PIEColor),
+				output.ColorPrinter(check.Checks.RPath, check.Checks.RPathColor),
+				output.ColorPrinter(check.Checks.RunPath, check.Checks.RunPathColor),
+				output.ColorPrinter(check.Checks.Symbols, check.Checks.SymbolsColor),
+				output.ColorPrinter(check.Checks.FortifySource, check.Checks.FortifySourceColor),
+				output.ColorPrinter(check.Checks.Fortified, "unset"),
+				output.ColorPrinter(check.Checks.FortifyAble, "unset"),
+				output.ColorPrinter(check.Name, "unset"),
 			)
 		}
 	}

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/slimm609/checksec/v3/pkg/output"
 	"sigs.k8s.io/yaml"
 )
 
@@ -73,7 +74,7 @@ func FortifyPrinter(outputFormat string, data interface{}, colors interface{}, n
 		}
 		fmt.Println(string(xmlData))
 	} else {
-		PrintLogo(noBanner)
+		output.PrintLogo(noBanner)
 		var fortifyChecksColors []FortifyCheckColor
 
 		// Unmarshal JSON data
@@ -83,18 +84,18 @@ func FortifyPrinter(outputFormat string, data interface{}, colors interface{}, n
 		}
 
 		for _, check := range fortifyChecksColors {
-			fmt.Printf("* FORTIFY_SOURCE support available (libc): %s\n", colorPrinter(check.Checks.LibcSupport, check.Checks.LibcSupportColor))
-			fmt.Printf("* Binary compiled with FORTIFY_SOURCE support: %s\n\n", colorPrinter(check.Checks.FortifySource, check.Checks.FortifySourceColor))
+			fmt.Printf("* FORTIFY_SOURCE support available (libc): %s\n", output.ColorPrinter(check.Checks.LibcSupport, check.Checks.LibcSupportColor))
+			fmt.Printf("* Binary compiled with FORTIFY_SOURCE support: %s\n\n", output.ColorPrinter(check.Checks.FortifySource, check.Checks.FortifySourceColor))
 			fmt.Println("------ EXECUTABLE-FILE ------- | -------- LIBC --------")
 			fmt.Println("Fortifiable library functions  | Checked function names")
 			// TODO: add function breakdown
 			fmt.Println("Coming Soon")
-			fmt.Printf("\n%s\n", colorPrinter("SUMMARY", "green"))
-			fmt.Printf("* Number of checked functions in libc                : %s\n", colorPrinter(check.Checks.NumLibcFunc, "unset"))
-			fmt.Printf("* Total number of library functions in the executable: %s\n", colorPrinter(check.Checks.NumFileFunc, "unset"))
-			fmt.Printf("* Number of Fortifiable functions in the executable  : %s\n", colorPrinter(check.Checks.FortifyAble, "unset"))
-			fmt.Printf("* Number of checked functions in the executable      : %s\n", colorPrinter(check.Checks.Fortified, "green"))
-			fmt.Printf("* Number of unchecked functions in the executable    : %s\n", colorPrinter(check.Checks.NoFortify, "red"))
+			fmt.Printf("\n%s\n", output.ColorPrinter("SUMMARY", "green"))
+			fmt.Printf("* Number of checked functions in libc                : %s\n", output.ColorPrinter(check.Checks.NumLibcFunc, "unset"))
+			fmt.Printf("* Total number of library functions in the executable: %s\n", output.ColorPrinter(check.Checks.NumFileFunc, "unset"))
+			fmt.Printf("* Number of Fortifiable functions in the executable  : %s\n", output.ColorPrinter(check.Checks.FortifyAble, "unset"))
+			fmt.Printf("* Number of checked functions in the executable      : %s\n", output.ColorPrinter(check.Checks.Fortified, "green"))
+			fmt.Printf("* Number of unchecked functions in the executable    : %s\n", output.ColorPrinter(check.Checks.NoFortify, "red"))
 		}
 	}
 }
