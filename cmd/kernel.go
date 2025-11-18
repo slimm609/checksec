@@ -23,20 +23,17 @@ var kernelCmd = &cobra.Command{
 			osReleaseFile := "/proc/sys/kernel/osrelease"
 			_, err := os.Stat(osReleaseFile)
 			if err != nil {
-				fmt.Println("Error: could not find kernel config")
-				os.Exit(1)
+				utils.Fatalf("Error: could not find kernel config: %v", err)
 			}
 			osReleaseVersion, err := os.ReadFile(osReleaseFile)
 			if err != nil {
-				fmt.Println("Error: could not find kernel config")
-				os.Exit(1)
+				utils.Fatalf("Error: could not find kernel config: %v", err)
 			}
 			content := strings.ReplaceAll(string(osReleaseVersion), "\n", "")
 			configFile = fmt.Sprintf("%s-%s", "/boot/config", content)
 			_, err = os.Stat(configFile)
 			if err != nil {
-				fmt.Println("Error: could not find kernel config")
-				os.Exit(1)
+				utils.Fatalf("Error: could not find kernel config: %v", err)
 			}
 		}
 

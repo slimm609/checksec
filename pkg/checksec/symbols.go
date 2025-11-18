@@ -6,6 +6,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"os"
+
+	"github.com/slimm609/checksec/v3/pkg/utils"
 )
 
 type symbols struct {
@@ -18,8 +20,7 @@ func SYMBOLS(name string) *symbols {
 	res := symbols{}
 	file, err := elf.Open(name)
 	if err != nil {
-		fmt.Println("Error:", err)
-		os.Exit(1)
+		utils.Fatalf("Error opening ELF file: %v", err)
 	}
 	defer file.Close()
 

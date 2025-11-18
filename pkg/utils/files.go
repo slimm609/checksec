@@ -7,6 +7,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+
+	"github.com/slimm609/checksec/v3/pkg/utils"
 )
 
 // Indirections for testability
@@ -18,12 +20,10 @@ var (
 // CheckElfExists - Check if file exists and is an Elf file
 func CheckElfExists(fileName string) bool {
 	if !checkFileExistsFn(fileName) {
-		fmt.Println("File not found:", fileName)
-		os.Exit(1)
+		utils.Fatalf("File not found: %v", fileName)
 	}
 	if !checkIfElfFn(fileName) {
-		fmt.Println("File is not an ELF file:", fileName)
-		os.Exit(1)
+		utils.Fatalf("File is not an ELF file: %v", fileName)
 	}
 
 	return true
@@ -44,17 +44,14 @@ func CheckDirExists(dirName string) bool {
 	dirInfo, err := os.Stat(dirName)
 	if err != nil {
 		if os.IsNotExist(err) {
-			fmt.Println("Directory not found:", dirName)
-			os.Exit(1)
+			utils.Fatalf("Directory not found: %v", dirName)
 		} else {
-			fmt.Println("An error occurred:", err)
-			os.Exit(1)
+			utils.Fatalf("An error occurred: %v", err)
 		}
 	}
 
 	if !dirInfo.IsDir() {
-		fmt.Printf("%s is not a Directory", dirName)
-		os.Exit(1)
+		utils.Fatalf("%s is not a Directory", dirName)
 	}
 
 	return true
@@ -65,11 +62,9 @@ func CheckFileExists(fileName string) bool {
 	_, err := os.Stat(fileName)
 	if err != nil {
 		if os.IsNotExist(err) {
-			fmt.Println("File not found:", fileName)
-			os.Exit(1)
+			utils.Fatalf("File not found: %v", fileName)
 		} else {
-			fmt.Println("An error occurred:", err)
-			os.Exit(1)
+			utils.Fatalf("An error occurred: %v", err)
 		}
 	}
 
