@@ -31,9 +31,10 @@ func RELRO(name string) *relro {
 		return &res
 	}
 
-	// check both bind and flags.
+	// check bind and flags and flags1.
 	// if DT_BIND_NOW == 0, then it is set
 	// if (DT_FLAGS & 0x8) > 0, then DF_BIND_NOW is set
+	// if (DT_FLAGS_1 & 0x1) > 1, then DF_1_NOW is set
 	// this is depending on the compiler version used.
 	bind, _ := file.DynValue(elf.DT_BIND_NOW)
 	if len(bind) == 0 {
@@ -44,8 +45,14 @@ func RELRO(name string) *relro {
 		flags, _ = DynValueFromPTDynamic(file, elf.DT_FLAGS)
 	}
 
-	const DF_BIND_NOW = 0x8
-	if (len(bind) > 0 && bind[0] == 0) || (len(flags) > 0 && (flags[0] & DF_BIND_NOW) > 0) {
+	flags1, _ := file.DynValue(elf.DT_FLAGS_1)
+	if len(flags1) == 0 {
+		flags1, _ = DynValueFromPTDynamic(file, elf.DT_FLAGS_1)
+	}
+
+	if (len(bind) > 0 && bind[0] == 0) ||
+		(len(flags) > 0 && (flags[0]&uint64(elf.DF_BIND_NOW)) != 0) ||
+		(len(flags1) > 0 && (flags1[0]&uint64(elf.DF_1_NOW)) != 0) {
 		bindNow = true
 	}
 
