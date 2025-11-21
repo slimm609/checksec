@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/slimm609/checksec/v3/pkg/output"
 	"github.com/slimm609/checksec/v3/pkg/utils"
 	"github.com/spf13/cobra"
 )
@@ -23,20 +24,17 @@ var kernelCmd = &cobra.Command{
 			osReleaseFile := "/proc/sys/kernel/osrelease"
 			_, err := os.Stat(osReleaseFile)
 			if err != nil {
-				fmt.Println("Error: could not find kernel config")
-				os.Exit(1)
+				output.Fatalf("Error: could not find kernel config: %v", err)
 			}
 			osReleaseVersion, err := os.ReadFile(osReleaseFile)
 			if err != nil {
-				fmt.Println("Error: could not find kernel config")
-				os.Exit(1)
+				output.Fatalf("Error: could not find kernel config: %v", err)
 			}
 			content := strings.ReplaceAll(string(osReleaseVersion), "\n", "")
 			configFile = fmt.Sprintf("%s-%s", "/boot/config", content)
 			_, err = os.Stat(configFile)
 			if err != nil {
-				fmt.Println("Error: could not find kernel config")
-				os.Exit(1)
+				output.Fatalf("Error: could not find kernel config: %v", err)
 			}
 		}
 

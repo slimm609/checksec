@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/slimm609/checksec/v3/pkg/output"
 	uroot "github.com/u-root/u-root/pkg/ldd"
 )
 
@@ -51,8 +52,7 @@ func Fortify(name string, binary *elf.File, ldd string) *fortify {
 
 	libcfile, err := os.Open(ldd)
 	if err != nil {
-		fmt.Println("Error:", err)
-		os.Exit(1)
+		output.Fatalf("Error opening libc file: %v", err)
 	}
 	defer libcfile.Close()
 	libc, err := elf.NewFile(libcfile)
@@ -61,8 +61,7 @@ func Fortify(name string, binary *elf.File, ldd string) *fortify {
 	if err != nil {
 		libcDynSymbols, err = FunctionsFromSymbolTable(libcfile)
 		if err != nil {
-			fmt.Println("Error:", err)
-			os.Exit(1)
+			output.Fatalf("Error getting dynamic symbols from libc file: %v", err)
 		}
 	}
 
@@ -88,23 +87,20 @@ func Fortify(name string, binary *elf.File, ldd string) *fortify {
 
 	f, err := os.Open(name)
 	if err != nil {
-		fmt.Println("Error:", err)
-		os.Exit(1)
+		output.Fatalf("Error opening ELF file: %v", err)
 	}
 	defer f.Close()
 
 	file, err := elf.NewFile(f)
 	if err != nil {
-		fmt.Println("Error parsing ELF file:", err)
-		os.Exit(1)
+		output.Fatalf("Error parsing ELF file: %v", err)
 	}
 
 	dynSymbols, err := file.DynamicSymbols()
 	if err != nil {
 		dynSymbols, err = FunctionsFromSymbolTable(f)
 		if err != nil {
-			fmt.Println("Error:", err)
-			os.Exit(1)
+			output.Fatalf("Error getting dynamic symbols from ELF file: %v", err)
 		}
 	}
 
@@ -154,8 +150,7 @@ func getLdd(filename string) string {
 	dynamic := false
 	file, err := elf.Open(filename)
 	if err != nil {
-		fmt.Println("Error:", err)
-		os.Exit(1)
+		output.Fatalf("Error opening ELF file: %v", err)
 	}
 	defer file.Close()
 	for _, prog := range file.Progs {

@@ -1,7 +1,14 @@
-package utils
+package output
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/fatih/color"
+)
+
+var (
+	stdError = os.Stderr
 )
 
 func PrintLogo(noBanner bool) {
@@ -19,7 +26,7 @@ func PrintLogo(noBanner bool) {
 	}
 }
 
-func colorPrinter(result string, resultColor string) string {
+func ColorPrinter(result string, resultColor string) string {
 	unset := color.New(color.Reset).SprintFunc()
 	italic := color.New(color.Italic).SprintfFunc()
 	red := color.New(color.FgRed).SprintFunc()
@@ -40,4 +47,9 @@ func colorPrinter(result string, resultColor string) string {
 	} else {
 		return unset(result)
 	}
+}
+
+func Fatalf(format string, a ...any) {
+	fmt.Fprintf(stdError, format, a...)
+	os.Exit(1)
 }

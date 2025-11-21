@@ -3,3 +3,4 @@ checksec.crt
 checksec.key
 tests/binaries/output/
 dist/
+checksec
