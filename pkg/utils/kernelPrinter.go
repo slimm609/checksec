@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/slimm609/checksec/v3/pkg/output"
 	"sigs.k8s.io/yaml"
 )
 
@@ -65,22 +66,22 @@ func KernelPrinter(outputFormat string, kernel any, kernelColors any, noBanner b
 		}
 		fmt.Println(string(xmlData))
 	} else {
-		PrintLogo(noBanner)
+		output.PrintLogo(noBanner)
 		if !noHeader {
 			fmt.Println("Kernel configs only print what is supported by the specific kernel/kernel config")
 			fmt.Printf("%-70s%-25s%-30s%-30s\n",
-				colorPrinter("Description", "unset"),
-				colorPrinter("Value", "unset"),
-				colorPrinter("Check Type", "unset"),
-				colorPrinter("Config Key", "unset"),
+				output.ColorPrinter("Description", "unset"),
+				output.ColorPrinter("Value", "unset"),
+				output.ColorPrinter("Check Type", "unset"),
+				output.ColorPrinter("Config Key", "unset"),
 			)
 		}
 		for _, check := range KernelCheckColor {
 			fmt.Printf("%-70s%-26s%-30s%-30s\n",
-				colorPrinter(check.Description, "unset"),
-				colorPrinter(check.Value, check.Color),
-				colorPrinter(check.CheckType, "unset"),
-				colorPrinter(check.Name, "unset"),
+				output.ColorPrinter(check.Description, "unset"),
+				output.ColorPrinter(check.Value, check.Color),
+				output.ColorPrinter(check.CheckType, "unset"),
+				output.ColorPrinter(check.Name, "unset"),
 			)
 		}
 	}
