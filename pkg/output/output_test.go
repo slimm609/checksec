@@ -61,7 +61,7 @@ func TestColorPrinter(t *testing.T) {
 		{"unset", "plain"},
 	}
 	for _, tc := range cases {
-		got := colorPrinter(tc.text, tc.color)
+		got := ColorPrinter(tc.text, tc.color)
 		if !strings.Contains(got, tc.text) {
 			t.Fatalf("expected colored output to contain text %q for color %q, got %q", tc.text, tc.color, got)
 		}
