@@ -19,6 +19,50 @@ type CanaryResult struct {
 // StackChk to check for stack_chk_fail value
 const StackChk = "__stack_chk_fail"
 
+// validatePath ensures the path is within the current working directory
+func validatePath(path string) error {
+	if path == "" {
+		return fmt.Errorf("path is empty")
+	}
+
+	// Disallow absolute paths
+	if filepath.IsAbs(path) {
+		return fmt.Errorf("absolute paths are not allowed")
+	}
+
+	// Disallow any ".." component (before or after Clean)
+	if strings.Contains(path, "..") {
+		return fmt.Errorf("path traversal detected")
+	}
+
+	cleanPath := filepath.Clean(path)
+
+	// Double-check: ensure no ".." remains (defensive)
+	if strings.Contains(cleanPath, "..") {
+		return fmt.Errorf("path traversal detected")
+	}
+
+	// Get absolute path of current working directory
+	cwd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("failed to get current working directory: %w", err)
+	}
+
+	// Resolve the full absolute path of the target file
+	absPath := filepath.Join(cwd, cleanPath)
+	finalPath, err := filepath.Abs(absPath)
+	if err != nil {
+		return fmt.Errorf("invalid path: %w", err)
+	}
+
+	// Ensure the final path is under the current working directory
+	if !strings.HasPrefix(finalPath, cwd+string(filepath.Separator)) && finalPath != cwd {
+		return fmt.Errorf("path traversal detected: %s", finalPath)
+	}
+
+	return nil
+}
+
 // Canary - Check for canary bits
 func Canary(name string) (*CanaryResult, error) {
 	// Input validation
@@ -27,6 +71,9 @@ func Canary(name string) (*CanaryResult, error) {
 	}
 
 	// Clean the file path to prevent directory traversal
+	if err := validatePath(name); err != nil {
+		return nil, fmt.Errorf("invalid path: %w", err)
+	}
 	cleanPath := filepath.Clean(name)
 
 	// Check file exists and is accessible
