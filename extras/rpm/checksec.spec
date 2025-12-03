@@ -1,15 +1,15 @@
+%global debug_package %{nil}
+%global _enable_debug_packages 0
 Summary:    Tool to check system for binary-hardening
 Name:        checksec
-Version:    1.7.4
+Version:    3.0.2
 Release:    1
 License:    BSD
 Group:        Development/Tools
-Source0:    https://raw.githubusercontent.com/slimm609/checksec.sh/master/%{name}
-Source1:    https://raw.githubusercontent.com/slimm609/checksec.sh/master/ChangeLog
-URL:        https://github.com/slimm609/checksec.sh
-Requires:    binutils
-BuildArch:    noarch
-BuildRoot:    %{tmpdir}/%{name}-%{version}-root-%(id -u -n)
+Source0:    https://github.com/slimm609/checksec/archive/refs/tags/%{version}.tar.gz
+URL:        https://github.com/slimm609/checksec
+BuildRequires:    golang
+
 
 %description
 Modern Linux distributions offer some mitigation techniques to make it
@@ -29,17 +29,20 @@ checksec can check binary-files and running processes for hardening
 features.
 
 %prep
-cp -p %{SOURCE1} ChangeLog
+%autosetup
+
+%build
+go build -buildmode=pie -ldflags="-s -w -X 'main.version=%{version}' -extldflags '-Wl,-z,relro,-z,now,-z,noexecstack'" -o %{name} .
 
 %install
-rm -rf $RPM_BUILD_ROOT
 install -d $RPM_BUILD_ROOT%{_bindir}
-install -p %{SOURCE0} $RPM_BUILD_ROOT%{_bindir}/%{name}
+install -d $RPM_BUILD_ROOT%{_mandir}/man1
+install -p -m 0755 %{name} $RPM_BUILD_ROOT%{_bindir}/%{name}
+install -p -m 0644 extras/man/%{name}.1 $RPM_BUILD_ROOT%{_mandir}/man1/
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %files
-%defattr(644,root,root,755)
-%doc ChangeLog
-%attr(755,root,root) %{_bindir}/%{name}
+%{_bindir}/%{name}
+%{_mandir}/man1/%{name}.1*
