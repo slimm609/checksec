@@ -12,6 +12,7 @@ release:
 env:
   - DOCKER_CLI_EXPERIMENTAL=enabled
   - CGO_ENABLED=0
+  - GOCACHE=/tmp/gocache-checksec
 
 builds:
   - id: core
@@ -38,6 +39,29 @@ sboms:
   cmd: syft
   args: ["${artifact}", "--output", "cyclonedx-json=${document}"]
   artifacts: binary
+
+nfpms:
+  - id: linux-packages
+    builds:
+      - core
+    formats:
+      - rpm
+      - deb
+      - apk
+    file_name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Arch }}"
+    vendor: checksec
+    maintainer: Brian Davis <maintainers@checksec.invalid>
+    homepage: https://github.com/slimm609/checksec
+    description: Security feature auditing for ELF binaries and Linux kernels.
+    license: BSD-3-Clause
+    bindir: /usr/bin
+    contents:
+      - src: LICENSE
+        dst: /usr/share/licenses/checksec/LICENSE
+      - src: extras/man/checksec.1
+        dst: /usr/share/man/man1/checksec.1
+    rpm:
+      summary: Security feature auditing for ELF binaries and Linux kernels
 
 checksum:
   name_template: "{{ .ProjectName }}_checksums.sha512"

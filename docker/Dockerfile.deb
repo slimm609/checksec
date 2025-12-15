@@ -1,0 +1,16 @@
+ARG BASE_IMAGE=debian:12-slim
+FROM ${BASE_IMAGE}
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+ARG PACKAGE
+COPY ${PACKAGE} /tmp/checksec.deb
+
+RUN apt-get update \
+  && apt-get install -y /tmp/checksec.deb \
+  && rm -rf /var/lib/apt/lists/* /tmp/checksec.deb
+
+RUN checksec --version
+
+ENTRYPOINT ["checksec"]
+CMD ["--help"]
