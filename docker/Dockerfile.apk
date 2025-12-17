@@ -1,0 +1,13 @@
+ARG BASE_IMAGE=alpine:3.20
+FROM ${BASE_IMAGE}
+
+ARG PACKAGE
+COPY ${PACKAGE} /tmp/checksec.apk
+
+RUN apk add --no-cache --allow-untrusted /tmp/checksec.apk \
+  && rm -f /tmp/checksec.apk
+
+RUN checksec --version
+
+ENTRYPOINT ["checksec"]
+CMD ["--help"]

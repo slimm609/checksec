@@ -1,0 +1,15 @@
+ARG BASE_IMAGE=fedora:40
+FROM ${BASE_IMAGE}
+
+ARG PACKAGE
+COPY ${PACKAGE} /tmp/checksec.rpm
+
+RUN dnf -y update \
+  && dnf -y install /tmp/checksec.rpm \
+  && dnf clean all \
+  && rm -f /tmp/checksec.rpm
+
+RUN checksec --version
+
+ENTRYPOINT ["checksec"]
+CMD ["--help"]
