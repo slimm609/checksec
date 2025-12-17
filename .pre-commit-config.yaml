@@ -13,7 +13,7 @@ repos:
     pass_filenames: false
   - id: go-fmt
     name: gofmt (write)
-    entry: bash -c 'gofmt -s -w "$@"'
+    entry: gofmt -s -w
     language: system
     types: [go]
   - id: go-vet
