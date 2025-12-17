@@ -47,23 +47,24 @@ func DynValueFromPTDynamic(file *elf.File, tag elf.DynTag) ([]uint64, error) {
 				return res, err
 			}
 
+			bo := file.ByteOrder
 			if file.Class == elf.ELFCLASS64 {
 				for i := 0; i < len(data); i += 16 { // Each entry is typically 16 bytes
-					if i+8 > len(data) {
+					if i+16 > len(data) {
 						break
 					}
-					if elf.DynTag(binary.LittleEndian.Uint64(data[i:i+8])) == tag {
-						value := binary.LittleEndian.Uint64(data[i+8 : i+16])
+					if elf.DynTag(bo.Uint64(data[i:i+8])) == tag {
+						value := bo.Uint64(data[i+8 : i+16])
 						return append(res, value), err
 					}
 				}
 			} else {
 				for i := 0; i < len(data); i += 8 { // Each entry is typically 8 bytes
-					if i+4 > len(data) {
+					if i+8 > len(data) {
 						break
 					}
-					if elf.DynTag(binary.LittleEndian.Uint32(data[i:i+4])) == tag {
-						value := uint64(binary.LittleEndian.Uint32(data[i+4 : i+8]))
+					if elf.DynTag(bo.Uint32(data[i:i+4])) == tag {
+						value := uint64(bo.Uint32(data[i+4 : i+8]))
 						return append(res, value), err
 					}
 				}
@@ -77,6 +78,15 @@ func FunctionsFromSymbolTable(file *os.File) ([]elf.Symbol, error) {
 	// Iterate over the dynamic section to handle stripped binaries with no sections
 	var functions []elf.Symbol
 
+	fileInfo, statErr := file.Stat()
+	if statErr != nil {
+		return functions, statErr
+	}
+	if fileInfo.Size() <= 0 {
+		return functions, fmt.Errorf("invalid file size: %d", fileInfo.Size())
+	}
+	fileSize := uint64(fileInfo.Size())
+
 	f, err := elf.NewFile(file)
 	if err != nil {
 		fmt.Println("Error parsing ELF file:", err)
@@ -86,13 +96,61 @@ func FunctionsFromSymbolTable(file *os.File) ([]elf.Symbol, error) {
 	symTabOffset, _ := DynValueFromPTDynamic(f, elf.DT_SYMTAB)
 	strTabOffset, _ := DynValueFromPTDynamic(f, elf.DT_STRTAB)
 	strTabSize, _ := DynValueFromPTDynamic(f, elf.DT_STRSZ)
+	symEntSizeVals, _ := DynValueFromPTDynamic(f, elf.DT_SYMENT)
 
 	if symTabOffset == nil || strTabSize == nil || strTabOffset == nil {
 		return functions, err
 	}
+	if len(symTabOffset) == 0 || len(strTabOffset) == 0 || len(strTabSize) == 0 {
+		return functions, err
+	}
+	if symTabOffset[0] >= fileSize || strTabOffset[0] >= fileSize {
+		return functions, fmt.Errorf("invalid dynamic offsets: symtab=%d strtab=%d fileSize=%d", symTabOffset[0], strTabOffset[0], fileSize)
+	}
+
+	// Determine symbol entry size from DT_SYMENT or fallback to arch defaults
+	var symEntSize uint64
+	if len(symEntSizeVals) > 0 && symEntSizeVals[0] > 0 {
+		symEntSize = symEntSizeVals[0]
+	} else if f.Class == elf.ELFCLASS32 {
+		symEntSize = uint64(binary.Size(elf.Sym32{}))
+	} else {
+		symEntSize = uint64(binary.Size(elf.Sym64{}))
+	}
+
+	if symEntSize == 0 {
+		return functions, err
+	}
+
+	// Estimate symbol table size conservatively to avoid huge allocations.
+	var symTableSize uint64
+	if strTabOffset[0] > symTabOffset[0] {
+		symTableSize = strTabOffset[0] - symTabOffset[0]
+	} else {
+		estCount := strTabSize[0] / symEntSize
+		symTableSize = estCount * symEntSize
+	}
+
+	if symTableSize == 0 {
+		return functions, err
+	}
+
+	// Cap reads to the underlying file size to avoid huge allocations on malformed binaries.
+	if max := fileSize - symTabOffset[0]; symTableSize > max {
+		symTableSize = max
+	}
+	if symTableSize == 0 {
+		return functions, err
+	}
+	if max := fileSize - strTabOffset[0]; strTabSize[0] > max {
+		strTabSize[0] = max
+	}
+	if strTabSize[0] == 0 {
+		return functions, err
+	}
 
 	// Read the symbol table
-	symData := make([]byte, symTabOffset[0])
+	symData := make([]byte, symTableSize)
 	_, err = file.ReadAt(symData, int64(symTabOffset[0]))
 	if err != nil {
 		fmt.Println("Error reading symbol table:", err)
@@ -118,6 +176,8 @@ func FunctionsFromSymbolTable(file *os.File) ([]elf.Symbol, error) {
 		is64Bit = true
 	}
 
+	bo := f.ByteOrder
+
 	// Iterate over the symbol table to extract function names
 	for i := 0; i < len(symData); i += symSize {
 		if i+symSize > len(symData) {
@@ -125,7 +185,7 @@ func FunctionsFromSymbolTable(file *os.File) ([]elf.Symbol, error) {
 		}
 		if is64Bit {
 			sym := elf.Sym64{}
-			err := binary.Read(bytes.NewReader(symData[i:i+symSize]), binary.LittleEndian, &sym)
+			err := binary.Read(bytes.NewReader(symData[i:i+symSize]), bo, &sym)
 			if err != nil {
 				fmt.Println("Error reading symbol:", err)
 				continue
@@ -149,7 +209,7 @@ func FunctionsFromSymbolTable(file *os.File) ([]elf.Symbol, error) {
 			}
 		} else {
 			sym := elf.Sym32{}
-			err := binary.Read(bytes.NewReader(symData[i:i+symSize]), binary.LittleEndian, &sym)
+			err := binary.Read(bytes.NewReader(symData[i:i+symSize]), bo, &sym)
 			if err != nil {
 				fmt.Println("Error reading symbol:", err)
 				continue

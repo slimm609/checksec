@@ -36,6 +36,7 @@ var fortifyProcCmd = &cobra.Command{
 
 		utils.CheckElfExists(file)
 		binary := utils.GetBinary(file)
+		defer binary.Close()
 		fortify := checksec.Fortify(file, binary, libc)
 		output := []interface{}{
 			map[string]interface{}{

@@ -107,20 +107,14 @@ func GetAllFilesFromDir(dirName string, recursive bool) []string {
 	return results
 }
 
-// GetBinary - Return the binary details
+// GetBinary - Return the ELF file handle.
+// Callers must close the returned *elf.File when finished.
 func GetBinary(fileName string) *elf.File {
-
 	binary, err := elf.Open(fileName)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	defer func(f *elf.File) {
-		err := f.Close()
-		if err != nil {
-			log.Fatal(err)
-		}
-	}(binary)
 
 	return binary
 }

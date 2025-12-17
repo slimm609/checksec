@@ -133,6 +133,9 @@ func getStringField(v interface{}, fieldName string) string {
 func RunFileChecks(filename string, libc string) ([]interface{}, []interface{}) {
 
 	binary := getBinaryFn(filename)
+	if binary != nil {
+		defer binary.Close()
+	}
 	relro := relroFn(filename)
 	canary := canaryFn(filename)
 	cfi := cfiFn(filename)

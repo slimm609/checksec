@@ -56,6 +56,9 @@ func Fortify(name string, binary *elf.File, ldd string) *fortify {
 	}
 	defer libcfile.Close()
 	libc, err := elf.NewFile(libcfile)
+	if err != nil {
+		output.Fatalf("Error parsing libc file: %v", err)
+	}
 
 	libcDynSymbols, err := libc.DynamicSymbols()
 	if err != nil {
