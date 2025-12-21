@@ -2,7 +2,7 @@
 %global _enable_debug_packages 0
 Summary:    Tool to check system for binary-hardening
 Name:        checksec
-Version:    3.0.2
+Version:    3.1.0
 Release:    1
 License:    BSD
 Group:        Development/Tools
