@@ -27,6 +27,14 @@ var procAllCmd = &cobra.Command{
 			if proc == int32(os.Getpid()) {
 				continue
 			}
+			// skip kthreadd
+			if proc == 2 {
+				continue
+			}
+			// Check parent process ID (kthreadd has PID 2)
+			if ppid, err := process.Ppid(); err == nil && ppid == 2 {
+				continue
+			}
 			filePath := filepath.Join("/proc", fmt.Sprint(proc), "exe")
 
 			file := filePath
@@ -40,6 +48,12 @@ var procAllCmd = &cobra.Command{
 				// If we cannot read the link, try using the symlink path
 				file = filePath
 			}
+
+			// Skip non-ELF files (scripts, etc.)
+			if !utils.CheckIfElf(file) {
+				continue
+			}
+
 			data, color := utils.RunFileChecks(file, libc)
 			Elements = append(Elements, data...)
 			ElementColors = append(ElementColors, color...)
