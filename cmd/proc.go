@@ -21,7 +21,13 @@ var procCmd = &cobra.Command{
 
 		file, err := os.Readlink(filepath.Join("/proc", proc, "exe"))
 		if err != nil {
-			fmt.Printf("Error: Pid %s not found", proc)
+			if os.IsNotExist(err) {
+				fmt.Printf("Error: Pid %s not found", proc)
+			} else if os.IsPermission(err) {
+				fmt.Printf("Error: Permission denied to access /proc/%s/exe", proc)
+			} else {
+				fmt.Printf("Error: %s", err.Error())
+			}
 			os.Exit(1)
 		}
 
