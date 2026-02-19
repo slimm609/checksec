@@ -13,11 +13,11 @@ type stubFortify struct{ Output, Color, Fortified, Fortifiable string }
 func TestRunFileChecks_UsesHooksAndAggregates(t *testing.T) {
 	origGetBinary := getBinaryFn
 	origRelro, origCanary, origCfi, origNx, origPie := relroFn, canaryFn, cfiFn, nxFn, pieFn
-	origRpath, origRunpath, origSymbols, origFortify := rpathFn, runpathFn, symbolsFn, fortifyFn
+	origRpath, origRunpath, origSymbols, origSafeStack, origFortify := rpathFn, runpathFn, symbolsFn, safestackFn, fortifyFn
 	defer func() {
 		getBinaryFn = origGetBinary
 		relroFn, canaryFn, cfiFn, nxFn, pieFn = origRelro, origCanary, origCfi, origNx, origPie
-		rpathFn, runpathFn, symbolsFn, fortifyFn = origRpath, origRunpath, origSymbols, origFortify
+		rpathFn, runpathFn, symbolsFn, safestackFn, fortifyFn = origRpath, origRunpath, origSymbols, origSafeStack, origFortify
 	}()
 
 	getBinaryFn = func(string) *elf.File { return nil }
@@ -29,6 +29,7 @@ func TestRunFileChecks_UsesHooksAndAggregates(t *testing.T) {
 	rpathFn = func(string) interface{} { return &stubRes{Output: "No RPATH", Color: "green"} }
 	runpathFn = func(string) interface{} { return &stubRes{Output: "No RUNPATH", Color: "green"} }
 	symbolsFn = func(string) interface{} { return &stubRes{Output: "0 symbols", Color: "green"} }
+	safestackFn = func(string) interface{} { return &stubRes{Output: "No SafeStack Found", Color: "red"} }
 	fortifyFn = func(string, interface{}, string) interface{} {
 		return &stubFortify{Output: "Yes", Color: "green", Fortified: "2", Fortifiable: "3"}
 	}
@@ -37,7 +38,7 @@ func TestRunFileChecks_UsesHooksAndAggregates(t *testing.T) {
 
 	b, _ := json.Marshal(data)
 	s := string(b)
-	mustContain := []string{"Full RELRO", "Canary Found", "SHSTK", "NX enabled", "PIE Enabled", "No RPATH", "No RUNPATH", "0 symbols", "\"fortified\":\"2\"", "\"fortifyable\":\"3\""}
+	mustContain := []string{"Full RELRO", "Canary Found", "SHSTK", "NX enabled", "PIE Enabled", "No RPATH", "No RUNPATH", "0 symbols", "No SafeStack Found", "\"fortified\":\"2\"", "\"fortifyable\":\"3\""}
 	for _, m := range mustContain {
 		if !strings.Contains(s, m) {
 			t.Fatalf("data missing %q in %s", m, s)
@@ -46,7 +47,7 @@ func TestRunFileChecks_UsesHooksAndAggregates(t *testing.T) {
 
 	cb, _ := json.Marshal(colors)
 	cs := string(cb)
-	for _, m := range []string{"canaryColor", "cfiColor", "pieColor", "nxColor", "relroColor", "rpathColor", "runpathColor", "symbolsColor", "fortify_sourceColor"} {
+	for _, m := range []string{"canaryColor", "cfiColor", "pieColor", "nxColor", "relroColor", "rpathColor", "runpathColor", "symbolsColor", "safestackColor", "fortify_sourceColor"} {
 		if !strings.Contains(cs, m) {
 			t.Fatalf("colors missing %q in %s", m, cs)
 		}

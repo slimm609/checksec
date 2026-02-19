@@ -97,6 +97,16 @@ var (
 		}()
 		return checksec.SYMBOLS(filename)
 	}
+	safestackFn = func(filename string) interface{} {
+		result, err := checksec.SafeStack(filename)
+		if err != nil {
+			return &checksec.SafeStackResult{
+				Output: "Error checking SafeStack",
+				Color:  "red",
+			}
+		}
+		return result
+	}
 	fortifyFn = func(filename string, binary interface{}, libc string) (result interface{}) {
 		defer func() {
 			if r := recover(); r != nil {
@@ -144,6 +154,7 @@ func RunFileChecks(filename string, libc string) ([]interface{}, []interface{}) 
 	rpath := rpathFn(filename)
 	runpath := runpathFn(filename)
 	symbols := symbolsFn(filename)
+	safestack := safestackFn(filename)
 	fortify := fortifyFn(filename, binary, libc)
 
 	data := []interface{}{
@@ -158,6 +169,7 @@ func RunFileChecks(filename string, libc string) ([]interface{}, []interface{}) 
 				"rpath":          getStringField(rpath, "Output"),
 				"runpath":        getStringField(runpath, "Output"),
 				"symbols":        getStringField(symbols, "Output"),
+				"safestack":      getStringField(safestack, "Output"),
 				"fortify_source": getStringField(fortify, "Output"),
 				"fortified":      getStringField(fortify, "Fortified"),
 				"fortifyable":    getStringField(fortify, "Fortifiable"),
@@ -191,6 +203,8 @@ func RunFileChecks(filename string, libc string) ([]interface{}, []interface{}) 
 				"runpathColor":        getStringField(runpath, "Color"),
 				"symbols":             getStringField(symbols, "Output"),
 				"symbolsColor":        getStringField(symbols, "Color"),
+				"safestack":           getStringField(safestack, "Output"),
+				"safestackColor":      getStringField(safestack, "Color"),
 			},
 		},
 	}
