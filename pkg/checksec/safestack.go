@@ -2,12 +2,10 @@ package checksec
 
 import (
 	"bytes"
-	"context"
 	"debug/elf"
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 )
 
 // SafeStackInit symbol used by SafeStack-enabled binaries.
@@ -32,14 +30,6 @@ func SafeStack(name string) (*SafeStackResult, error) {
 	cleanPath := filepath.Clean(name)
 	if _, err := os.Stat(cleanPath); err != nil {
 		return nil, fmt.Errorf("cannot access file: %w", err)
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-	select {
-	case <-ctx.Done():
-		return nil, fmt.Errorf("operation timed out")
-	default:
 	}
 
 	f, err := os.Open(cleanPath)
