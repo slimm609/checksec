@@ -23,6 +23,7 @@ type SecurityCheck struct {
 		RPath         string `json:"rpath"`
 		RunPath       string `json:"runpath"`
 		Symbols       string `json:"symbols"`
+		SafeStack     string `json:"safestack"`
 	} `json:"checks"`
 }
 
@@ -49,6 +50,8 @@ type SecurityCheckColor struct {
 		RunPathColor       string `json:"runpathColor"`
 		Symbols            string `json:"symbols"`
 		SymbolsColor       string `json:"symbolsColor"`
+		SafeStack          string `json:"safestack"`
+		SafeStackColor     string `json:"safestackColor"`
 	} `json:"checks"`
 }
 
@@ -93,7 +96,7 @@ func FilePrinter(outputFormat string, data interface{}, colors interface{}, noBa
 			return
 		}
 		if !noHeader {
-			fmt.Printf("%-24s%-26s%-26s%-22s%-24s%-19s%-21s%-24s%-19s%-20s%-25s%-40s\n",
+			fmt.Printf("%-24s%-26s%-26s%-22s%-24s%-19s%-21s%-24s%-24s%-19s%-20s%-25s%-40s\n",
 				output.ColorPrinter("RELRO", "unset"),
 				output.ColorPrinter("Stack Canary", "unset"),
 				output.ColorPrinter("CFI", "unset"),
@@ -102,6 +105,7 @@ func FilePrinter(outputFormat string, data interface{}, colors interface{}, noBa
 				output.ColorPrinter("RPATH", "unset"),
 				output.ColorPrinter("RUNPATH", "unset"),
 				output.ColorPrinter("Symbols", "unset"),
+				output.ColorPrinter("SafeStack", "unset"),
 				output.ColorPrinter("FORTIFY", "unset"),
 				output.ColorPrinter("Fortified", "unset"),
 				output.ColorPrinter("Fortifiable", "unset"),
@@ -109,7 +113,7 @@ func FilePrinter(outputFormat string, data interface{}, colors interface{}, noBa
 			)
 		}
 		for _, check := range securityChecksColors {
-			fmt.Printf("%-25s%-27s%-27s%-23s%-25s%-20s%-22s%-25s%-20s%-20s%-25s%-40s\n",
+			fmt.Printf("%-25s%-27s%-27s%-23s%-25s%-20s%-22s%-25s%-25s%-20s%-20s%-25s%-40s\n",
 				output.ColorPrinter(check.Checks.Relro, check.Checks.RelroColor),
 				output.ColorPrinter(check.Checks.Canary, check.Checks.CanaryColor),
 				output.ColorPrinter(check.Checks.Cfi, check.Checks.CfiColor),
@@ -118,6 +122,7 @@ func FilePrinter(outputFormat string, data interface{}, colors interface{}, noBa
 				output.ColorPrinter(check.Checks.RPath, check.Checks.RPathColor),
 				output.ColorPrinter(check.Checks.RunPath, check.Checks.RunPathColor),
 				output.ColorPrinter(check.Checks.Symbols, check.Checks.SymbolsColor),
+				output.ColorPrinter(check.Checks.SafeStack, check.Checks.SafeStackColor),
 				output.ColorPrinter(check.Checks.FortifySource, check.Checks.FortifySourceColor),
 				output.ColorPrinter(check.Checks.Fortified, "unset"),
 				output.ColorPrinter(check.Checks.FortifyAble, "unset"),
