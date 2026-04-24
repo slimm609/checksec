@@ -35,15 +35,19 @@ func SYMBOLS(name string) *symbols {
 	return &res
 }
 
-func DynValueFromPTDynamic(file *elf.File, tag elf.DynTag) ([]uint64, error) {
+func DynValueFromPTDynamic(file *elf.File, tag elf.DynTag, names ...string) ([]uint64, error) {
 	var res []uint64
+	name := "unknown"
+	if len(names) > 0 {
+		name = names[0]
+	}
 
 	for _, prog := range file.Progs {
 		if prog.Type == elf.PT_DYNAMIC {
 			data := make([]byte, prog.Filesz)
 			_, err := prog.ReadAt(data, 0)
 			if err != nil {
-				fmt.Println("Error reading dynamic section:", err)
+				output.Warnf("Error reading dynamic section for %s: %v", name, err)
 				return res, err
 			}
 
@@ -89,14 +93,14 @@ func FunctionsFromSymbolTable(file *os.File) ([]elf.Symbol, error) {
 
 	f, err := elf.NewFile(file)
 	if err != nil {
-		fmt.Println("Error parsing ELF file:", err)
+		output.Warnf("Error parsing ELF file %s: %v", file.Name(), err)
 		return functions, err
 	}
 
-	symTabOffset, _ := DynValueFromPTDynamic(f, elf.DT_SYMTAB)
-	strTabOffset, _ := DynValueFromPTDynamic(f, elf.DT_STRTAB)
-	strTabSize, _ := DynValueFromPTDynamic(f, elf.DT_STRSZ)
-	symEntSizeVals, _ := DynValueFromPTDynamic(f, elf.DT_SYMENT)
+	symTabOffset, _ := DynValueFromPTDynamic(f, elf.DT_SYMTAB, file.Name())
+	strTabOffset, _ := DynValueFromPTDynamic(f, elf.DT_STRTAB, file.Name())
+	strTabSize, _ := DynValueFromPTDynamic(f, elf.DT_STRSZ, file.Name())
+	symEntSizeVals, _ := DynValueFromPTDynamic(f, elf.DT_SYMENT, file.Name())
 
 	if symTabOffset == nil || strTabSize == nil || strTabOffset == nil {
 		return functions, err
@@ -153,7 +157,7 @@ func FunctionsFromSymbolTable(file *os.File) ([]elf.Symbol, error) {
 	symData := make([]byte, symTableSize)
 	_, err = file.ReadAt(symData, int64(symTabOffset[0]))
 	if err != nil {
-		fmt.Println("Error reading symbol table:", err)
+		output.Warnf("Error reading symbol table for %s: %v", file.Name(), err)
 		return functions, err
 	}
 
@@ -161,7 +165,7 @@ func FunctionsFromSymbolTable(file *os.File) ([]elf.Symbol, error) {
 	strData := make([]byte, strTabSize[0])
 	_, err = file.ReadAt(strData, int64(strTabOffset[0]))
 	if err != nil {
-		fmt.Println("Error reading string table:", err)
+		output.Warnf("Error reading string table for %s: %v", file.Name(), err)
 		return functions, err
 	}
 
@@ -187,7 +191,7 @@ func FunctionsFromSymbolTable(file *os.File) ([]elf.Symbol, error) {
 			sym := elf.Sym64{}
 			err := binary.Read(bytes.NewReader(symData[i:i+symSize]), bo, &sym)
 			if err != nil {
-				fmt.Println("Error reading symbol:", err)
+				output.Warnf("Error reading symbol in %s: %v", file.Name(), err)
 				continue
 			}
 
@@ -211,7 +215,7 @@ func FunctionsFromSymbolTable(file *os.File) ([]elf.Symbol, error) {
 			sym := elf.Sym32{}
 			err := binary.Read(bytes.NewReader(symData[i:i+symSize]), bo, &sym)
 			if err != nil {
-				fmt.Println("Error reading symbol:", err)
+				output.Warnf("Error reading symbol in %s: %v", file.Name(), err)
 				continue
 			}
 

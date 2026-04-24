@@ -1,5 +1,6 @@
 .\" Process this file with
 .\" groff -mdoc -Tascii checksec.1
+.\"
 .Dd February 2026
 .Dt CHECKSEC 1
 .Os
@@ -14,16 +15,16 @@
 .Op Fl -libc Ar path
 .Op Fl -no-banner
 .Op Fl -no-headers
+.Op Fl -no-warnings
+.Op Fl -color Ar auto|always|never
 .Ar command
 .Op Ar command-options
 .Sh DESCRIPTION
 .Nm
-is a security-checking tool for binaries, running processes, and kernel settings.
-.Pp
-Since
-.Sy v3.0.0 ,
-.Nm
-uses a subcommand-based CLI. This is a breaking change from the older v2/bash-style interface.
+is a Go implementation of the checksec utility. It inspects ELF binaries and
+the running kernel for common hardening features such as RELRO, NX, PIE, RPATH/RUNPATH,
+stack canaries, Clang CFI hints, and fortify-able libc usage. Results can be printed
+as a table or serialized for machine consumption.
 .Sh GLOBAL OPTIONS
 .Bl -tag -width Ds
 .It Fl h , Fl -help
@@ -41,31 +42,41 @@ checks on offline/embedded filesystems).
 Disable the startup banner.
 .It Fl -no-headers
 Disable table headers.
+.It Fl -no-warnings
+Suppress warning messages (e.g., missing libc, unreadable symbol tables).
+.It Fl -color Ns = Ns Ar auto|always|never
+Control color output. Default is
+.Sy auto
+(color when writing to a terminal).
+Use
+.Sy always
+to preserve color through pipes.
 .El
 .Sh COMMANDS
 .Bl -tag -width Ds
 .It Cm file Ar path
-Check security properties for a single binary file.
+Inspect a single ELF file.
 .It Cm dir Ar directory
-Check security properties for binary files in a directory.
-Use
-.Fl r
-or
-.Fl -recursive
+Inspect all ELF files in a directory. Use
+.Fl r , Fl -recursive
 to recurse into subdirectories.
 .It Cm fortifyFile Ar path
-Check FORTIFY information for a binary file.
+Report fortified/fortifiable libc calls in a file.
 .It Cm fortifyProc Ar pid
-Check FORTIFY information for a running process.
+Report fortified/fortifiable libc calls for a running process ID.
 .It Cm kernel Op Ar config
-Check kernel security flags.
-If
-.Ar config
-is provided, use that kernel config file.
+Inspect kernel hardening via
+.Pa /proc/config.gz
+,
+.Pa /boot/config-<release>
+,
+or a supplied config path.
 .It Cm proc Ar pid
-Check security properties for a running process.
+Inspect the executable of a running process ID.
 .It Cm procAll
-Check security properties for all running processes.
+Inspect all running processes. Kernel threads and processes without readable
+.Pa /proc/<pid>/exe
+are skipped.
 .El
 .Sh COMPATIBILITY NOTES
 .Bl -bullet
@@ -92,7 +103,9 @@ If you want compact output similar to older invocations, use
 .It
 .Sy checksec file /bin/ls
 .It
-.Sy checksec --no-banner file /bin/ls
+.Sy checksec --no-banner --no-warnings file /bin/ls
+.It
+.Sy checksec --color=always file /bin/ls | grep RELRO
 .It
 .Sy checksec --output json dir /usr/bin
 .It
@@ -104,8 +117,15 @@ If you want compact output similar to older invocations, use
 .It
 .Sy checksec kernel /path/to/config
 .El
+.Sh DIAGNOSTICS
+Most commands exit non-zero on fatal errors (e.g., unreadable files). The
+.Cm procAll
+command skips processes it cannot read and continues.
 .Sh SEE ALSO
-.Xr hardening-check 1
+.Xr hardening-check 1 ,
+.Xr feature_test_macros 7 ,
+.Xr gcc 1 ,
+.Xr ld 1
 .Sh HISTORY
 .Nm
 was originally written by

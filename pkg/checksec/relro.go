@@ -37,16 +37,16 @@ func RELRO(name string) *relro {
 	// this is depending on the compiler version used.
 	bind, _ := file.DynValue(elf.DT_BIND_NOW)
 	if len(bind) == 0 {
-		bind, _ = DynValueFromPTDynamic(file, elf.DT_BIND_NOW)
+		bind, _ = DynValueFromPTDynamic(file, elf.DT_BIND_NOW, name)
 	}
 	flags, _ := file.DynValue(elf.DT_FLAGS)
 	if len(flags) == 0 {
-		flags, _ = DynValueFromPTDynamic(file, elf.DT_FLAGS)
+		flags, _ = DynValueFromPTDynamic(file, elf.DT_FLAGS, name)
 	}
 
 	flags1, _ := file.DynValue(elf.DT_FLAGS_1)
 	if len(flags1) == 0 {
-		flags1, _ = DynValueFromPTDynamic(file, elf.DT_FLAGS_1)
+		flags1, _ = DynValueFromPTDynamic(file, elf.DT_FLAGS_1, name)
 	}
 
 	if (len(bind) > 0 && bind[0] == 0) ||

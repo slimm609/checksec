@@ -37,6 +37,11 @@ var procAllCmd = &cobra.Command{
 			}
 			filePath := filepath.Join("/proc", fmt.Sprint(proc), "exe")
 
+			// Skip kernel threads; they do not have an exe.
+			if isKthread(proc) {
+				continue
+			}
+
 			file := filePath
 			if target, err := os.Readlink(filePath); err == nil {
 				file = strings.Split(target, " ")[0]
@@ -49,11 +54,13 @@ var procAllCmd = &cobra.Command{
 				file = filePath
 			}
 
-			// Skip non-ELF files (scripts, etc.)
+			if _, err := os.Stat(file); err != nil {
+				// Cannot access exe (e.g., permission denied); skip this process
+				continue
+			}
 			if !utils.CheckIfElf(file) {
 				continue
 			}
-
 			data, color := utils.RunFileChecks(file, libc)
 			Elements = append(Elements, data...)
 			ElementColors = append(ElementColors, color...)
@@ -64,4 +71,22 @@ var procAllCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(procAllCmd)
+}
+
+func isKthread(pid int32) bool {
+	statusPath := filepath.Join("/proc", fmt.Sprint(pid), "status")
+	data, err := os.ReadFile(statusPath)
+	if err != nil {
+		return false
+	}
+	for _, line := range strings.Split(string(data), "\n") {
+		if strings.HasPrefix(line, "Kthread:") {
+			fields := strings.Fields(line)
+			if len(fields) >= 2 && fields[1] == "1" {
+				return true
+			}
+			break
+		}
+	}
+	return false
 }

@@ -8,7 +8,8 @@ import (
 )
 
 var (
-	stdError = os.Stderr
+	stdError   = os.Stderr
+	NoWarnings bool
 )
 
 func PrintLogo(noBanner bool) {
@@ -46,6 +47,12 @@ func ColorPrinter(result string, resultColor string) string {
 		return italic(result)
 	} else {
 		return unset(result)
+	}
+}
+
+func Warnf(format string, a ...any) {
+	if !NoWarnings {
+		fmt.Fprintf(stdError, format+"\n", a...)
 	}
 }
 

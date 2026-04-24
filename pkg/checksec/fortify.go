@@ -2,7 +2,6 @@ package checksec
 
 import (
 	"debug/elf"
-	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
@@ -166,7 +165,7 @@ func getLdd(filename string) string {
 
 	files, _ := uroot.FList(filename)
 	if dynamic && len(files) == 0 {
-		fmt.Println("Warning: Dynamic Binary found but missing libc. Fortify results will be skipped")
+		output.Warnf("Warning: %s: Dynamic Binary found but missing libc. Fortify results will be skipped", filename)
 		return "unk"
 	}
 
