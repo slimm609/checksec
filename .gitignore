@@ -3,6 +3,6 @@ checksec.crt
 checksec.key
 tests/binaries/output/
 dist/
-checksec
+/checksec
 docs/superpowers/
 coverage.out
