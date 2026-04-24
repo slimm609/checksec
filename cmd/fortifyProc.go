@@ -30,7 +30,7 @@ var fortifyProcCmd = &cobra.Command{
 				file = filePath
 			}
 		} else {
-			fmt.Printf("Error: Pid %s not found/no access", proc)
+			fmt.Fprintf(os.Stderr, "Error: Pid %s not found/no access\n", proc)
 			os.Exit(1)
 		}
 

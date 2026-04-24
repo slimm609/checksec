@@ -42,10 +42,14 @@ func Execute() {
 	cobra.OnInitialize(func() {
 		output.NoWarnings = noWarnings
 		switch colorMode {
+		case "auto":
+			// default behavior
 		case "always":
 			color.NoColor = false
 		case "never":
 			color.NoColor = true
+		default:
+			output.Fatalf("Error: invalid --color value %q (must be auto, always, or never)\n", colorMode)
 		}
 	})
 

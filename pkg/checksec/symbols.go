@@ -35,15 +35,19 @@ func SYMBOLS(name string) *symbols {
 	return &res
 }
 
-func DynValueFromPTDynamic(file *elf.File, tag elf.DynTag) ([]uint64, error) {
+func DynValueFromPTDynamic(file *elf.File, tag elf.DynTag, names ...string) ([]uint64, error) {
 	var res []uint64
+	name := "unknown"
+	if len(names) > 0 {
+		name = names[0]
+	}
 
 	for _, prog := range file.Progs {
 		if prog.Type == elf.PT_DYNAMIC {
 			data := make([]byte, prog.Filesz)
 			_, err := prog.ReadAt(data, 0)
 			if err != nil {
-				output.Warnf("Error reading dynamic section: %v", err)
+				output.Warnf("Error reading dynamic section for %s: %v", name, err)
 				return res, err
 			}
 
@@ -93,10 +97,10 @@ func FunctionsFromSymbolTable(file *os.File) ([]elf.Symbol, error) {
 		return functions, err
 	}
 
-	symTabOffset, _ := DynValueFromPTDynamic(f, elf.DT_SYMTAB)
-	strTabOffset, _ := DynValueFromPTDynamic(f, elf.DT_STRTAB)
-	strTabSize, _ := DynValueFromPTDynamic(f, elf.DT_STRSZ)
-	symEntSizeVals, _ := DynValueFromPTDynamic(f, elf.DT_SYMENT)
+	symTabOffset, _ := DynValueFromPTDynamic(f, elf.DT_SYMTAB, file.Name())
+	strTabOffset, _ := DynValueFromPTDynamic(f, elf.DT_STRTAB, file.Name())
+	strTabSize, _ := DynValueFromPTDynamic(f, elf.DT_STRSZ, file.Name())
+	symEntSizeVals, _ := DynValueFromPTDynamic(f, elf.DT_SYMENT, file.Name())
 
 	if symTabOffset == nil || strTabSize == nil || strTabOffset == nil {
 		return functions, err
