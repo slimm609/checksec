@@ -4,3 +4,5 @@ checksec.key
 tests/binaries/output/
 dist/
 checksec
+docs/superpowers/
+coverage.out

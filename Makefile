@@ -5,6 +5,11 @@ VERSION ?= 3.1.0
 test:
 	./tests/test-checksec.sh
 
+.PHONY: coverage
+coverage:
+	go test ./pkg/... -coverprofile=coverage.out -covermode=atomic
+	go tool cover -func=coverage.out
+
 .PHONY: build-image
 build-image:
 	docker build -t slimm609/checksec .
