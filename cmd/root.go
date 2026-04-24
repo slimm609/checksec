@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/fatih/color"
+	"github.com/slimm609/checksec/v3/pkg/output"
 	"github.com/spf13/cobra"
 )
 
@@ -12,6 +14,8 @@ var (
 	outputFormat string
 	noBanner     bool
 	noHeader     bool
+	noWarnings   bool
+	colorMode    string
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -32,6 +36,19 @@ func Execute() {
 	rootCmd.PersistentFlags().StringVarP(&libc, "libc", "l", "", "Set libc location (useful for FORTIFY check on offline embedded file-system)")
 	rootCmd.PersistentFlags().BoolVarP(&noBanner, "no-banner", "", false, "disable the banner")
 	rootCmd.PersistentFlags().BoolVarP(&noHeader, "no-headers", "", false, "disable the headers")
+	rootCmd.PersistentFlags().BoolVarP(&noWarnings, "no-warnings", "", false, "disable warnings")
+	rootCmd.PersistentFlags().StringVar(&colorMode, "color", "auto", "Color output mode (auto, always, never)")
+
+	cobra.OnInitialize(func() {
+		output.NoWarnings = noWarnings
+		switch colorMode {
+		case "always":
+			color.NoColor = false
+		case "never":
+			color.NoColor = true
+		}
+	})
+
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
