@@ -7,7 +7,7 @@ test:
 
 .PHONY: coverage
 coverage:
-	go test ./pkg/... -coverprofile=coverage.out -covermode=count
+	go test ./pkg/... -coverpkg=./pkg/... -coverprofile=coverage.out -covermode=count
 	go tool cover -func=coverage.out
 
 .PHONY: build-image

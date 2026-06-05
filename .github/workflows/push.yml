@@ -15,7 +15,13 @@ jobs:
           go-version-file: go.mod
 
       - name: Run tests with coverage
-        run: go test ./... -coverprofile=coverage.out
+        run: go test ./pkg/... -coverpkg=./pkg/... -covermode=count -coverprofile=coverage.out
+
+      - name: Enforce coverage threshold
+        run: |
+          pct=$(go tool cover -func=coverage.out | awk '/^total:/ {print substr($3, 1, length($3)-1)}')
+          echo "Total pkg coverage: ${pct}%"
+          awk -v p="$pct" 'BEGIN { exit (p+0 < 80.0) }' || { echo "Coverage ${pct}% is below the 80% floor"; exit 1; }
 
       - name: Build checksec binary for Docker context
         run: go build -o checksec .
