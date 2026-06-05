@@ -141,7 +141,10 @@ func TestFortify_FixtureLibcSupported(t *testing.T) {
 	libc := requireFixture(t, "dso.so")
 	target := requireFixture(t, "all")
 
-	res := Fortify(target, nil, libc)
+	res, err := Fortify(target, nil, libc)
+	if err != nil {
+		t.Fatalf("Fortify() error = %v", err)
+	}
 	if res == nil {
 		t.Fatal("Fortify() returned nil")
 	}

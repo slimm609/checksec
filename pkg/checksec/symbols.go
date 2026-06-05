@@ -16,11 +16,11 @@ type symbols struct {
 }
 
 // SYMBOLS detects usage of elf symbols
-func SYMBOLS(name string) *symbols {
+func SYMBOLS(name string) (*symbols, error) {
 	res := symbols{}
 	file, err := elf.Open(name)
 	if err != nil {
-		output.Fatalf("Error opening ELF file: %v", err)
+		return nil, fmt.Errorf("error opening ELF file: %w", err)
 	}
 	defer file.Close()
 
@@ -32,7 +32,7 @@ func SYMBOLS(name string) *symbols {
 		res.Output = fmt.Sprintf("%d symbols", len(symbols))
 		res.Color = "red"
 	}
-	return &res
+	return &res, nil
 }
 
 func DynValueFromPTDynamic(file *elf.File, tag elf.DynTag, names ...string) ([]uint64, error) {

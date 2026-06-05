@@ -21,7 +21,10 @@ func TestRPATH_NoRpath(t *testing.T) {
 		t.Skipf("cannot build linux test ELF: %v (%s)", err, out)
 	}
 
-	result := RPATH(bin)
+	result, err := RPATH(bin)
+	if err != nil {
+		t.Fatalf("RPATH() error = %v", err)
+	}
 	if result == nil {
 		t.Fatal("RPATH() returned nil")
 	}
@@ -37,7 +40,10 @@ func TestRPATH_WithRpath(t *testing.T) {
 	// The committed "rpath" fixture is a real ELF carrying DT_RPATH ([./]).
 	bin := requireFixture(t, "rpath")
 
-	result := RPATH(bin)
+	result, err := RPATH(bin)
+	if err != nil {
+		t.Fatalf("RPATH() error = %v", err)
+	}
 	if result == nil {
 		t.Fatal("RPATH() returned nil")
 	}

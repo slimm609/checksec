@@ -2,8 +2,7 @@ package checksec
 
 import (
 	"debug/elf"
-
-	"github.com/slimm609/checksec/v3/pkg/output"
+	"fmt"
 )
 
 type relro struct {
@@ -11,7 +10,7 @@ type relro struct {
 	Color  string
 }
 
-func RELRO(name string) *relro {
+func RELRO(name string) (*relro, error) {
 	res := relro{}
 	relroHeader := false
 	bindNow := false
@@ -20,14 +19,14 @@ func RELRO(name string) *relro {
 	// Open the ELF binary file
 	file, err := elf.Open(name)
 	if err != nil {
-		output.Fatalf("Error opening ELF file: %v", err)
+		return nil, fmt.Errorf("error opening ELF file: %w", err)
 	}
 	defer file.Close()
 
 	if len(file.Progs) == 0 {
 		res.Color = "italic"
 		res.Output = "N/A"
-		return &res
+		return &res, nil
 	}
 
 	// check bind and flags and flags1.
@@ -64,14 +63,14 @@ func RELRO(name string) *relro {
 	if bindNow == true {
 		res.Color = "green"
 		res.Output = "Full RELRO"
-		return &res
+		return &res, nil
 	} else if relroHeader == true {
 		res.Color = "yellow"
 		res.Output = "Partial RELRO"
-		return &res
+		return &res, nil
 	} else {
 		res.Color = "red"
 		res.Output = "No RELRO"
-		return &res
+		return &res, nil
 	}
 }

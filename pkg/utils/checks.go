@@ -7,20 +7,24 @@ import (
 	"github.com/slimm609/checksec/v3/pkg/checksec"
 )
 
+// errResult is a uniform error placeholder returned when a check fails. Its
+// Output/Color fields are read reflectively by getStringField, the same as the
+// real check result structs.
+type errResult struct {
+	Output string
+	Color  string
+}
+
 // Function indirections for testability
 var (
 	getBinaryFn = GetBinary
 
-	relroFn = func(filename string) (result interface{}) {
-		defer func() {
-			if r := recover(); r != nil {
-				result = &struct {
-					Output string
-					Color  string
-				}{Output: "Error checking RELRO", Color: "red"}
-			}
-		}()
-		return checksec.RELRO(filename)
+	relroFn = func(filename string) interface{} {
+		res, err := checksec.RELRO(filename)
+		if err != nil {
+			return &errResult{Output: "Error checking RELRO", Color: "red"}
+		}
+		return res
 	}
 	canaryFn = func(filename string) interface{} {
 		result, err := checksec.Canary(filename)
@@ -64,38 +68,26 @@ var (
 		}()
 		return checksec.PIE(filename, binary.(*elf.File))
 	}
-	rpathFn = func(filename string) (result interface{}) {
-		defer func() {
-			if r := recover(); r != nil {
-				result = &struct {
-					Output string
-					Color  string
-				}{Output: "Error checking RPATH", Color: "red"}
-			}
-		}()
-		return checksec.RPATH(filename)
+	rpathFn = func(filename string) interface{} {
+		res, err := checksec.RPATH(filename)
+		if err != nil {
+			return &errResult{Output: "Error checking RPATH", Color: "red"}
+		}
+		return res
 	}
-	runpathFn = func(filename string) (result interface{}) {
-		defer func() {
-			if r := recover(); r != nil {
-				result = &struct {
-					Output string
-					Color  string
-				}{Output: "Error checking RUNPATH", Color: "red"}
-			}
-		}()
-		return checksec.RUNPATH(filename)
+	runpathFn = func(filename string) interface{} {
+		res, err := checksec.RUNPATH(filename)
+		if err != nil {
+			return &errResult{Output: "Error checking RUNPATH", Color: "red"}
+		}
+		return res
 	}
-	symbolsFn = func(filename string) (result interface{}) {
-		defer func() {
-			if r := recover(); r != nil {
-				result = &struct {
-					Output string
-					Color  string
-				}{Output: "Error checking SYMBOLS", Color: "red"}
-			}
-		}()
-		return checksec.SYMBOLS(filename)
+	symbolsFn = func(filename string) interface{} {
+		res, err := checksec.SYMBOLS(filename)
+		if err != nil {
+			return &errResult{Output: "Error checking SYMBOLS", Color: "red"}
+		}
+		return res
 	}
 	safestackFn = func(filename string) interface{} {
 		result, err := checksec.SafeStack(filename)
@@ -107,18 +99,13 @@ var (
 		}
 		return result
 	}
-	fortifyFn = func(filename string, binary interface{}, libc string) (result interface{}) {
-		defer func() {
-			if r := recover(); r != nil {
-				result = &struct {
-					Output      string
-					Color       string
-					Fortified   string
-					Fortifiable string
-				}{Output: "Error checking Fortify", Color: "red", Fortified: "", Fortifiable: ""}
-			}
-		}()
-		return checksec.Fortify(filename, binary.(*elf.File), libc)
+	fortifyFn = func(filename string, binary interface{}, libc string) interface{} {
+		b, _ := binary.(*elf.File)
+		res, err := checksec.Fortify(filename, b, libc)
+		if err != nil {
+			return &errResult{Output: "Error checking Fortify", Color: "red"}
+		}
+		return res
 	}
 
 	kernelConfigFn = checksec.KernelConfig

@@ -21,7 +21,10 @@ func TestRUNPATH_NoRunpath(t *testing.T) {
 		t.Skipf("cannot build linux test ELF: %v (%s)", err, out)
 	}
 
-	result := RUNPATH(bin)
+	result, err := RUNPATH(bin)
+	if err != nil {
+		t.Fatalf("RUNPATH() error = %v", err)
+	}
 	if result == nil {
 		t.Fatal("RUNPATH() returned nil")
 	}
@@ -37,7 +40,10 @@ func TestRUNPATH_WithRunpath(t *testing.T) {
 	// The committed "runpath" fixture is a real ELF carrying DT_RUNPATH ([./]).
 	bin := requireFixture(t, "runpath")
 
-	result := RUNPATH(bin)
+	result, err := RUNPATH(bin)
+	if err != nil {
+		t.Fatalf("RUNPATH() error = %v", err)
+	}
 	if result == nil {
 		t.Fatal("RUNPATH() returned nil")
 	}

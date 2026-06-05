@@ -27,7 +27,10 @@ func buildLinuxELF(t *testing.T) string {
 func TestRELRO_StaticGoElf(t *testing.T) {
 	bin := buildLinuxELF(t)
 
-	result := RELRO(bin)
+	result, err := RELRO(bin)
+	if err != nil {
+		t.Fatalf("RELRO() error = %v", err)
+	}
 	if result == nil {
 		t.Fatal("RELRO() returned nil")
 	}
@@ -51,7 +54,10 @@ func TestRELRO_NoProgHeaders(t *testing.T) {
 		t.Skipf("rel.o fixture not found: %v", err)
 	}
 
-	result := RELRO(bin)
+	result, err := RELRO(bin)
+	if err != nil {
+		t.Fatalf("RELRO() error = %v", err)
+	}
 	if result == nil {
 		t.Fatal("RELRO() returned nil")
 	}

@@ -7,7 +7,10 @@ import (
 
 func TestFortify_NoneDynamic(t *testing.T) {
 	binary := &elf.File{}
-	result := Fortify("test", binary, "none")
+	result, err := Fortify("test", binary, "none")
+	if err != nil {
+		t.Fatalf("Fortify() error = %v", err)
+	}
 	if result == nil {
 		t.Fatal("Fortify() returned nil")
 	}
@@ -30,7 +33,10 @@ func TestFortify_NoneDynamic(t *testing.T) {
 
 func TestFortify_UnknownLDD(t *testing.T) {
 	binary := &elf.File{}
-	result := Fortify("test", binary, "unk")
+	result, err := Fortify("test", binary, "unk")
+	if err != nil {
+		t.Fatalf("Fortify() error = %v", err)
+	}
 	if result == nil {
 		t.Fatal("Fortify() returned nil")
 	}
