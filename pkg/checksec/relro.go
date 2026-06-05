@@ -48,11 +48,7 @@ func RELRO(name string) (*relro, error) {
 		flags1, _ = DynValueFromPTDynamic(file, elf.DT_FLAGS_1, name)
 	}
 
-	if (len(bind) > 0 && bind[0] == 0) ||
-		(len(flags) > 0 && (flags[0]&uint64(elf.DF_BIND_NOW)) != 0) ||
-		(len(flags1) > 0 && (flags1[0]&uint64(elf.DF_1_NOW)) != 0) {
-		bindNow = true
-	}
+	bindNow = relroBindNow(bind, flags, flags1)
 
 	for _, prog := range file.Progs {
 		if prog.Type == elf.PT_GNU_RELRO {
@@ -73,4 +69,15 @@ func RELRO(name string) (*relro, error) {
 		res.Output = "No RELRO"
 		return &res, nil
 	}
+}
+
+// relroBindNow reports whether the dynamic-section flags indicate bind-now (the
+// "Full RELRO" condition): a present DT_BIND_NOW entry, the DF_BIND_NOW bit in
+// DT_FLAGS, or the DF_1_NOW bit in DT_FLAGS_1.
+func relroBindNow(bind, flags, flags1 []uint64) bool {
+	// A present DT_BIND_NOW entry means bind-now regardless of its d_val (which
+	// the ELF spec leaves unused), so presence — not value == 0 — is the test.
+	return len(bind) > 0 ||
+		(len(flags) > 0 && (flags[0]&uint64(elf.DF_BIND_NOW)) != 0) ||
+		(len(flags1) > 0 && (flags1[0]&uint64(elf.DF_1_NOW)) != 0)
 }

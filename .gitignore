@@ -6,3 +6,4 @@ dist/
 /checksec
 docs/superpowers/
 coverage.out
+testdata/rapid/
