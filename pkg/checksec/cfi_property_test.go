@@ -85,6 +85,50 @@ func buildPropertyNote(bo binary.ByteOrder, noteType, bitmask uint32) []byte {
 	return b
 }
 
+// buildPropertyNoteRaw builds a property record with an explicit datasz and
+// payload, padded to 8-byte (ELFCLASS64) alignment: type(4) | datasz(4) |
+// payload(datasz) | pad. Used to test records the parser must skip over.
+func buildPropertyNoteRaw(bo binary.ByteOrder, noteType, datasz uint32, payload []byte) []byte {
+	padded := (int(datasz) + 7) &^ 7
+	b := make([]byte, 8+padded)
+	bo.PutUint32(b[0:4], noteType)
+	bo.PutUint32(b[4:8], datasz)
+	copy(b[8:], payload)
+	return b
+}
+
+// A non-feature property whose datasz is not 4 (e.g. GNU_PROPERTY_STACK_SIZE,
+// datasz=8) must be skipped by its full padded length so a following x86 feature
+// property is still found, rather than desyncing the scan.
+func TestX86Notes_SkipsNon4ByteProperty(t *testing.T) {
+	bo := binary.LittleEndian
+	// Payload whose second word encodes datasz=4 (LE): if the parser mis-walks
+	// into the payload it will treat this as a header and desync the scan.
+	lead := buildPropertyNoteRaw(bo, 0x0001, 8, []byte{0, 0, 0, 0, 4, 0, 0, 0})
+	feat := buildPropertyNote(bo, GnuPropertyX86Feature1Flag, GnuPropertyX86FeatureIBT|GnuPropertyX86FeatureSHSTK)
+	data := append(lead, feat...)
+
+	got := parseX86CETFromNotes(data, bo)
+	if !got.ibt || !got.shstk {
+		t.Fatalf("feature property after an 8-byte property was missed: %+v", got)
+	}
+}
+
+// Same requirement for the AArch64 PAC/BTI parser.
+func TestArmNotes_SkipsNon4ByteProperty(t *testing.T) {
+	bo := binary.LittleEndian
+	// Payload whose second word encodes datasz=4 (LE): if the parser mis-walks
+	// into the payload it will treat this as a header and desync the scan.
+	lead := buildPropertyNoteRaw(bo, 0x0001, 8, []byte{0, 0, 0, 0, 4, 0, 0, 0})
+	feat := buildPropertyNote(bo, GnuPropertyArmFeature1Flag, GnuPropertyArmFeaturePAC|GnuPropertyArmFeatureBTI)
+	data := append(lead, feat...)
+
+	got := parseArmPACBTIFromNotes(data, bo)
+	if !got.pac || !got.bti {
+		t.Fatalf("feature property after an 8-byte property was missed: %+v", got)
+	}
+}
+
 // A well-formed single x86 feature note must yield the same result as parsing
 // its bitmask directly.
 func TestProp_X86Notes_SingleRecordOracle(t *testing.T) {

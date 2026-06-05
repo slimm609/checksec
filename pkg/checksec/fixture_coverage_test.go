@@ -3,6 +3,7 @@ package checksec
 import (
 	"debug/elf"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -131,6 +132,22 @@ func TestFunctionsFromSymbolTable_Fixture(t *testing.T) {
 	}
 	if len(funcs) == 0 {
 		t.Error("expected at least one function symbol from dso.so")
+	}
+}
+
+func TestFortify_TargetNotElfReturnsError(t *testing.T) {
+	// With a valid libc but a non-ELF target, Fortify must return an error
+	// rather than calling os.Exit (the bug fixed for the (*fortify, error) API).
+	libc := requireFixture(t, "dso.so")
+	dir := t.TempDir()
+	bad := filepath.Join(dir, "not-elf")
+	if err := os.WriteFile(bad, []byte("plain text, not an ELF"), 0o644); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+
+	res, err := Fortify(bad, nil, libc)
+	if err == nil {
+		t.Fatalf("expected error for non-ELF target, got result %+v", res)
 	}
 }
 

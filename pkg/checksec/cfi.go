@@ -159,32 +159,30 @@ func Cfi(name string) (*CfiResult, error) {
 func parseX86CETFromNotes(data []byte, bo binary.ByteOrder) x86CET {
 	var parsed x86CET
 	i := 0
-	for i < len(data) {
-		// Bounds checking for note type and data size
-		if i+8 > len(data) {
-			break
-		}
-
+	for i+8 <= len(data) {
 		notetype := bo.Uint32(data[i : i+4])
 		datasz := bo.Uint32(data[i+4 : i+8])
 		i += 8
 
-		if datasz != 4 {
-			continue
-		}
-
-		// Bounds checking for bitmask
-		if i+4 > len(data) {
+		// The payload is datasz bytes, padded to 8-byte (ELFCLASS64) alignment.
+		// Advance by the full padded length so non-feature properties (datasz != 4)
+		// don't desync the scan and hide a following feature property.
+		payloadLen := align8(datasz)
+		if i+int(datasz) > len(data) {
 			break
 		}
-
-		bitmask := bo.Uint32(data[i : i+4])
-		if notetype == GnuPropertyX86Feature1Flag {
-			parsed = parseBitmaskForx86CET(bitmask)
+		if datasz == 4 && notetype == GnuPropertyX86Feature1Flag {
+			parsed = parseBitmaskForx86CET(bo.Uint32(data[i : i+4]))
 		}
-		i += 8
+		i += payloadLen
 	}
 	return parsed
+}
+
+// align8 rounds n up to the next multiple of 8 (the GNU property note alignment
+// for ELFCLASS64), returned as an int for use as a slice offset.
+func align8(n uint32) int {
+	return int((uint64(n) + 7) &^ 7)
 }
 
 // parseArmPACBTIFromNotes walks a .note.gnu.property payload and returns the
@@ -192,30 +190,21 @@ func parseX86CETFromNotes(data []byte, bo binary.ByteOrder) x86CET {
 func parseArmPACBTIFromNotes(data []byte, bo binary.ByteOrder) armPACBTI {
 	var parsed armPACBTI
 	i := 0
-	for i < len(data) {
-		// Bounds checking for note type and data size
-		if i+8 > len(data) {
-			break
-		}
-
+	for i+8 <= len(data) {
 		notetype := bo.Uint32(data[i : i+4])
 		datasz := bo.Uint32(data[i+4 : i+8])
 		i += 8
 
-		if datasz != 4 {
-			continue
-		}
-
-		// Bounds checking for bitmask
-		if i+4 > len(data) {
+		// Advance by the full padded payload so non-feature properties don't
+		// desync the scan (see parseX86CETFromNotes).
+		payloadLen := align8(datasz)
+		if i+int(datasz) > len(data) {
 			break
 		}
-
-		bitmask := bo.Uint32(data[i : i+4])
-		if notetype == GnuPropertyArmFeature1Flag {
-			parsed = parseBitmaskForArmPACBTI(bitmask)
+		if datasz == 4 && notetype == GnuPropertyArmFeature1Flag {
+			parsed = parseBitmaskForArmPACBTI(bo.Uint32(data[i : i+4]))
 		}
-		i += 8
+		i += payloadLen
 	}
 	return parsed
 }

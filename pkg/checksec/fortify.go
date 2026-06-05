@@ -98,20 +98,20 @@ func fortifyWithLdd(name, ldd string, supportedFuncs []string) (*fortify, error)
 
 	f, err := os.Open(name)
 	if err != nil {
-		output.Fatalf("Error opening ELF file: %v", err)
+		return nil, fmt.Errorf("error opening ELF file: %w", err)
 	}
 	defer f.Close()
 
 	file, err := elf.NewFile(f)
 	if err != nil {
-		output.Fatalf("Error parsing ELF file: %v", err)
+		return nil, fmt.Errorf("error parsing ELF file: %w", err)
 	}
 
 	dynSymbols, err := file.DynamicSymbols()
 	if err != nil {
 		dynSymbols, err = FunctionsFromSymbolTable(f)
 		if err != nil {
-			output.Fatalf("Error getting dynamic symbols from ELF file: %v", err)
+			return nil, fmt.Errorf("error getting dynamic symbols from ELF file: %w", err)
 		}
 	}
 

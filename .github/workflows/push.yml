@@ -15,7 +15,7 @@ jobs:
           go-version-file: go.mod
 
       - name: Run tests with coverage
-        run: go test ./pkg/... -coverpkg=./pkg/... -covermode=count -coverprofile=coverage.out
+        run: go test ./pkg/... -count=1 -coverpkg=./pkg/... -covermode=count -coverprofile=coverage.out
 
       - name: Enforce coverage threshold
         run: |
