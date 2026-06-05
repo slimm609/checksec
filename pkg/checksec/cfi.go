@@ -3,6 +3,7 @@ package checksec
 import (
 	"context"
 	"debug/elf"
+	"encoding/binary"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -99,33 +100,7 @@ func Cfi(name string) (*CfiResult, error) {
 		// x86-64, check for Shadow Stack and IBT
 		// https://docs.kernel.org/next/x86/shstk.html
 		// https://www.intel.com/content/www/us/en/developer/articles/technical/technical-look-control-flow-enforcement-technology.html
-		var parsedSupport x86CET
-		i := 0
-		for i < len(propertyData) {
-			// Bounds checking for note type and data size
-			if i+8 > len(propertyData) {
-				break
-			}
-
-			notetype := file.ByteOrder.Uint32(propertyData[i : i+4])
-			datasz := file.ByteOrder.Uint32(propertyData[i+4 : i+8])
-			i += 8
-
-			if datasz != 4 {
-				continue
-			}
-
-			// Bounds checking for bitmask
-			if i+4 > len(propertyData) {
-				break
-			}
-
-			bitmask := file.ByteOrder.Uint32(propertyData[i : i+4])
-			if notetype == GnuPropertyX86Feature1Flag {
-				parsedSupport = parseBitmaskForx86CET(bitmask)
-			}
-			i += 8
-		}
+		parsedSupport := parseX86CETFromNotes(propertyData, file.ByteOrder)
 
 		if parsedSupport.shstk && parsedSupport.ibt {
 			hwColor = "green"
@@ -144,33 +119,7 @@ func Cfi(name string) (*CfiResult, error) {
 		// AARCH64, check for PAC and BTI
 		// https://docs.kernel.org/arch/arm64/pointer-authentication.html
 		// https://community.arm.com/arm-community-blogs/b/architectures-and-processors-blog/posts/armv8-1-m-pointer-authentication-and-branch-target-identification-extension
-		var parsedSupport armPACBTI
-		i := 0
-		for i < len(propertyData) {
-			// Bounds checking for note type and data size
-			if i+8 > len(propertyData) {
-				break
-			}
-
-			notetype := file.ByteOrder.Uint32(propertyData[i : i+4])
-			datasz := file.ByteOrder.Uint32(propertyData[i+4 : i+8])
-			i += 8
-
-			if datasz != 4 {
-				continue
-			}
-
-			// Bounds checking for bitmask
-			if i+4 > len(propertyData) {
-				break
-			}
-
-			bitmask := file.ByteOrder.Uint32(propertyData[i : i+4])
-			if notetype == GnuPropertyArmFeature1Flag {
-				parsedSupport = parseBitmaskForArmPACBTI(bitmask)
-			}
-			i += 8
-		}
+		parsedSupport := parseArmPACBTIFromNotes(propertyData, file.ByteOrder)
 
 		if parsedSupport.pac && parsedSupport.bti {
 			hwColor = "green"
@@ -230,6 +179,73 @@ func Cfi(name string) (*CfiResult, error) {
 	}
 
 	return res, nil
+}
+
+// parseX86CETFromNotes walks a .note.gnu.property payload and returns the x86
+// CET (SHSTK/IBT) features advertised. It is bounds-safe on truncated or
+// malformed input: out-of-range reads stop the scan rather than panicking.
+func parseX86CETFromNotes(data []byte, bo binary.ByteOrder) x86CET {
+	var parsed x86CET
+	i := 0
+	for i < len(data) {
+		// Bounds checking for note type and data size
+		if i+8 > len(data) {
+			break
+		}
+
+		notetype := bo.Uint32(data[i : i+4])
+		datasz := bo.Uint32(data[i+4 : i+8])
+		i += 8
+
+		if datasz != 4 {
+			continue
+		}
+
+		// Bounds checking for bitmask
+		if i+4 > len(data) {
+			break
+		}
+
+		bitmask := bo.Uint32(data[i : i+4])
+		if notetype == GnuPropertyX86Feature1Flag {
+			parsed = parseBitmaskForx86CET(bitmask)
+		}
+		i += 8
+	}
+	return parsed
+}
+
+// parseArmPACBTIFromNotes walks a .note.gnu.property payload and returns the
+// AArch64 PAC/BTI features advertised. It is bounds-safe on truncated input.
+func parseArmPACBTIFromNotes(data []byte, bo binary.ByteOrder) armPACBTI {
+	var parsed armPACBTI
+	i := 0
+	for i < len(data) {
+		// Bounds checking for note type and data size
+		if i+8 > len(data) {
+			break
+		}
+
+		notetype := bo.Uint32(data[i : i+4])
+		datasz := bo.Uint32(data[i+4 : i+8])
+		i += 8
+
+		if datasz != 4 {
+			continue
+		}
+
+		// Bounds checking for bitmask
+		if i+4 > len(data) {
+			break
+		}
+
+		bitmask := bo.Uint32(data[i : i+4])
+		if notetype == GnuPropertyArmFeature1Flag {
+			parsed = parseBitmaskForArmPACBTI(bitmask)
+		}
+		i += 8
+	}
+	return parsed
 }
 
 func parseBitmaskForx86CET(bitmask uint32) x86CET {

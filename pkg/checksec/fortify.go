@@ -67,15 +67,8 @@ func Fortify(name string, binary *elf.File, ldd string) *fortify {
 		}
 	}
 
-	// Iterate through dynamic symbols and print their information
-	for _, sym := range libcDynSymbols {
-		if strings.HasPrefix(sym.Name, "__") && strings.HasSuffix(sym.Name, "_chk") {
-			if isInSlice(sym.Name, supportedFuncs) {
-				chkFuncLibs = append(chkFuncLibs, strings.Trim(sym.Name, "__"))
-				funcLibs = append(funcLibs, strings.Trim(strings.Trim(sym.Name, "__"), "_chk"))
-			}
-		}
-	}
+	// Determine which fortifiable __*_chk functions the libc actually provides.
+	chkFuncLibs, funcLibs = fortifyLibcFuncs(libcDynSymbols, supportedFuncs)
 
 	if len(chkFuncLibs) > 0 {
 		res.LibcSupport = "Yes"
@@ -111,22 +104,7 @@ func Fortify(name string, binary *elf.File, ldd string) *fortify {
 		fileFunc = append(fileFunc, strings.Trim(sym.Name, "__"))
 	}
 
-	sort.Strings(chkFuncLibs)
-	sort.Strings(funcLibs)
-	sort.Strings(fileFunc)
-
-	for _, item := range chkFuncLibs {
-		if isInSlice(item, fileFunc) {
-			checked++
-		}
-	}
-
-	total = checked
-	for _, item := range funcLibs {
-		if isInSlice(item, fileFunc) {
-			total++
-		}
-	}
+	checked, total = computeFortifyCounts(chkFuncLibs, funcLibs, fileFunc)
 
 	if checked > 0 {
 		res.Output = "Yes"
@@ -146,6 +124,43 @@ func Fortify(name string, binary *elf.File, ldd string) *fortify {
 		return &res
 	}
 
+}
+
+// fortifyLibcFuncs extracts, from a libc's symbols, the fortifiable __*_chk
+// functions it provides (chkFuncs) and their unprotected base names (baseFuncs),
+// limited to the compiler-supported fortify functions.
+func fortifyLibcFuncs(libcSyms []elf.Symbol, supportedFuncs []string) (chkFuncs, baseFuncs []string) {
+	for _, sym := range libcSyms {
+		if strings.HasPrefix(sym.Name, "__") && strings.HasSuffix(sym.Name, "_chk") {
+			if isInSlice(sym.Name, supportedFuncs) {
+				chkFuncs = append(chkFuncs, strings.Trim(sym.Name, "__"))
+				baseFuncs = append(baseFuncs, strings.Trim(strings.Trim(sym.Name, "__"), "_chk"))
+			}
+		}
+	}
+	return chkFuncs, baseFuncs
+}
+
+// computeFortifyCounts compares the libc's fortifiable functions against the
+// functions present in the target binary. It returns the number of fortified
+// calls and the total fortifiable count (fortified plus fortifiable-but-unprotected).
+func computeFortifyCounts(chkFuncs, baseFuncs, fileFuncs []string) (fortified, fortifiable int) {
+	sort.Strings(chkFuncs)
+	sort.Strings(baseFuncs)
+	sort.Strings(fileFuncs)
+
+	for _, item := range chkFuncs {
+		if isInSlice(item, fileFuncs) {
+			fortified++
+		}
+	}
+	fortifiable = fortified
+	for _, item := range baseFuncs {
+		if isInSlice(item, fileFuncs) {
+			fortifiable++
+		}
+	}
+	return fortified, fortifiable
 }
 
 func getLdd(filename string) string {
