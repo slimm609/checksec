@@ -34,5 +34,17 @@ func TestRUNPATH_NoRunpath(t *testing.T) {
 }
 
 func TestRUNPATH_WithRunpath(t *testing.T) {
-	t.Skip("requires C binary with RUNPATH set — needs gcc/ld")
+	// The committed "runpath" fixture is a real ELF carrying DT_RUNPATH ([./]).
+	bin := requireFixture(t, "runpath")
+
+	result := RUNPATH(bin)
+	if result == nil {
+		t.Fatal("RUNPATH() returned nil")
+	}
+	if result.Output != "RUNPATH" {
+		t.Errorf("Output = %q, want %q", result.Output, "RUNPATH")
+	}
+	if result.Color != "red" {
+		t.Errorf("Color = %q, want %q", result.Color, "red")
+	}
 }

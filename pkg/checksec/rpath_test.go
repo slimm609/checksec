@@ -34,5 +34,17 @@ func TestRPATH_NoRpath(t *testing.T) {
 }
 
 func TestRPATH_WithRpath(t *testing.T) {
-	t.Skip("requires C binary with RPATH set — needs gcc/ld")
+	// The committed "rpath" fixture is a real ELF carrying DT_RPATH ([./]).
+	bin := requireFixture(t, "rpath")
+
+	result := RPATH(bin)
+	if result == nil {
+		t.Fatal("RPATH() returned nil")
+	}
+	if result.Output != "RPATH" {
+		t.Errorf("Output = %q, want %q", result.Output, "RPATH")
+	}
+	if result.Color != "red" {
+		t.Errorf("Color = %q, want %q", result.Color, "red")
+	}
 }

@@ -1,0 +1,17 @@
+mode: set
+github.com/slimm609/checksec/v3/pkg/output/output.go:15.31,25.15 3 1
+github.com/slimm609/checksec/v3/pkg/output/output.go:25.15,27.3 1 1
+github.com/slimm609/checksec/v3/pkg/output/output.go:30.61,38.28 7 1
+github.com/slimm609/checksec/v3/pkg/output/output.go:38.28,40.3 1 1
+github.com/slimm609/checksec/v3/pkg/output/output.go:40.8,40.33 1 1
+github.com/slimm609/checksec/v3/pkg/output/output.go:40.33,42.3 1 1
+github.com/slimm609/checksec/v3/pkg/output/output.go:42.8,42.36 1 1
+github.com/slimm609/checksec/v3/pkg/output/output.go:42.36,44.3 1 1
+github.com/slimm609/checksec/v3/pkg/output/output.go:44.8,44.34 1 1
+github.com/slimm609/checksec/v3/pkg/output/output.go:44.34,46.3 1 1
+github.com/slimm609/checksec/v3/pkg/output/output.go:46.8,46.36 1 1
+github.com/slimm609/checksec/v3/pkg/output/output.go:46.36,48.3 1 1
+github.com/slimm609/checksec/v3/pkg/output/output.go:48.8,50.3 1 1
+github.com/slimm609/checksec/v3/pkg/output/output.go:53.37,54.17 1 0
+github.com/slimm609/checksec/v3/pkg/output/output.go:54.17,56.3 1 0
+github.com/slimm609/checksec/v3/pkg/output/output.go:59.38,62.2 2 0
