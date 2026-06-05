@@ -134,6 +134,25 @@ func TestFunctionsFromSymbolTable_Fixture(t *testing.T) {
 	}
 }
 
+func TestFortify_FixtureAutoLdd(t *testing.T) {
+	// Passing ldd="" exercises the automatic getLdd resolution path. On a host
+	// without a matching libc for the fixture's architecture this resolves to
+	// "none"/"unk" and yields an N/A result — either way getLdd runs.
+	target := requireFixture(t, "none")
+
+	res, err := Fortify(target, nil, "")
+	if err != nil {
+		t.Fatalf("Fortify() error = %v", err)
+	}
+	if res == nil {
+		t.Fatal("Fortify() returned nil")
+	}
+	validOutputs := map[string]bool{"Yes": true, "No": true, "N/A": true}
+	if !validOutputs[res.Output] {
+		t.Errorf("unexpected Output = %q", res.Output)
+	}
+}
+
 func TestFortify_FixtureLibcSupported(t *testing.T) {
 	// Use a fixture that exports __*_chk functions as a stand-in libc so the
 	// LibcSupport=Yes branch and the fortified-count comparison are exercised

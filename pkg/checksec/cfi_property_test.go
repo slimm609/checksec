@@ -8,6 +8,44 @@ import (
 	"pgregory.net/rapid"
 )
 
+func TestCetOutputString(t *testing.T) {
+	cases := []struct {
+		in        x86CET
+		wantOut   string
+		wantColor string
+	}{
+		{x86CET{shstk: true, ibt: true}, "SHSTK & IBT", "green"},
+		{x86CET{shstk: true, ibt: false}, "SHSTK & NO IBT", "yellow"},
+		{x86CET{shstk: false, ibt: true}, "NO SHSTK & IBT", "yellow"},
+		{x86CET{shstk: false, ibt: false}, "NO SHSTK & NO IBT", "red"},
+	}
+	for _, c := range cases {
+		gotOut, gotColor := cetOutputString(c.in)
+		if gotOut != c.wantOut || gotColor != c.wantColor {
+			t.Errorf("cetOutputString(%+v) = %q/%q, want %q/%q", c.in, gotOut, gotColor, c.wantOut, c.wantColor)
+		}
+	}
+}
+
+func TestArmOutputString(t *testing.T) {
+	cases := []struct {
+		in        armPACBTI
+		wantOut   string
+		wantColor string
+	}{
+		{armPACBTI{pac: true, bti: true}, "PAC & BTI", "green"},
+		{armPACBTI{pac: true, bti: false}, "PAC & NO BTI", "yellow"},
+		{armPACBTI{pac: false, bti: true}, "NO PAC & BTI", "yellow"},
+		{armPACBTI{pac: false, bti: false}, "NO PAC & NO BTI", "red"},
+	}
+	for _, c := range cases {
+		gotOut, gotColor := armOutputString(c.in)
+		if gotOut != c.wantOut || gotColor != c.wantColor {
+			t.Errorf("armOutputString(%+v) = %q/%q, want %q/%q", c.in, gotOut, gotColor, c.wantOut, c.wantColor)
+		}
+	}
+}
+
 // parseBitmaskForx86CET must set exactly the IBT/SHSTK flags corresponding to
 // the GNU property feature bits, independent of any other bits in the mask.
 func TestProp_X86Bitmask_Oracle(t *testing.T) {

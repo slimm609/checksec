@@ -100,40 +100,12 @@ func Cfi(name string) (*CfiResult, error) {
 		// x86-64, check for Shadow Stack and IBT
 		// https://docs.kernel.org/next/x86/shstk.html
 		// https://www.intel.com/content/www/us/en/developer/articles/technical/technical-look-control-flow-enforcement-technology.html
-		parsedSupport := parseX86CETFromNotes(propertyData, file.ByteOrder)
-
-		if parsedSupport.shstk && parsedSupport.ibt {
-			hwColor = "green"
-			hwOutput = "SHSTK & IBT"
-		} else if parsedSupport.shstk {
-			hwColor = "yellow"
-			hwOutput = "SHSTK & NO IBT"
-		} else if parsedSupport.ibt {
-			hwColor = "yellow"
-			hwOutput = "NO SHSTK & IBT"
-		} else {
-			hwColor = "red"
-			hwOutput = "NO SHSTK & NO IBT"
-		}
+		hwOutput, hwColor = cetOutputString(parseX86CETFromNotes(propertyData, file.ByteOrder))
 	} else if file.Class == elf.ELFCLASS64 && file.Machine == elf.EM_AARCH64 {
 		// AARCH64, check for PAC and BTI
 		// https://docs.kernel.org/arch/arm64/pointer-authentication.html
 		// https://community.arm.com/arm-community-blogs/b/architectures-and-processors-blog/posts/armv8-1-m-pointer-authentication-and-branch-target-identification-extension
-		parsedSupport := parseArmPACBTIFromNotes(propertyData, file.ByteOrder)
-
-		if parsedSupport.pac && parsedSupport.bti {
-			hwColor = "green"
-			hwOutput = "PAC & BTI"
-		} else if parsedSupport.pac {
-			hwColor = "yellow"
-			hwOutput = "PAC & NO BTI"
-		} else if parsedSupport.bti {
-			hwColor = "yellow"
-			hwOutput = "NO PAC & BTI"
-		} else {
-			hwColor = "red"
-			hwOutput = "NO PAC & NO BTI"
-		}
+		hwOutput, hwColor = armOutputString(parseArmPACBTIFromNotes(propertyData, file.ByteOrder))
 	} else {
 		// Leave hwOutput empty; fallback to Unknown unless Clang CFI is detected
 	}
@@ -246,6 +218,34 @@ func parseArmPACBTIFromNotes(data []byte, bo binary.ByteOrder) armPACBTI {
 		i += 8
 	}
 	return parsed
+}
+
+// cetOutputString maps parsed x86 CET features to the display string and color.
+func cetOutputString(s x86CET) (output, color string) {
+	switch {
+	case s.shstk && s.ibt:
+		return "SHSTK & IBT", "green"
+	case s.shstk:
+		return "SHSTK & NO IBT", "yellow"
+	case s.ibt:
+		return "NO SHSTK & IBT", "yellow"
+	default:
+		return "NO SHSTK & NO IBT", "red"
+	}
+}
+
+// armOutputString maps parsed AArch64 PAC/BTI features to the display string and color.
+func armOutputString(s armPACBTI) (output, color string) {
+	switch {
+	case s.pac && s.bti:
+		return "PAC & BTI", "green"
+	case s.pac:
+		return "PAC & NO BTI", "yellow"
+	case s.bti:
+		return "NO PAC & BTI", "yellow"
+	default:
+		return "NO PAC & NO BTI", "red"
+	}
 }
 
 func parseBitmaskForx86CET(bitmask uint32) x86CET {
