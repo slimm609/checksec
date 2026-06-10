@@ -2,8 +2,7 @@ package checksec
 
 import (
 	"debug/elf"
-
-	"github.com/slimm609/checksec/v3/pkg/output"
+	"fmt"
 )
 
 type relro struct {
@@ -11,7 +10,7 @@ type relro struct {
 	Color  string
 }
 
-func RELRO(name string) *relro {
+func RELRO(name string) (*relro, error) {
 	res := relro{}
 	relroHeader := false
 	bindNow := false
@@ -20,14 +19,14 @@ func RELRO(name string) *relro {
 	// Open the ELF binary file
 	file, err := elf.Open(name)
 	if err != nil {
-		output.Fatalf("Error opening ELF file: %v", err)
+		return nil, fmt.Errorf("error opening ELF file: %w", err)
 	}
 	defer file.Close()
 
 	if len(file.Progs) == 0 {
 		res.Color = "italic"
 		res.Output = "N/A"
-		return &res
+		return &res, nil
 	}
 
 	// check bind and flags and flags1.
@@ -49,11 +48,7 @@ func RELRO(name string) *relro {
 		flags1, _ = DynValueFromPTDynamic(file, elf.DT_FLAGS_1, name)
 	}
 
-	if (len(bind) > 0 && bind[0] == 0) ||
-		(len(flags) > 0 && (flags[0]&uint64(elf.DF_BIND_NOW)) != 0) ||
-		(len(flags1) > 0 && (flags1[0]&uint64(elf.DF_1_NOW)) != 0) {
-		bindNow = true
-	}
+	bindNow = relroBindNow(bind, flags, flags1)
 
 	for _, prog := range file.Progs {
 		if prog.Type == elf.PT_GNU_RELRO {
@@ -64,14 +59,25 @@ func RELRO(name string) *relro {
 	if bindNow == true {
 		res.Color = "green"
 		res.Output = "Full RELRO"
-		return &res
+		return &res, nil
 	} else if relroHeader == true {
 		res.Color = "yellow"
 		res.Output = "Partial RELRO"
-		return &res
+		return &res, nil
 	} else {
 		res.Color = "red"
 		res.Output = "No RELRO"
-		return &res
+		return &res, nil
 	}
+}
+
+// relroBindNow reports whether the dynamic-section flags indicate bind-now (the
+// "Full RELRO" condition): a present DT_BIND_NOW entry, the DF_BIND_NOW bit in
+// DT_FLAGS, or the DF_1_NOW bit in DT_FLAGS_1.
+func relroBindNow(bind, flags, flags1 []uint64) bool {
+	// A present DT_BIND_NOW entry means bind-now regardless of its d_val (which
+	// the ELF spec leaves unused), so presence — not value == 0 — is the test.
+	return len(bind) > 0 ||
+		(len(flags) > 0 && (flags[0]&uint64(elf.DF_BIND_NOW)) != 0) ||
+		(len(flags1) > 0 && (flags1[0]&uint64(elf.DF_1_NOW)) != 0)
 }

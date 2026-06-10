@@ -2,8 +2,7 @@ package checksec
 
 import (
 	"debug/elf"
-
-	"github.com/slimm609/checksec/v3/pkg/output"
+	"fmt"
 )
 
 type rpath struct {
@@ -11,11 +10,11 @@ type rpath struct {
 	Color  string
 }
 
-func RPATH(name string) *rpath {
+func RPATH(name string) (*rpath, error) {
 	res := rpath{}
 	file, err := elf.Open(name)
 	if err != nil {
-		output.Fatalf("Error opening ELF file: %v", err)
+		return nil, fmt.Errorf("error opening ELF file: %w", err)
 	}
 	defer file.Close()
 
@@ -27,5 +26,5 @@ func RPATH(name string) *rpath {
 		res.Output = "RPATH"
 		res.Color = "red"
 	}
-	return &res
+	return &res, nil
 }

@@ -16,11 +16,11 @@ type symbols struct {
 }
 
 // SYMBOLS detects usage of elf symbols
-func SYMBOLS(name string) *symbols {
+func SYMBOLS(name string) (*symbols, error) {
 	res := symbols{}
 	file, err := elf.Open(name)
 	if err != nil {
-		output.Fatalf("Error opening ELF file: %v", err)
+		return nil, fmt.Errorf("error opening ELF file: %w", err)
 	}
 	defer file.Close()
 
@@ -32,7 +32,7 @@ func SYMBOLS(name string) *symbols {
 		res.Output = fmt.Sprintf("%d symbols", len(symbols))
 		res.Color = "red"
 	}
-	return &res
+	return &res, nil
 }
 
 func DynValueFromPTDynamic(file *elf.File, tag elf.DynTag, names ...string) ([]uint64, error) {
@@ -51,31 +51,32 @@ func DynValueFromPTDynamic(file *elf.File, tag elf.DynTag, names ...string) ([]u
 				return res, err
 			}
 
-			bo := file.ByteOrder
-			if file.Class == elf.ELFCLASS64 {
-				for i := 0; i < len(data); i += 16 { // Each entry is typically 16 bytes
-					if i+16 > len(data) {
-						break
-					}
-					if elf.DynTag(bo.Uint64(data[i:i+8])) == tag {
-						value := bo.Uint64(data[i+8 : i+16])
-						return append(res, value), err
-					}
-				}
-			} else {
-				for i := 0; i < len(data); i += 8 { // Each entry is typically 8 bytes
-					if i+8 > len(data) {
-						break
-					}
-					if elf.DynTag(bo.Uint32(data[i:i+4])) == tag {
-						value := uint64(bo.Uint32(data[i+4 : i+8]))
-						return append(res, value), err
-					}
-				}
+			if v, ok := scanDynamicEntries(data, file.Class, file.ByteOrder, tag); ok {
+				return append(res, v), err
 			}
 		}
 	}
 	return res, nil
+}
+
+// scanDynamicEntries walks a raw PT_DYNAMIC payload looking for the first entry
+// matching tag, returning its d_val. It is bounds-safe: a truncated final entry
+// is ignored rather than causing an out-of-range read.
+func scanDynamicEntries(data []byte, class elf.Class, bo binary.ByteOrder, tag elf.DynTag) (uint64, bool) {
+	if class == elf.ELFCLASS64 {
+		for i := 0; i+16 <= len(data); i += 16 { // Each entry is 16 bytes
+			if elf.DynTag(bo.Uint64(data[i:i+8])) == tag {
+				return bo.Uint64(data[i+8 : i+16]), true
+			}
+		}
+	} else {
+		for i := 0; i+8 <= len(data); i += 8 { // Each entry is 8 bytes
+			if elf.DynTag(bo.Uint32(data[i:i+4])) == tag {
+				return uint64(bo.Uint32(data[i+4 : i+8])), true
+			}
+		}
+	}
+	return 0, false
 }
 
 func FunctionsFromSymbolTable(file *os.File) ([]elf.Symbol, error) {

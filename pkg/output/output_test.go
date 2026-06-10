@@ -4,11 +4,27 @@ import (
 	"bytes"
 	"io"
 	"os"
+	"os/exec"
 	"strings"
 	"testing"
 
 	"github.com/fatih/color"
 )
+
+// TestFatalf_Exits covers the os.Exit(1) path of Fatalf via a subprocess.
+func TestFatalf_Exits(t *testing.T) {
+	if os.Getenv("BE_FATALF") == "1" {
+		Fatalf("fatal %s", "boom")
+		return
+	}
+	cmd := exec.Command(os.Args[0], "-test.run=^TestFatalf_Exits$")
+	cmd.Env = append(os.Environ(), "BE_FATALF=1")
+	err := cmd.Run()
+	if exitErr, ok := err.(*exec.ExitError); ok && !exitErr.Success() {
+		return // expected non-zero exit
+	}
+	t.Fatalf("expected Fatalf to exit non-zero, got err=%v", err)
+}
 
 // captureOutput captures stdout during fn execution and returns it as string
 func captureOutput(t *testing.T, fn func()) string {
@@ -45,6 +61,42 @@ func TestPrintLogo(t *testing.T) {
 	out = captureOutput(t, func() { PrintLogo(true) })
 	if out != "" {
 		t.Fatalf("expected no output when noBanner=true, got: %q", out)
+	}
+}
+
+func TestWarnf(t *testing.T) {
+	// Redirect the package's stderr sink to a pipe so we can inspect output.
+	oldErr, oldNoWarn := stdError, NoWarnings
+	defer func() { stdError, NoWarnings = oldErr, oldNoWarn }()
+
+	capture := func(fn func()) string {
+		r, w, err := os.Pipe()
+		if err != nil {
+			t.Fatalf("pipe: %v", err)
+		}
+		stdError = w
+		fn()
+		_ = w.Close()
+		var buf bytes.Buffer
+		if _, err := io.Copy(&buf, r); err != nil {
+			t.Fatalf("copy: %v", err)
+		}
+		_ = r.Close()
+		return buf.String()
+	}
+
+	NoWarnings = false
+	got := capture(func() { Warnf("danger %s %d", "zone", 7) })
+	if !strings.Contains(got, "danger zone 7") {
+		t.Errorf("Warnf output = %q, want it to contain %q", got, "danger zone 7")
+	}
+	if !strings.HasSuffix(got, "\n") {
+		t.Errorf("Warnf output = %q, want trailing newline", got)
+	}
+
+	NoWarnings = true
+	if got := capture(func() { Warnf("suppressed") }); got != "" {
+		t.Errorf("Warnf with NoWarnings=true wrote %q, want empty", got)
 	}
 }
 

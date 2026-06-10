@@ -3,6 +3,7 @@ package checksec
 import (
 	"context"
 	"debug/elf"
+	"encoding/binary"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -99,92 +100,12 @@ func Cfi(name string) (*CfiResult, error) {
 		// x86-64, check for Shadow Stack and IBT
 		// https://docs.kernel.org/next/x86/shstk.html
 		// https://www.intel.com/content/www/us/en/developer/articles/technical/technical-look-control-flow-enforcement-technology.html
-		var parsedSupport x86CET
-		i := 0
-		for i < len(propertyData) {
-			// Bounds checking for note type and data size
-			if i+8 > len(propertyData) {
-				break
-			}
-
-			notetype := file.ByteOrder.Uint32(propertyData[i : i+4])
-			datasz := file.ByteOrder.Uint32(propertyData[i+4 : i+8])
-			i += 8
-
-			if datasz != 4 {
-				continue
-			}
-
-			// Bounds checking for bitmask
-			if i+4 > len(propertyData) {
-				break
-			}
-
-			bitmask := file.ByteOrder.Uint32(propertyData[i : i+4])
-			if notetype == GnuPropertyX86Feature1Flag {
-				parsedSupport = parseBitmaskForx86CET(bitmask)
-			}
-			i += 8
-		}
-
-		if parsedSupport.shstk && parsedSupport.ibt {
-			hwColor = "green"
-			hwOutput = "SHSTK & IBT"
-		} else if parsedSupport.shstk {
-			hwColor = "yellow"
-			hwOutput = "SHSTK & NO IBT"
-		} else if parsedSupport.ibt {
-			hwColor = "yellow"
-			hwOutput = "NO SHSTK & IBT"
-		} else {
-			hwColor = "red"
-			hwOutput = "NO SHSTK & NO IBT"
-		}
+		hwOutput, hwColor = cetOutputString(parseX86CETFromNotes(propertyData, file.ByteOrder))
 	} else if file.Class == elf.ELFCLASS64 && file.Machine == elf.EM_AARCH64 {
 		// AARCH64, check for PAC and BTI
 		// https://docs.kernel.org/arch/arm64/pointer-authentication.html
 		// https://community.arm.com/arm-community-blogs/b/architectures-and-processors-blog/posts/armv8-1-m-pointer-authentication-and-branch-target-identification-extension
-		var parsedSupport armPACBTI
-		i := 0
-		for i < len(propertyData) {
-			// Bounds checking for note type and data size
-			if i+8 > len(propertyData) {
-				break
-			}
-
-			notetype := file.ByteOrder.Uint32(propertyData[i : i+4])
-			datasz := file.ByteOrder.Uint32(propertyData[i+4 : i+8])
-			i += 8
-
-			if datasz != 4 {
-				continue
-			}
-
-			// Bounds checking for bitmask
-			if i+4 > len(propertyData) {
-				break
-			}
-
-			bitmask := file.ByteOrder.Uint32(propertyData[i : i+4])
-			if notetype == GnuPropertyArmFeature1Flag {
-				parsedSupport = parseBitmaskForArmPACBTI(bitmask)
-			}
-			i += 8
-		}
-
-		if parsedSupport.pac && parsedSupport.bti {
-			hwColor = "green"
-			hwOutput = "PAC & BTI"
-		} else if parsedSupport.pac {
-			hwColor = "yellow"
-			hwOutput = "PAC & NO BTI"
-		} else if parsedSupport.bti {
-			hwColor = "yellow"
-			hwOutput = "NO PAC & BTI"
-		} else {
-			hwColor = "red"
-			hwOutput = "NO PAC & NO BTI"
-		}
+		hwOutput, hwColor = armOutputString(parseArmPACBTIFromNotes(propertyData, file.ByteOrder))
 	} else {
 		// Leave hwOutput empty; fallback to Unknown unless Clang CFI is detected
 	}
@@ -230,6 +151,90 @@ func Cfi(name string) (*CfiResult, error) {
 	}
 
 	return res, nil
+}
+
+// parseX86CETFromNotes walks a .note.gnu.property payload and returns the x86
+// CET (SHSTK/IBT) features advertised. It is bounds-safe on truncated or
+// malformed input: out-of-range reads stop the scan rather than panicking.
+func parseX86CETFromNotes(data []byte, bo binary.ByteOrder) x86CET {
+	var parsed x86CET
+	i := 0
+	for i+8 <= len(data) {
+		notetype := bo.Uint32(data[i : i+4])
+		datasz := bo.Uint32(data[i+4 : i+8])
+		i += 8
+
+		// The payload is datasz bytes, padded to 8-byte (ELFCLASS64) alignment.
+		// Advance by the full padded length so non-feature properties (datasz != 4)
+		// don't desync the scan and hide a following feature property.
+		payloadLen := align8(datasz)
+		if i+int(datasz) > len(data) {
+			break
+		}
+		if datasz == 4 && notetype == GnuPropertyX86Feature1Flag {
+			parsed = parseBitmaskForx86CET(bo.Uint32(data[i : i+4]))
+		}
+		i += payloadLen
+	}
+	return parsed
+}
+
+// align8 rounds n up to the next multiple of 8 (the GNU property note alignment
+// for ELFCLASS64), returned as an int for use as a slice offset.
+func align8(n uint32) int {
+	return int((uint64(n) + 7) &^ 7)
+}
+
+// parseArmPACBTIFromNotes walks a .note.gnu.property payload and returns the
+// AArch64 PAC/BTI features advertised. It is bounds-safe on truncated input.
+func parseArmPACBTIFromNotes(data []byte, bo binary.ByteOrder) armPACBTI {
+	var parsed armPACBTI
+	i := 0
+	for i+8 <= len(data) {
+		notetype := bo.Uint32(data[i : i+4])
+		datasz := bo.Uint32(data[i+4 : i+8])
+		i += 8
+
+		// Advance by the full padded payload so non-feature properties don't
+		// desync the scan (see parseX86CETFromNotes).
+		payloadLen := align8(datasz)
+		if i+int(datasz) > len(data) {
+			break
+		}
+		if datasz == 4 && notetype == GnuPropertyArmFeature1Flag {
+			parsed = parseBitmaskForArmPACBTI(bo.Uint32(data[i : i+4]))
+		}
+		i += payloadLen
+	}
+	return parsed
+}
+
+// cetOutputString maps parsed x86 CET features to the display string and color.
+func cetOutputString(s x86CET) (output, color string) {
+	switch {
+	case s.shstk && s.ibt:
+		return "SHSTK & IBT", "green"
+	case s.shstk:
+		return "SHSTK & NO IBT", "yellow"
+	case s.ibt:
+		return "NO SHSTK & IBT", "yellow"
+	default:
+		return "NO SHSTK & NO IBT", "red"
+	}
+}
+
+// armOutputString maps parsed AArch64 PAC/BTI features to the display string and color.
+func armOutputString(s armPACBTI) (output, color string) {
+	switch {
+	case s.pac && s.bti:
+		return "PAC & BTI", "green"
+	case s.pac:
+		return "PAC & NO BTI", "yellow"
+	case s.bti:
+		return "NO PAC & BTI", "yellow"
+	default:
+		return "NO PAC & NO BTI", "red"
+	}
 }
 
 func parseBitmaskForx86CET(bitmask uint32) x86CET {

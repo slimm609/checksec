@@ -21,7 +21,10 @@ func TestSYMBOLS_WithSymbols(t *testing.T) {
 		t.Skipf("cannot build linux test ELF: %v (%s)", err, out)
 	}
 
-	result := SYMBOLS(bin)
+	result, err := SYMBOLS(bin)
+	if err != nil {
+		t.Fatalf("SYMBOLS() error = %v", err)
+	}
 	if result == nil {
 		t.Fatal("SYMBOLS() returned nil")
 	}
@@ -47,7 +50,10 @@ func TestSYMBOLS_Stripped(t *testing.T) {
 		t.Skipf("cannot build stripped linux test ELF: %v (%s)", err, out)
 	}
 
-	result := SYMBOLS(bin)
+	result, err := SYMBOLS(bin)
+	if err != nil {
+		t.Fatalf("SYMBOLS() error = %v", err)
+	}
 	if result == nil {
 		t.Fatal("SYMBOLS() returned nil")
 	}

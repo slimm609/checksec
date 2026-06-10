@@ -2,8 +2,7 @@ package checksec
 
 import (
 	"debug/elf"
-
-	"github.com/slimm609/checksec/v3/pkg/output"
+	"fmt"
 )
 
 type runpath struct {
@@ -12,11 +11,11 @@ type runpath struct {
 }
 
 // Detect runpath in binary
-func RUNPATH(name string) *runpath {
+func RUNPATH(name string) (*runpath, error) {
 	res := runpath{}
 	file, err := elf.Open(name)
 	if err != nil {
-		output.Fatalf("Error opening ELF file: %v", err)
+		return nil, fmt.Errorf("error opening ELF file: %w", err)
 	}
 	defer file.Close()
 
@@ -28,5 +27,5 @@ func RUNPATH(name string) *runpath {
 		res.Output = "RUNPATH"
 		res.Color = "red"
 	}
-	return &res
+	return &res, nil
 }
