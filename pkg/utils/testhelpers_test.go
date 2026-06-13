@@ -1,41 +1,26 @@
 package utils
 
 import (
-	"bytes"
-	"io"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"testing"
-
-	"github.com/fatih/color"
 )
 
-// captureOutput redirects stdout (and color output) during fn execution and returns the captured bytes as a string.
-func captureOutput(t *testing.T, fn func()) string {
+// buildLinuxELF cross-compiles a trivial Go program to a linux/amd64 ELF and
+// returns its path, skipping the test if the toolchain is unavailable.
+func buildLinuxELF(t *testing.T) string {
 	t.Helper()
-
-	oldStdout := os.Stdout
-	oldColor := color.Output
-
-	r, w, err := os.Pipe()
-	if err != nil {
-		t.Fatalf("pipe error: %v", err)
+	dir := t.TempDir()
+	src := filepath.Join(dir, "main.go")
+	bin := filepath.Join(dir, "app")
+	if err := os.WriteFile(src, []byte("package main\nfunc main(){}\n"), 0o644); err != nil {
+		t.Fatalf("write source: %v", err)
 	}
-
-	os.Stdout = w
-	color.Output = w
-	defer func() {
-		os.Stdout = oldStdout
-		color.Output = oldColor
-	}()
-
-	fn()
-
-	_ = w.Close()
-	var buf bytes.Buffer
-	if _, err := io.Copy(&buf, r); err != nil {
-		t.Fatalf("copy error: %v", err)
+	cmd := exec.Command("go", "build", "-o", bin, src)
+	cmd.Env = append(os.Environ(), "GOOS=linux", "GOARCH=amd64", "CGO_ENABLED=0")
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Skipf("cannot build linux ELF: %v (%s)", err, out)
 	}
-	_ = r.Close()
-
-	return buf.String()
+	return bin
 }

@@ -5,13 +5,7 @@ import (
 	"fmt"
 )
 
-type relro struct {
-	Output string
-	Color  string
-}
-
-func RELRO(name string) (*relro, error) {
-	res := relro{}
+func RELRO(name string) (*Result, error) {
 	relroHeader := false
 	bindNow := false
 
@@ -24,9 +18,7 @@ func RELRO(name string) (*relro, error) {
 	defer file.Close()
 
 	if len(file.Progs) == 0 {
-		res.Color = "italic"
-		res.Output = "N/A"
-		return &res, nil
+		return &Result{Value: "N/A", Status: StatusNA}, nil
 	}
 
 	// check bind and flags and flags1.
@@ -56,19 +48,12 @@ func RELRO(name string) (*relro, error) {
 		}
 	}
 
-	if bindNow == true {
-		res.Color = "green"
-		res.Output = "Full RELRO"
-		return &res, nil
-	} else if relroHeader == true {
-		res.Color = "yellow"
-		res.Output = "Partial RELRO"
-		return &res, nil
-	} else {
-		res.Color = "red"
-		res.Output = "No RELRO"
-		return &res, nil
+	if bindNow {
+		return &Result{Value: "Full RELRO", Status: StatusGood}, nil
+	} else if relroHeader {
+		return &Result{Value: "Partial RELRO", Status: StatusWarn}, nil
 	}
+	return &Result{Value: "No RELRO", Status: StatusBad}, nil
 }
 
 // relroBindNow reports whether the dynamic-section flags indicate bind-now (the

@@ -10,7 +10,7 @@ func TestPIE(t *testing.T) {
 		name           string
 		elfType        elf.Type
 		expectedOutput string
-		expectedColor  string
+		expectedColor  Status
 	}{
 		{"ET_DYN is PIE enabled", elf.ET_DYN, "PIE Enabled", "green"},
 		{"ET_REL is REL", elf.ET_REL, "REL", "yellow"},
@@ -25,11 +25,11 @@ func TestPIE(t *testing.T) {
 			if result == nil {
 				t.Fatal("PIE() returned nil")
 			}
-			if result.Output != tt.expectedOutput {
-				t.Errorf("Output = %q, want %q", result.Output, tt.expectedOutput)
+			if result.Value != tt.expectedOutput {
+				t.Errorf("Output = %q, want %q", result.Value, tt.expectedOutput)
 			}
-			if result.Color != tt.expectedColor {
-				t.Errorf("Color = %q, want %q", result.Color, tt.expectedColor)
+			if result.Status != tt.expectedColor {
+				t.Errorf("Color = %q, want %q", result.Status, tt.expectedColor)
 			}
 		})
 	}

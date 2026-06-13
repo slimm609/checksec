@@ -64,7 +64,7 @@ func TestSafeStackLinuxELFNoSafeStack(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SafeStack returned error: %v", err)
 	}
-	if res.Output != "No SafeStack Found" || res.Color != "red" {
+	if res.Value != "No SafeStack Found" || res.Status != "red" {
 		t.Fatalf("unexpected result: %+v", res)
 	}
 }

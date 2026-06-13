@@ -10,11 +10,6 @@ import (
 	"time"
 )
 
-type CfiResult struct {
-	Output string
-	Color  string
-}
-
 type x86CET struct {
 	shstk bool
 	ibt   bool
@@ -39,7 +34,7 @@ const (
 )
 
 // Cfi - Check for Control Flow Integrity features
-func Cfi(name string) (*CfiResult, error) {
+func Cfi(name string) (*Result, error) {
 	// Input validation
 	if name == "" {
 		return nil, fmt.Errorf("filename cannot be empty")
@@ -75,9 +70,9 @@ func Cfi(name string) (*CfiResult, error) {
 		return nil, fmt.Errorf("invalid ELF file: %w", err)
 	}
 
-	res := &CfiResult{}
+	res := &Result{}
 	var hwOutput string
-	var hwColor string
+	var hwColor Status
 	notes := file.Section(".note.gnu.property")
 	if notes == nil {
 		resUnknown(res)
@@ -131,23 +126,23 @@ func Cfi(name string) (*CfiResult, error) {
 			return res, nil
 		}
 		// Only Clang CFI detected
-		res.Color = "green"
+		res.Status = StatusGood
 		if clangMode == "multi" {
-			res.Output = "Clang CFI: Multi-Module"
+			res.Value = "Clang CFI: Multi-Module"
 		} else {
-			res.Output = "Clang CFI: Single-Module"
+			res.Value = "Clang CFI: Single-Module"
 		}
 		return res, nil
 	}
 
 	// Combine HW and Clang CFI info
-	res.Color = hwColor
+	res.Status = hwColor
 	if clangMode == "none" {
-		res.Output = hwOutput
+		res.Value = hwOutput
 	} else if clangMode == "multi" {
-		res.Output = hwOutput + " | Clang CFI: Multi-Module"
+		res.Value = hwOutput + " | Clang CFI: Multi-Module"
 	} else {
-		res.Output = hwOutput + " | Clang CFI: Single-Module"
+		res.Value = hwOutput + " | Clang CFI: Single-Module"
 	}
 
 	return res, nil
@@ -209,31 +204,31 @@ func parseArmPACBTIFromNotes(data []byte, bo binary.ByteOrder) armPACBTI {
 	return parsed
 }
 
-// cetOutputString maps parsed x86 CET features to the display string and color.
-func cetOutputString(s x86CET) (output, color string) {
+// cetOutputString maps parsed x86 CET features to the display string and status.
+func cetOutputString(s x86CET) (string, Status) {
 	switch {
 	case s.shstk && s.ibt:
-		return "SHSTK & IBT", "green"
+		return "SHSTK & IBT", StatusGood
 	case s.shstk:
-		return "SHSTK & NO IBT", "yellow"
+		return "SHSTK & NO IBT", StatusWarn
 	case s.ibt:
-		return "NO SHSTK & IBT", "yellow"
+		return "NO SHSTK & IBT", StatusWarn
 	default:
-		return "NO SHSTK & NO IBT", "red"
+		return "NO SHSTK & NO IBT", StatusBad
 	}
 }
 
-// armOutputString maps parsed AArch64 PAC/BTI features to the display string and color.
-func armOutputString(s armPACBTI) (output, color string) {
+// armOutputString maps parsed AArch64 PAC/BTI features to the display string and status.
+func armOutputString(s armPACBTI) (string, Status) {
 	switch {
 	case s.pac && s.bti:
-		return "PAC & BTI", "green"
+		return "PAC & BTI", StatusGood
 	case s.pac:
-		return "PAC & NO BTI", "yellow"
+		return "PAC & NO BTI", StatusWarn
 	case s.bti:
-		return "NO PAC & BTI", "yellow"
+		return "NO PAC & BTI", StatusWarn
 	default:
-		return "NO PAC & NO BTI", "red"
+		return "NO PAC & NO BTI", StatusBad
 	}
 }
 
@@ -275,9 +270,9 @@ func parseBitmaskForArmPACBTI(bitmask uint32) armPACBTI {
 	return result
 }
 
-func resUnknown(emptyCfi *CfiResult) {
-	emptyCfi.Color = "yellow"
-	emptyCfi.Output = "Unknown"
+func resUnknown(emptyCfi *Result) {
+	emptyCfi.Status = StatusWarn
+	emptyCfi.Value = "Unknown"
 }
 
 // classifyClangCFIMode determines presence and scope of Clang CFI.

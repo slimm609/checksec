@@ -32,8 +32,8 @@ var procCmd = &cobra.Command{
 		}
 
 		utils.CheckElfExists(file)
-		data, color := utils.RunFileChecks(file, libc)
-		utils.FilePrinter(outputFormat, data, color, noBanner, noHeader)
+		report := utils.RunFileChecks(file, libc)
+		utils.FilePrinter(cmd.OutOrStdout(), outputFormat, []utils.FileReport{report}, utils.PrintOptions{NoBanner: noBanner, NoHeader: noHeader})
 	},
 }
 

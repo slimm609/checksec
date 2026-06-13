@@ -10,14 +10,8 @@ import (
 	"github.com/slimm609/checksec/v3/pkg/output"
 )
 
-type symbols struct {
-	Output string
-	Color  string
-}
-
 // SYMBOLS detects usage of elf symbols
-func SYMBOLS(name string) (*symbols, error) {
-	res := symbols{}
+func SYMBOLS(name string) (*Result, error) {
 	file, err := elf.Open(name)
 	if err != nil {
 		return nil, fmt.Errorf("error opening ELF file: %w", err)
@@ -26,13 +20,9 @@ func SYMBOLS(name string) (*symbols, error) {
 
 	symbols, _ := file.Symbols()
 	if len(symbols) == 0 {
-		res.Output = "No Symbols"
-		res.Color = "green"
-	} else {
-		res.Output = fmt.Sprintf("%d symbols", len(symbols))
-		res.Color = "red"
+		return &Result{Value: "No Symbols", Status: StatusGood}, nil
 	}
-	return &res, nil
+	return &Result{Value: fmt.Sprintf("%d symbols", len(symbols)), Status: StatusBad}, nil
 }
 
 func DynValueFromPTDynamic(file *elf.File, tag elf.DynTag, names ...string) ([]uint64, error) {

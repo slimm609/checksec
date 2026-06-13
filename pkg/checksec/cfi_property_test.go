@@ -10,38 +10,38 @@ import (
 
 func TestCetOutputString(t *testing.T) {
 	cases := []struct {
-		in        x86CET
-		wantOut   string
-		wantColor string
+		in         x86CET
+		wantOut    string
+		wantStatus Status
 	}{
-		{x86CET{shstk: true, ibt: true}, "SHSTK & IBT", "green"},
-		{x86CET{shstk: true, ibt: false}, "SHSTK & NO IBT", "yellow"},
-		{x86CET{shstk: false, ibt: true}, "NO SHSTK & IBT", "yellow"},
-		{x86CET{shstk: false, ibt: false}, "NO SHSTK & NO IBT", "red"},
+		{x86CET{shstk: true, ibt: true}, "SHSTK & IBT", StatusGood},
+		{x86CET{shstk: true, ibt: false}, "SHSTK & NO IBT", StatusWarn},
+		{x86CET{shstk: false, ibt: true}, "NO SHSTK & IBT", StatusWarn},
+		{x86CET{shstk: false, ibt: false}, "NO SHSTK & NO IBT", StatusBad},
 	}
 	for _, c := range cases {
-		gotOut, gotColor := cetOutputString(c.in)
-		if gotOut != c.wantOut || gotColor != c.wantColor {
-			t.Errorf("cetOutputString(%+v) = %q/%q, want %q/%q", c.in, gotOut, gotColor, c.wantOut, c.wantColor)
+		gotOut, gotStatus := cetOutputString(c.in)
+		if gotOut != c.wantOut || gotStatus != c.wantStatus {
+			t.Errorf("cetOutputString(%+v) = %q/%q, want %q/%q", c.in, gotOut, gotStatus, c.wantOut, c.wantStatus)
 		}
 	}
 }
 
 func TestArmOutputString(t *testing.T) {
 	cases := []struct {
-		in        armPACBTI
-		wantOut   string
-		wantColor string
+		in         armPACBTI
+		wantOut    string
+		wantStatus Status
 	}{
-		{armPACBTI{pac: true, bti: true}, "PAC & BTI", "green"},
-		{armPACBTI{pac: true, bti: false}, "PAC & NO BTI", "yellow"},
-		{armPACBTI{pac: false, bti: true}, "NO PAC & BTI", "yellow"},
-		{armPACBTI{pac: false, bti: false}, "NO PAC & NO BTI", "red"},
+		{armPACBTI{pac: true, bti: true}, "PAC & BTI", StatusGood},
+		{armPACBTI{pac: true, bti: false}, "PAC & NO BTI", StatusWarn},
+		{armPACBTI{pac: false, bti: true}, "NO PAC & BTI", StatusWarn},
+		{armPACBTI{pac: false, bti: false}, "NO PAC & NO BTI", StatusBad},
 	}
 	for _, c := range cases {
-		gotOut, gotColor := armOutputString(c.in)
-		if gotOut != c.wantOut || gotColor != c.wantColor {
-			t.Errorf("armOutputString(%+v) = %q/%q, want %q/%q", c.in, gotOut, gotColor, c.wantOut, c.wantColor)
+		gotOut, gotStatus := armOutputString(c.in)
+		if gotOut != c.wantOut || gotStatus != c.wantStatus {
+			t.Errorf("armOutputString(%+v) = %q/%q, want %q/%q", c.in, gotOut, gotStatus, c.wantOut, c.wantStatus)
 		}
 	}
 }

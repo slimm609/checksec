@@ -20,11 +20,11 @@ func TestCanary_FixtureFound(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Canary() error = %v", err)
 	}
-	if res.Output != "Canary Found" {
-		t.Errorf("Output = %q, want %q", res.Output, "Canary Found")
+	if res.Value != "Canary Found" {
+		t.Errorf("Value = %q, want %q", res.Value, "Canary Found")
 	}
-	if res.Color != "green" {
-		t.Errorf("Color = %q, want %q", res.Color, "green")
+	if res.Status != StatusGood {
+		t.Errorf("Status = %q, want %q", res.Status, StatusGood)
 	}
 }
 
@@ -37,11 +37,11 @@ func TestCanary_FixtureNoCanary(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Canary() error = %v", err)
 	}
-	if res.Output != "No Canary Found" {
-		t.Errorf("Output = %q, want %q", res.Output, "No Canary Found")
+	if res.Value != "No Canary Found" {
+		t.Errorf("Value = %q, want %q", res.Value, "No Canary Found")
 	}
-	if res.Color != "red" {
-		t.Errorf("Color = %q, want %q", res.Color, "red")
+	if res.Status != StatusBad {
+		t.Errorf("Status = %q, want %q", res.Status, StatusBad)
 	}
 }
 
@@ -54,11 +54,11 @@ func TestSafeStack_FixtureStripped(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SafeStack() error = %v", err)
 	}
-	if res.Output != "No SafeStack Found" {
-		t.Errorf("Output = %q, want %q", res.Output, "No SafeStack Found")
+	if res.Value != "No SafeStack Found" {
+		t.Errorf("Value = %q, want %q", res.Value, "No SafeStack Found")
 	}
-	if res.Color != "red" {
-		t.Errorf("Color = %q, want %q", res.Color, "red")
+	if res.Status != StatusBad {
+		t.Errorf("Status = %q, want %q", res.Status, StatusBad)
 	}
 }
 
@@ -69,12 +69,12 @@ func TestCfi_FixtureArm64(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Cfi() error = %v", err)
 	}
-	if res.Output == "" {
-		t.Error("Cfi() Output is empty")
+	if res.Value == "" {
+		t.Error("Cfi() Value is empty")
 	}
-	validColors := map[string]bool{"green": true, "yellow": true, "red": true}
-	if !validColors[res.Color] {
-		t.Errorf("unexpected Color = %q", res.Color)
+	validStatus := map[Status]bool{StatusGood: true, StatusWarn: true, StatusBad: true}
+	if !validStatus[res.Status] {
+		t.Errorf("unexpected Status = %q", res.Status)
 	}
 }
 
@@ -85,12 +85,12 @@ func TestCfi_FixtureX86(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Cfi() error = %v", err)
 	}
-	if res.Output == "" {
-		t.Error("Cfi() Output is empty")
+	if res.Value == "" {
+		t.Error("Cfi() Value is empty")
 	}
-	validColors := map[string]bool{"green": true, "yellow": true, "red": true}
-	if !validColors[res.Color] {
-		t.Errorf("unexpected Color = %q", res.Color)
+	validStatus := map[Status]bool{StatusGood: true, StatusWarn: true, StatusBad: true}
+	if !validStatus[res.Status] {
+		t.Errorf("unexpected Status = %q", res.Status)
 	}
 }
 

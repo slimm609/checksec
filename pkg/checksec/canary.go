@@ -1,26 +1,40 @@
 package checksec
 
 import (
-	"bytes"
 	"context"
 	"debug/elf"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
-
-// CanaryResult struct
-type CanaryResult struct {
-	Output string
-	Color  string
-}
 
 // StackChk to check for stack_chk_fail value
 const StackChk = "__stack_chk_fail"
 
+// canarySymbolPrefixes are symbol-name prefixes whose presence indicates the
+// binary was built with stack-smashing protection. Mirrors checksec.bash:
+// __stack_chk_fail (glibc handler), __stack_chk_guard (the guard slot itself,
+// seen in static/freestanding builds), and __intel_security_cookie (Intel ICC).
+var canarySymbolPrefixes = []string{
+	"__stack_chk_fail",
+	"__stack_chk_guard",
+	"__intel_security_cookie",
+	"__intel_security_check_cookie",
+}
+
+func isCanarySymbol(name string) bool {
+	for _, p := range canarySymbolPrefixes {
+		if strings.HasPrefix(name, p) {
+			return true
+		}
+	}
+	return false
+}
+
 // Canary - Check for canary bits
-func Canary(name string) (*CanaryResult, error) {
+func Canary(name string) (*Result, error) {
 	// Input validation
 	if name == "" {
 		return nil, fmt.Errorf("filename cannot be empty")
@@ -54,15 +68,13 @@ func Canary(name string) (*CanaryResult, error) {
 		return nil, fmt.Errorf("invalid ELF file: %w", err)
 	}
 
-	res := &CanaryResult{}
+	found := &Result{Value: "Canary Found", Status: StatusGood}
 
 	// Check symbols with proper error handling
 	if symbols, err := file.Symbols(); err == nil {
 		for _, symbol := range symbols {
-			if bytes.HasPrefix([]byte(symbol.Name), []byte(StackChk)) {
-				res.Output = "Canary Found"
-				res.Color = "green"
-				return res, nil
+			if isCanarySymbol(symbol.Name) {
+				return found, nil
 			}
 		}
 	}
@@ -70,10 +82,8 @@ func Canary(name string) (*CanaryResult, error) {
 	// Check imported symbols
 	if importedSymbols, err := file.ImportedSymbols(); err == nil {
 		for _, imp := range importedSymbols {
-			if bytes.HasPrefix([]byte(imp.Name), []byte(StackChk)) {
-				res.Output = "Canary Found"
-				res.Color = "green"
-				return res, nil
+			if isCanarySymbol(imp.Name) {
+				return found, nil
 			}
 		}
 	}
@@ -81,15 +91,11 @@ func Canary(name string) (*CanaryResult, error) {
 	// Check dynamic functions
 	if dynamicFunctions, err := FunctionsFromSymbolTable(f); err == nil {
 		for _, symbol := range dynamicFunctions {
-			if bytes.HasPrefix([]byte(symbol.Name), []byte(StackChk)) {
-				res.Output = "Canary Found"
-				res.Color = "green"
-				return res, nil
+			if isCanarySymbol(symbol.Name) {
+				return found, nil
 			}
 		}
 	}
 
-	res.Output = "No Canary Found"
-	res.Color = "red"
-	return res, nil
+	return &Result{Value: "No Canary Found", Status: StatusBad}, nil
 }

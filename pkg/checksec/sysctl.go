@@ -6,71 +6,83 @@ import (
 	"github.com/lorenzosaino/go-sysctl"
 )
 
-func SysctlCheck() ([]interface{}, []interface{}) {
-	var Results []interface{}
-	var ColorResults []interface{}
+// sysctlValueMap maps a raw sysctl value (e.g. "0", "1", "2") to its Result.
+type sysctlValueMap map[string]Result
 
-	sysctlChecks := []map[string]interface{}{
-		{"name": "fs.protected_symlinks", "desc": "Protected symlinks", "values": map[string]map[string]string{"0": {"res": "Disabled", "color": "red"}, "1": {"res": "Enabled", "color": "green"}}},
-		{"name": "fs.protected_hardlinks", "desc": "Protected hardlinks", "values": map[string]map[string]string{"0": {"res": "Disabled", "color": "red"}, "1": {"res": "Enabled", "color": "green"}}},
-		{"name": "net.ipv4.conf.all.rp_filter", "desc": "Ipv4 reverse path filtering", "values": map[string]map[string]string{"0": {"res": "Disabled", "color": "red"}, "1": {"res": "Enabled", "color": "green"}}},
-		{"name": "kernel.yama.ptrace_scope", "desc": "YAMA", "values": map[string]map[string]string{"0": {"res": "Disabled", "color": "red"}, "1": {"res": "Enabled", "color": "green"}}},
-		{"name": "kernel.exec-shield", "desc": "Exec Shield", "values": map[string]map[string]string{"0": {"res": "Disabled", "color": "red"}, "1": {"res": "Enabled", "color": "green"}}},
-		{"name": "kernel.unprivileged_bpf_disabled", "desc": "Unprivileged BPF Disabled", "values": map[string]map[string]string{"0": {"res": "Disabled", "color": "red"}, "1": {"res": "Enabled", "color": "green"}}},
-		{"name": "kernel.randomize_va_space", "desc": "Vanilla Kernel ASLR", "values": map[string]map[string]string{"0": {"res": "Disabled", "color": "red"}, "1": {"res": "Partial", "color": "yellow"}, "2": {"res": "Enabled", "color": "green"}}},
-		{"name": "kernel.dmesg_restrict", "desc": "Dmesg Restrictions", "values": map[string]map[string]string{"0": {"res": "Disabled", "color": "red"}, "1": {"res": "Enabled", "color": "green"}}},
-		{"name": "kernel.kptr_restrict", "desc": "Kernel Pointer Restrictions", "values": map[string]map[string]string{"0": {"res": "Disabled", "color": "red"}, "1": {"res": "Partial", "color": "yellow"}, "2": {"res": "Enabled", "color": "green"}}},
-		{"name": "fs.protected_fifos", "desc": "Protected fifos", "values": map[string]map[string]string{"0": {"res": "Disabled", "color": "red"}, "1": {"res": "Partial", "color": "yellow"}, "2": {"res": "Enabled", "color": "green"}}},
-		{"name": "fs.protected_regular", "desc": "Protected regular", "values": map[string]map[string]string{"0": {"res": "Disabled", "color": "red"}, "1": {"res": "Partial", "color": "yellow"}, "2": {"res": "Enabled", "color": "green"}}},
-		{"name": "kernel.perf_event_paranoid", "desc": "Performance events by normal users", "values": map[string]map[string]string{"-1": {"res": "Disabled", "color": "red"}, "0": {"res": "Disabled", "color": "red"}, "1": {"res": "Partial", "color": "yellow"}, "2": {"res": "Enabled", "color": "green"}, "3": {"res": "Enabled", "color": "green"}}},
-		{"name": "dev.tty.ldisc_autoload", "desc": "Disable Autoload TTY Line Disciplines", "values": map[string]map[string]string{"1": {"res": "Disabled", "color": "red"}, "0": {"res": "Enabled", "color": "green"}}},
-		{"name": "dev.tty.legacy_tiocsti", "desc": "Disable Legacy TIOCSTI (breaks screen readers)", "values": map[string]map[string]string{"1": {"res": "Disabled", "color": "red"}, "0": {"res": "Enabled", "color": "green"}}},
-		{"name": "kernel.kexec_load_disabled", "desc": "Turn off kexec", "values": map[string]map[string]string{"0": {"res": "Disabled", "color": "red"}, "1": {"res": "Enabled", "color": "green"}}},
-		{"name": "net.core.bpf_jit_harden", "desc": "Turn on BPF JIT hardening", "values": map[string]map[string]string{"0": {"res": "Disabled", "color": "red"}, "1": {"res": "Partial", "color": "yellow"}, "2": {"res": "Enabled", "color": "green"}}},
-		{"name": "vm.unprivileged_userfaultfd", "desc": "Disable userfaultfd usage", "values": map[string]map[string]string{"1": {"res": "Disabled", "color": "red"}, "0": {"res": "Enabled", "color": "green"}}},
-		{"name": "fs.suid_dumpable", "desc": "Ensure suid binaries can't be dumped", "values": map[string]map[string]string{"2": {"res": "Disabled", "color": "red"}, "1": {"res": "Partial", "color": "yellow"}, "0": {"res": "Enabled", "color": "green"}}},
+type sysctlCheckDef struct {
+	name   string
+	desc   string
+	values sysctlValueMap
+}
+
+var (
+	onOff = sysctlValueMap{
+		"0": {Value: "Disabled", Status: StatusBad},
+		"1": {Value: "Enabled", Status: StatusGood},
 	}
+	offOn = sysctlValueMap{
+		"1": {Value: "Disabled", Status: StatusBad},
+		"0": {Value: "Enabled", Status: StatusGood},
+	}
+	tristate = sysctlValueMap{
+		"0": {Value: "Disabled", Status: StatusBad},
+		"1": {Value: "Partial", Status: StatusWarn},
+		"2": {Value: "Enabled", Status: StatusGood},
+	}
+)
 
+var sysctlChecks = []sysctlCheckDef{
+	{"fs.protected_symlinks", "Protected symlinks", onOff},
+	{"fs.protected_hardlinks", "Protected hardlinks", onOff},
+	{"net.ipv4.conf.all.rp_filter", "Ipv4 reverse path filtering", onOff},
+	{"kernel.yama.ptrace_scope", "YAMA", onOff},
+	{"kernel.exec-shield", "Exec Shield", onOff},
+	{"kernel.unprivileged_bpf_disabled", "Unprivileged BPF Disabled", onOff},
+	{"kernel.randomize_va_space", "Vanilla Kernel ASLR", tristate},
+	{"kernel.dmesg_restrict", "Dmesg Restrictions", onOff},
+	{"kernel.kptr_restrict", "Kernel Pointer Restrictions", tristate},
+	{"fs.protected_fifos", "Protected fifos", tristate},
+	{"fs.protected_regular", "Protected regular", tristate},
+	{"kernel.perf_event_paranoid", "Performance events by normal users", sysctlValueMap{
+		"-1": {Value: "Disabled", Status: StatusBad},
+		"0":  {Value: "Disabled", Status: StatusBad},
+		"1":  {Value: "Partial", Status: StatusWarn},
+		"2":  {Value: "Enabled", Status: StatusGood},
+		"3":  {Value: "Enabled", Status: StatusGood},
+	}},
+	{"dev.tty.ldisc_autoload", "Disable Autoload TTY Line Disciplines", offOn},
+	{"dev.tty.legacy_tiocsti", "Disable Legacy TIOCSTI (breaks screen readers)", offOn},
+	{"kernel.kexec_load_disabled", "Turn off kexec", onOff},
+	{"net.core.bpf_jit_harden", "Turn on BPF JIT hardening", tristate},
+	{"vm.unprivileged_userfaultfd", "Disable userfaultfd usage", offOn},
+	{"fs.suid_dumpable", "Ensure suid binaries can't be dumped", sysctlValueMap{
+		"2": {Value: "Disabled", Status: StatusBad},
+		"1": {Value: "Partial", Status: StatusWarn},
+		"0": {Value: "Enabled", Status: StatusGood},
+	}},
+}
+
+// SysctlCheck reads each known security-relevant sysctl and returns its
+// evaluated KernelCheck.
+func SysctlCheck() []KernelCheck {
+	results := make([]KernelCheck, 0, len(sysctlChecks))
 	for _, s := range sysctlChecks {
-		var res []interface{}
-		var colors []interface{}
-		var output string
-		var color string
-		check, _ := sysctl.Get(s["name"].(string))
-
-		values := s["values"].(map[string]map[string]string)
-
-		if len(check) == 0 {
+		raw, _ := sysctl.Get(s.name)
+		var res Result
+		if raw == "" {
 			if runtime.GOOS == "linux" {
-				output = "Unknown"
+				res = Result{Value: "Unknown", Status: StatusNA}
 			} else {
-				output = "N/A"
+				res = Result{Value: "N/A", Status: StatusNA}
 			}
-			color = "italic"
+		} else if r, ok := s.values[raw]; ok {
+			res = r
 		} else {
-			output = values[check]["res"]
-			color = values[check]["color"]
+			res = Result{Value: "Unknown", Status: StatusNA}
 		}
-		res = []interface{}{
-			map[string]interface{}{
-				"name":  s["name"],
-				"value": output,
-				"desc":  s["desc"],
-				"type":  "Sysctl",
-			},
-		}
-		colors = []interface{}{
-			map[string]interface{}{
-				"name":  s["name"],
-				"value": output,
-				"color": color,
-				"desc":  s["desc"],
-				"type":  "Sysctl",
-			},
-		}
-		Results = append(Results, res...)
-		ColorResults = append(ColorResults, colors...)
+		results = append(results, KernelCheck{
+			Name: s.name, Desc: s.desc, Type: "Sysctl", Result: res,
+		})
 	}
-
-	return Results, ColorResults
+	return results
 }

@@ -2,9 +2,44 @@ package checksec
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 )
+
+// TestIsCanarySymbol verifies the symbol-name predicate that drives Canary().
+// This is the regression guard for parity with checksec.bash, which matches
+// __stack_chk_fail | __stack_chk_guard | __intel_security_cookie.
+func TestIsCanarySymbol(t *testing.T) {
+	tests := []struct {
+		symbol string
+		want   bool
+		why    string
+	}{
+		// GCC / Clang -fstack-protector (dynamically linked)
+		{"__stack_chk_fail", true, "glibc canary failure handler"},
+		{"__stack_chk_fail_local", true, "glibc local-alias canary handler (PIC)"},
+		// Statically linked / freestanding: only the guard variable is present
+		{"__stack_chk_guard", true, "glibc/musl canary guard variable (static link)"},
+		// Intel ICC compiler
+		{"__intel_security_cookie", true, "Intel ICC stack cookie"},
+		{"__intel_security_check_cookie", true, "Intel ICC stack cookie check (prefix match)"},
+		// Negatives
+		{"__stack_chk", false, "incomplete prefix must not match"},
+		{"stack_chk_fail", false, "missing leading underscores"},
+		{"__safestack_init", false, "SafeStack symbol, not a canary"},
+		{"main", false, "unrelated symbol"},
+		{"", false, "empty symbol"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.symbol+"/"+tt.why, func(t *testing.T) {
+			if got := isCanarySymbol(tt.symbol); got != tt.want {
+				t.Errorf("isCanarySymbol(%q) = %v, want %v (%s)", tt.symbol, got, tt.want, tt.why)
+			}
+		})
+	}
+}
 
 func TestCanary_InputValidation(t *testing.T) {
 	tests := []struct {
@@ -87,17 +122,40 @@ func TestCanary_InvalidELF(t *testing.T) {
 }
 
 func TestCanary_ValidELFWithoutCanary(t *testing.T) {
-	// This test would require a valid ELF file without canary
-	// For now, we'll test the error handling path
-	// In a real test environment, you'd have test binaries
-	t.Skip("Requires test ELF binaries - skipping for now")
+	// A pure-Go linux/amd64 binary has no glibc stack-protector symbols.
+	tempDir := t.TempDir()
+	src := filepath.Join(tempDir, "main.go")
+	bin := filepath.Join(tempDir, "app")
+
+	if err := os.WriteFile(src, []byte("package main\nfunc main(){}\n"), 0o644); err != nil {
+		t.Fatalf("write source: %v", err)
+	}
+
+	cmd := exec.Command("go", "build", "-o", bin, src)
+	cmd.Env = append(os.Environ(), "GOOS=linux", "GOARCH=amd64", "CGO_ENABLED=0")
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Skipf("could not build linux test ELF: %v (%s)", err, string(out))
+	}
+
+	res, err := Canary(bin)
+	if err != nil {
+		t.Fatalf("Canary returned error: %v", err)
+	}
+	if res.Value != "No Canary Found" || res.Status != "red" {
+		t.Fatalf("unexpected result: %+v", res)
+	}
 }
 
 func TestCanary_ValidELFWithCanary(t *testing.T) {
-	// This test would require a valid ELF file with canary
-	// For now, we'll test the error handling path
-	// In a real test environment, you'd have test binaries
-	t.Skip("Requires test ELF binaries - skipping for now")
+	// Uses the committed gcc fixture built with -fstack-protector-all.
+	p := requireFixture(t, "all")
+	res, err := Canary(p)
+	if err != nil {
+		t.Fatalf("Canary returned error: %v", err)
+	}
+	if res.Value != "Canary Found" || res.Status != "green" {
+		t.Fatalf("expected Canary Found/green, got: %+v", res)
+	}
 }
 
 func TestCanary_PathTraversal(t *testing.T) {

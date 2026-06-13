@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/slimm609/checksec/v3/pkg/checksec"
 	"github.com/slimm609/checksec/v3/pkg/utils"
 
 	"github.com/spf13/cobra"
@@ -15,11 +14,8 @@ import (
 var fortifyProcCmd = &cobra.Command{
 	Use:   "fortifyProc",
 	Short: "Check Fortify for running process",
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) != 1 {
-			fmt.Printf("Error: no process id provided")
-			os.Exit(1)
-		}
 		proc := args[0]
 
 		filePath := filepath.Join("/proc", proc, "exe")
@@ -35,46 +31,8 @@ var fortifyProcCmd = &cobra.Command{
 		}
 
 		utils.CheckElfExists(file)
-		binary := utils.GetBinary(file)
-		defer binary.Close()
-		fortify, err := checksec.Fortify(file, binary, libc)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error checking fortify: %v\n", err)
-			os.Exit(1)
-		}
-		output := []interface{}{
-			map[string]interface{}{
-				"name": file,
-				"checks": map[string]interface{}{
-					"fortify_source": fortify.Output,
-					"fortified":      fortify.Fortified,
-					"fortifyable":    fortify.Fortifiable,
-					"noFortify":      fortify.NoFortify,
-					"libcSupport":    fortify.LibcSupport,
-					"numLibcFunc":    fortify.NumLibcFunc,
-					"numFileFunc":    fortify.NumFileFunc,
-				},
-			},
-		}
-		color := []interface{}{
-			map[string]interface{}{
-				"name": file,
-				"checks": map[string]interface{}{
-					"fortified":           fortify.Fortified,
-					"fortifiedColor":      "unset",
-					"noFortify":           fortify.NoFortify,
-					"fortifyable":         fortify.Fortifiable,
-					"fortifyableColor":    "unset",
-					"fortify_source":      fortify.Output,
-					"fortify_sourceColor": fortify.Color,
-					"libcSupport":         fortify.LibcSupport,
-					"libcSupportColor":    fortify.LibcSupportColor,
-					"numLibcFunc":         fortify.NumLibcFunc,
-					"numFileFunc":         fortify.NumFileFunc,
-				},
-			},
-		}
-		utils.FortifyPrinter(outputFormat, output, color, noBanner, noHeader)
+		report := utils.RunFortifyCheck(file, libc)
+		utils.FortifyPrinter(cmd.OutOrStdout(), outputFormat, report, utils.PrintOptions{NoBanner: noBanner, NoHeader: noHeader})
 	},
 }
 

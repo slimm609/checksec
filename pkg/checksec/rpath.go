@@ -5,13 +5,7 @@ import (
 	"fmt"
 )
 
-type rpath struct {
-	Output string
-	Color  string
-}
-
-func RPATH(name string) (*rpath, error) {
-	res := rpath{}
+func RPATH(name string) (*Result, error) {
 	file, err := elf.Open(name)
 	if err != nil {
 		return nil, fmt.Errorf("error opening ELF file: %w", err)
@@ -20,11 +14,7 @@ func RPATH(name string) (*rpath, error) {
 
 	rpath, _ := file.DynValue(15)
 	if len(rpath) == 0 {
-		res.Output = "No RPATH"
-		res.Color = "green"
-	} else {
-		res.Output = "RPATH"
-		res.Color = "red"
+		return &Result{Value: "No RPATH", Status: StatusGood}, nil
 	}
-	return &res, nil
+	return &Result{Value: "RPATH", Status: StatusBad}, nil
 }

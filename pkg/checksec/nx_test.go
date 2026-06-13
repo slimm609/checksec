@@ -44,7 +44,7 @@ func TestNX(t *testing.T) {
 		filename       string
 		mockProgs      []mockProgHeader
 		expectedOutput string
-		expectedColor  string
+		expectedColor  Status
 		description    string
 	}{
 		{
@@ -144,12 +144,12 @@ func TestNX(t *testing.T) {
 				t.Fatalf("NX() returned nil result")
 			}
 
-			if result.Output != tt.expectedOutput {
-				t.Errorf("NX() Output = %q, expected %q", result.Output, tt.expectedOutput)
+			if result.Value != tt.expectedOutput {
+				t.Errorf("NX() Output = %q, expected %q", result.Value, tt.expectedOutput)
 			}
 
-			if result.Color != tt.expectedColor {
-				t.Errorf("NX() Color = %q, expected %q", result.Color, tt.expectedColor)
+			if result.Status != tt.expectedColor {
+				t.Errorf("NX() Color = %q, expected %q", result.Status, tt.expectedColor)
 			}
 
 			// Log test description for documentation
@@ -171,12 +171,12 @@ func TestNX_SecurityValidation(t *testing.T) {
 		}
 
 		// Should return error state, not panic
-		if result.Output != "Error: Invalid binary" {
-			t.Errorf("Expected 'Error: Invalid binary' output for nil binary, got: %q", result.Output)
+		if result.Value != "Error: Invalid binary" {
+			t.Errorf("Expected 'Error: Invalid binary' output for nil binary, got: %q", result.Value)
 		}
 
-		if result.Color != "red" {
-			t.Errorf("Expected 'red' color for nil binary error, got: %q", result.Color)
+		if result.Status != "red" {
+			t.Errorf("Expected 'red' color for nil binary error, got: %q", result.Status)
 		}
 
 		t.Logf("SECURITY FIX VALIDATED: NX() handles nil input gracefully")
@@ -199,12 +199,12 @@ func TestNX_SecurityValidation(t *testing.T) {
 		}
 
 		// Should return error state for DoS protection
-		if result.Output != "Error: Too many program headers" {
-			t.Errorf("Expected DoS protection error, got: %q", result.Output)
+		if result.Value != "Error: Too many program headers" {
+			t.Errorf("Expected DoS protection error, got: %q", result.Value)
 		}
 
-		if result.Color != "red" {
-			t.Errorf("Expected 'red' color for DoS protection error, got: %q", result.Color)
+		if result.Status != "red" {
+			t.Errorf("Expected 'red' color for DoS protection error, got: %q", result.Status)
 		}
 
 		t.Logf("DoS PROTECTION VALIDATED: NX() limits program header processing")
@@ -257,15 +257,15 @@ func TestNX_EdgeCases(t *testing.T) {
 			}
 
 			// Should return valid output and color
-			if result.Output == "" {
+			if result.Value == "" {
 				t.Errorf("NX() returned empty output for: %s", tt.description)
 			}
 
-			if result.Color == "" {
+			if result.Status == "" {
 				t.Errorf("NX() returned empty color for: %s", tt.description)
 			}
 
-			t.Logf("Edge case: %s - Result: %s (%s)", tt.description, result.Output, result.Color)
+			t.Logf("Edge case: %s - Result: %s (%s)", tt.description, result.Value, result.Status)
 		})
 	}
 }
@@ -304,10 +304,10 @@ func TestNX_ReturnValueValidation(t *testing.T) {
 		"N/A":         true,
 	}
 
-	validColors := map[string]bool{
-		"green":  true,
-		"red":    true,
-		"italic": true,
+	validColors := map[Status]bool{
+		StatusGood: true,
+		StatusBad:  true,
+		StatusNA:   true,
 	}
 
 	for i, progs := range testCases {
@@ -319,12 +319,12 @@ func TestNX_ReturnValueValidation(t *testing.T) {
 				t.Fatal("NX() returned nil")
 			}
 
-			if !validOutputs[result.Output] {
-				t.Errorf("Invalid output value: %q", result.Output)
+			if !validOutputs[result.Value] {
+				t.Errorf("Invalid output value: %q", result.Value)
 			}
 
-			if !validColors[result.Color] {
-				t.Errorf("Invalid color value: %q", result.Color)
+			if !validColors[result.Status] {
+				t.Errorf("Invalid color value: %q", result.Status)
 			}
 		})
 	}

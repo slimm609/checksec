@@ -11,18 +11,12 @@ import (
 // SafeStackInit symbol used by SafeStack-enabled binaries.
 const SafeStackInit = "__safestack_init"
 
-// SafeStackResult is the result of SafeStack detection.
-type SafeStackResult struct {
-	Output string
-	Color  string
-}
-
 func hasSafeStackSymbol(name string) bool {
 	return bytes.HasPrefix([]byte(name), []byte(SafeStackInit))
 }
 
 // SafeStack checks for SafeStack support by searching for __safestack_init.
-func SafeStack(name string) (*SafeStackResult, error) {
+func SafeStack(name string) (*Result, error) {
 	if name == "" {
 		return nil, fmt.Errorf("filename cannot be empty")
 	}
@@ -43,14 +37,12 @@ func SafeStack(name string) (*SafeStackResult, error) {
 		return nil, fmt.Errorf("invalid ELF file: %w", err)
 	}
 
-	res := &SafeStackResult{}
+	found := &Result{Value: "SafeStack Found", Status: StatusGood}
 
 	if symbols, err := file.Symbols(); err == nil {
 		for _, symbol := range symbols {
 			if hasSafeStackSymbol(symbol.Name) {
-				res.Output = "SafeStack Found"
-				res.Color = "green"
-				return res, nil
+				return found, nil
 			}
 		}
 	}
@@ -58,9 +50,7 @@ func SafeStack(name string) (*SafeStackResult, error) {
 	if importedSymbols, err := file.ImportedSymbols(); err == nil {
 		for _, symbol := range importedSymbols {
 			if hasSafeStackSymbol(symbol.Name) {
-				res.Output = "SafeStack Found"
-				res.Color = "green"
-				return res, nil
+				return found, nil
 			}
 		}
 	}
@@ -68,14 +58,10 @@ func SafeStack(name string) (*SafeStackResult, error) {
 	if dynamicFunctions, err := FunctionsFromSymbolTable(f); err == nil {
 		for _, symbol := range dynamicFunctions {
 			if hasSafeStackSymbol(symbol.Name) {
-				res.Output = "SafeStack Found"
-				res.Color = "green"
-				return res, nil
+				return found, nil
 			}
 		}
 	}
 
-	res.Output = "No SafeStack Found"
-	res.Color = "red"
-	return res, nil
+	return &Result{Value: "No SafeStack Found", Status: StatusBad}, nil
 }

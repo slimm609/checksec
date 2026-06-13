@@ -28,11 +28,11 @@ func TestRUNPATH_NoRunpath(t *testing.T) {
 	if result == nil {
 		t.Fatal("RUNPATH() returned nil")
 	}
-	if result.Output != "No RUNPATH" {
-		t.Errorf("Output = %q, want %q", result.Output, "No RUNPATH")
+	if result.Value != "No RUNPATH" {
+		t.Errorf("Output = %q, want %q", result.Value, "No RUNPATH")
 	}
-	if result.Color != "green" {
-		t.Errorf("Color = %q, want %q", result.Color, "green")
+	if result.Status != "green" {
+		t.Errorf("Color = %q, want %q", result.Status, "green")
 	}
 }
 
@@ -47,10 +47,10 @@ func TestRUNPATH_WithRunpath(t *testing.T) {
 	if result == nil {
 		t.Fatal("RUNPATH() returned nil")
 	}
-	if result.Output != "RUNPATH" {
-		t.Errorf("Output = %q, want %q", result.Output, "RUNPATH")
+	if result.Value != "RUNPATH" {
+		t.Errorf("Output = %q, want %q", result.Value, "RUNPATH")
 	}
-	if result.Color != "red" {
-		t.Errorf("Color = %q, want %q", result.Color, "red")
+	if result.Status != "red" {
+		t.Errorf("Color = %q, want %q", result.Status, "red")
 	}
 }

@@ -28,11 +28,11 @@ func TestRPATH_NoRpath(t *testing.T) {
 	if result == nil {
 		t.Fatal("RPATH() returned nil")
 	}
-	if result.Output != "No RPATH" {
-		t.Errorf("Output = %q, want %q", result.Output, "No RPATH")
+	if result.Value != "No RPATH" {
+		t.Errorf("Output = %q, want %q", result.Value, "No RPATH")
 	}
-	if result.Color != "green" {
-		t.Errorf("Color = %q, want %q", result.Color, "green")
+	if result.Status != "green" {
+		t.Errorf("Color = %q, want %q", result.Status, "green")
 	}
 }
 
@@ -47,10 +47,10 @@ func TestRPATH_WithRpath(t *testing.T) {
 	if result == nil {
 		t.Fatal("RPATH() returned nil")
 	}
-	if result.Output != "RPATH" {
-		t.Errorf("Output = %q, want %q", result.Output, "RPATH")
+	if result.Value != "RPATH" {
+		t.Errorf("Output = %q, want %q", result.Value, "RPATH")
 	}
-	if result.Color != "red" {
-		t.Errorf("Color = %q, want %q", result.Color, "red")
+	if result.Status != "red" {
+		t.Errorf("Color = %q, want %q", result.Status, "red")
 	}
 }

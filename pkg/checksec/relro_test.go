@@ -39,12 +39,12 @@ func TestRELRO_StaticGoElf(t *testing.T) {
 		"Partial RELRO": true,
 		"No RELRO":      true,
 	}
-	if !validOutputs[result.Output] {
-		t.Errorf("unexpected Output = %q", result.Output)
+	if !validOutputs[result.Value] {
+		t.Errorf("unexpected Output = %q", result.Value)
 	}
-	validColors := map[string]bool{"green": true, "yellow": true, "red": true}
-	if !validColors[result.Color] {
-		t.Errorf("unexpected Color = %q", result.Color)
+	validStatus := map[Status]bool{StatusGood: true, StatusWarn: true, StatusBad: true}
+	if !validStatus[result.Status] {
+		t.Errorf("unexpected Status = %q", result.Status)
 	}
 }
 
@@ -62,7 +62,7 @@ func TestRELRO_NoProgHeaders(t *testing.T) {
 		t.Fatal("RELRO() returned nil")
 	}
 	validOutputs := map[string]bool{"N/A": true, "No RELRO": true}
-	if !validOutputs[result.Output] {
-		t.Errorf("unexpected Output for rel.o = %q", result.Output)
+	if !validOutputs[result.Value] {
+		t.Errorf("unexpected Output for rel.o = %q", result.Value)
 	}
 }

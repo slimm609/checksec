@@ -4,24 +4,13 @@ import (
 	"debug/elf"
 )
 
-type pie struct {
-	Output string
-	Color  string
-}
-
-func PIE(name string, binary *elf.File) *pie {
-	res := pie{}
+func PIE(name string, binary *elf.File) *Result {
 	switch binary.Type {
 	case elf.ET_DYN:
-		res.Color = "green"
-		res.Output = "PIE Enabled"
+		return &Result{Value: "PIE Enabled", Status: StatusGood}
 	case elf.ET_REL:
-		res.Color = "yellow"
-		res.Output = "REL"
+		return &Result{Value: "REL", Status: StatusWarn}
 	default:
-		res.Color = "red"
-		res.Output = "PIE Disabled"
+		return &Result{Value: "PIE Disabled", Status: StatusBad}
 	}
-
-	return &res
 }

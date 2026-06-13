@@ -28,11 +28,11 @@ func TestSYMBOLS_WithSymbols(t *testing.T) {
 	if result == nil {
 		t.Fatal("SYMBOLS() returned nil")
 	}
-	if result.Output == "No Symbols" {
+	if result.Value == "No Symbols" {
 		t.Skip("binary was unexpectedly stripped — skipping symbols-present check")
 	}
-	if result.Color != "red" {
-		t.Errorf("Color = %q, want %q for binary with symbols", result.Color, "red")
+	if result.Status != "red" {
+		t.Errorf("Color = %q, want %q for binary with symbols", result.Status, "red")
 	}
 }
 
@@ -57,10 +57,10 @@ func TestSYMBOLS_Stripped(t *testing.T) {
 	if result == nil {
 		t.Fatal("SYMBOLS() returned nil")
 	}
-	if result.Output != "No Symbols" {
-		t.Errorf("Output = %q, want %q for stripped binary", result.Output, "No Symbols")
+	if result.Value != "No Symbols" {
+		t.Errorf("Output = %q, want %q for stripped binary", result.Value, "No Symbols")
 	}
-	if result.Color != "green" {
-		t.Errorf("Color = %q, want %q for stripped binary", result.Color, "green")
+	if result.Status != "green" {
+		t.Errorf("Color = %q, want %q for stripped binary", result.Status, "green")
 	}
 }

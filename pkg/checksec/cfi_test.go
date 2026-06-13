@@ -215,15 +215,15 @@ func TestParseBitmaskForArmPACBTI_EdgeCases(t *testing.T) {
 }
 
 func TestResUnknown(t *testing.T) {
-	cfi := &CfiResult{}
+	cfi := &Result{}
 	resUnknown(cfi)
 
-	if cfi.Color != "yellow" {
-		t.Errorf("Expected color 'yellow', got '%s'", cfi.Color)
+	if cfi.Status != StatusWarn {
+		t.Errorf("Expected status %q, got %q", StatusWarn, cfi.Status)
 	}
 
-	if cfi.Output != "Unknown" {
-		t.Errorf("Expected output 'Unknown', got '%s'", cfi.Output)
+	if cfi.Value != "Unknown" {
+		t.Errorf("Expected value 'Unknown', got %q", cfi.Value)
 	}
 }
 
