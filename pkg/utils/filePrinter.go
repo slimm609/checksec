@@ -16,11 +16,24 @@ import (
 type PrintOptions struct {
 	NoBanner bool
 	NoHeader bool
+	// Fields overrides the column set for table/CSV/XML rendering. When nil,
+	// the default FileFields registry is used. proc/procAll set this to
+	// ProcFields to add the per-process Seccomp column.
+	Fields []Field
 }
 
-// FilePrinter renders reports in the requested format. All formats iterate the
-// fileFields registry, so a field added there appears everywhere with no
-// printer changes.
+func (o PrintOptions) fields() []Field {
+	if o.Fields != nil {
+		return o.Fields
+	}
+	return FileFields
+}
+
+// FilePrinter renders reports in the requested format. All ordered formats
+// (table/CSV/XML) iterate opts.fields(), so a field added there appears
+// everywhere with no printer changes. JSON/YAML marshal the FileReport map
+// directly, so they carry every key present in Checks regardless of the field
+// list.
 func FilePrinter(w io.Writer, format string, reports []FileReport, opts PrintOptions) {
 	switch format {
 	case "json":
@@ -35,28 +48,28 @@ func FilePrinter(w io.Writer, format string, reports []FileReport, opts PrintOpt
 		}
 		_, _ = w.Write(b)
 	case "xml":
-		writeXML(w, reports)
+		writeXML(w, reports, opts.fields())
 	case "csv":
-		writeCSV(w, reports, opts)
+		writeCSV(w, reports, opts.fields(), opts)
 	default:
-		writeTable(w, reports, opts)
+		writeTable(w, reports, opts.fields(), opts)
 	}
 }
 
-// writeCSV renders reports as RFC 4180 CSV. Column order matches fileFields,
-// with the file name as the trailing column.
-func writeCSV(w io.Writer, reports []FileReport, opts PrintOptions) {
+// writeCSV renders reports as RFC 4180 CSV. Column order matches fields, with
+// the file name as the trailing column.
+func writeCSV(w io.Writer, reports []FileReport, fields []Field, opts PrintOptions) {
 	cw := csv.NewWriter(w)
 	if !opts.NoHeader {
-		row := make([]string, 0, len(fileFields)+1)
-		for _, f := range fileFields {
+		row := make([]string, 0, len(fields)+1)
+		for _, f := range fields {
 			row = append(row, f.Header)
 		}
 		_ = cw.Write(append(row, "Name"))
 	}
 	for _, r := range reports {
-		row := make([]string, 0, len(fileFields)+1)
-		for _, f := range fileFields {
+		row := make([]string, 0, len(fields)+1)
+		for _, f := range fields {
 			row = append(row, r.Checks[f.Key].Value)
 		}
 		_ = cw.Write(append(row, r.Name))
@@ -65,26 +78,26 @@ func writeCSV(w io.Writer, reports []FileReport, opts PrintOptions) {
 }
 
 // writeTable renders reports as an aligned, colourised table. Column order and
-// headers come from fileFields. Widths are computed from the visible (pre-ANSI)
+// headers come from fields. Widths are computed from the visible (pre-ANSI)
 // text and padding is applied before colouring, so escape sequences never
 // affect alignment.
-func writeTable(w io.Writer, reports []FileReport, opts PrintOptions) {
+func writeTable(w io.Writer, reports []FileReport, fields []Field, opts PrintOptions) {
 	output.PrintLogo(opts.NoBanner)
 
-	widths := columnWidths(reports)
+	widths := columnWidths(reports, fields)
 	pad := func(s string, width int) string {
 		return fmt.Sprintf("%-*s", width+2, s)
 	}
 
 	if !opts.NoHeader {
-		for i, f := range fileFields {
+		for i, f := range fields {
 			fmt.Fprint(w, output.ColorPrinter(pad(f.Header, widths[i]), "unset"))
 		}
 		fmt.Fprintln(w, output.ColorPrinter("Name", "unset"))
 	}
 
 	for _, r := range reports {
-		for i, f := range fileFields {
+		for i, f := range fields {
 			res := r.Checks[f.Key]
 			fmt.Fprint(w, output.ColorPrinter(pad(res.Value, widths[i]), string(res.Status)))
 		}
@@ -92,11 +105,11 @@ func writeTable(w io.Writer, reports []FileReport, opts PrintOptions) {
 	}
 }
 
-// columnWidths returns the max visible width per fileFields column across the
+// columnWidths returns the max visible width per field column across the
 // header and all report rows.
-func columnWidths(reports []FileReport) []int {
-	widths := make([]int, len(fileFields))
-	for i, f := range fileFields {
+func columnWidths(reports []FileReport, fields []Field) []int {
+	widths := make([]int, len(fields))
+	for i, f := range fields {
 		widths[i] = len(f.Header)
 		for _, r := range reports {
 			if l := len(r.Checks[f.Key].Value); l > widths[i] {
@@ -121,14 +134,14 @@ type xmlReport struct {
 	Checks  []xmlCheck `xml:"checks>check"`
 }
 
-func writeXML(w io.Writer, reports []FileReport) {
+func writeXML(w io.Writer, reports []FileReport, fields []Field) {
 	root := struct {
 		XMLName xml.Name    `xml:"checksec"`
 		Files   []xmlReport `xml:"file"`
 	}{}
 	for _, r := range reports {
 		xr := xmlReport{Name: r.Name}
-		for _, f := range fileFields {
+		for _, f := range fields {
 			res := r.Checks[f.Key]
 			xr.Checks = append(xr.Checks, xmlCheck{
 				XMLName: xml.Name{Local: f.Key},

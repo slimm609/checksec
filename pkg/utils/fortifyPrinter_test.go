@@ -20,6 +20,48 @@ func sampleFortifyReport() FortifyReport {
 		NoFortify:     "1",
 		NumLibcFunc:   "18",
 		NumFileFunc:   "42",
+		Functions: []checksec.FortifyFunc{
+			{Name: "memcpy", Fortified: true},
+			{Name: "strcpy", Fortified: false},
+		},
+	}
+}
+
+// TestFortifyPrinter_TableBreakdown asserts the per-function table replaces
+// the "Coming Soon" placeholder and shows each function's checked status.
+func TestFortifyPrinter_TableBreakdown(t *testing.T) {
+	var buf bytes.Buffer
+	FortifyPrinter(&buf, "table", sampleFortifyReport(), PrintOptions{NoBanner: true})
+	out := buf.String()
+	if strings.Contains(out, "Coming Soon") {
+		t.Errorf("table still contains 'Coming Soon' placeholder:\n%s", out)
+	}
+	for _, want := range []string{"memcpy", "__memcpy_chk", "strcpy", "unchecked"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("table breakdown missing %q:\n%s", want, out)
+		}
+	}
+}
+
+func TestFortifyPrinter_TableBreakdownEmpty(t *testing.T) {
+	r := sampleFortifyReport()
+	r.Functions = nil
+	var buf bytes.Buffer
+	FortifyPrinter(&buf, "table", r, PrintOptions{NoBanner: true})
+	if !strings.Contains(buf.String(), "(none referenced)") {
+		t.Errorf("expected '(none referenced)' for empty Functions:\n%s", buf.String())
+	}
+}
+
+func TestFortifyPrinter_JSONIncludesFunctions(t *testing.T) {
+	var buf bytes.Buffer
+	FortifyPrinter(&buf, "json", sampleFortifyReport(), PrintOptions{NoBanner: true})
+	var got FortifyReport
+	if err := json.Unmarshal(buf.Bytes(), &got); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if len(got.Functions) != 2 || got.Functions[0].Name != "memcpy" {
+		t.Errorf("JSON Functions not round-tripped: %+v", got.Functions)
 	}
 }
 

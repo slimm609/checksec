@@ -60,9 +60,10 @@ var procAllCmd = &cobra.Command{
 			if !utils.CheckIfElf(file) {
 				continue
 			}
-			reports = append(reports, utils.RunFileChecks(file, libc))
+			reports = append(reports, utils.RunProcChecks(int(proc), file, libc))
 		}
-		utils.FilePrinter(cmd.OutOrStdout(), outputFormat, reports, utils.PrintOptions{NoBanner: noBanner, NoHeader: noHeader})
+		utils.FilePrinter(cmd.OutOrStdout(), outputFormat, reports,
+			utils.PrintOptions{NoBanner: noBanner, NoHeader: noHeader, Fields: utils.ProcFields})
 	},
 }
 

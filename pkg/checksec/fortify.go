@@ -13,6 +13,13 @@ import (
 	uroot "github.com/u-root/u-root/pkg/ldd"
 )
 
+// FortifyFunc is one fortifiable libc function the target binary references,
+// and whether it uses the __*_chk (fortified) variant.
+type FortifyFunc struct {
+	Name      string `json:"name"      xml:"name,attr"`
+	Fortified bool   `json:"fortified" xml:"fortified,attr"`
+}
+
 type fortify struct {
 	Output           string
 	Color            string
@@ -23,6 +30,7 @@ type fortify struct {
 	LibcSupportColor string
 	NumLibcFunc      string
 	NumFileFunc      string
+	Functions        []FortifyFunc
 }
 
 // Fortify reports FORTIFY_SOURCE coverage for the binary at name. The already-
@@ -103,6 +111,7 @@ func fortifyWithLdd(file *elf.File, ldd string, supportedFuncs []string) (*forti
 	}
 
 	checked, total = computeFortifyCounts(chkFuncLibs, funcLibs, fileFunc)
+	res.Functions = fortifyBreakdown(chkFuncLibs, funcLibs, fileFunc)
 
 	if checked > 0 {
 		res.Output = "Yes"
@@ -137,6 +146,28 @@ func fortifyLibcFuncs(libcSyms []elf.Symbol, supportedFuncs []string) (chkFuncs,
 		}
 	}
 	return chkFuncs, baseFuncs
+}
+
+// fortifyBreakdown returns one entry per fortifiable libc base function that
+// the target binary references (either as the base name or the _chk variant),
+// sorted by base name. Fortified=true if the _chk variant is present.
+func fortifyBreakdown(chkFuncs, baseFuncs, fileFuncs []string) []FortifyFunc {
+	inFile := make(map[string]bool, len(fileFuncs))
+	for _, f := range fileFuncs {
+		inFile[f] = true
+	}
+	var out []FortifyFunc
+	for i, base := range baseFuncs {
+		chk := chkFuncs[i]
+		usesChk := inFile[chk]
+		usesBase := inFile[base]
+		if !usesChk && !usesBase {
+			continue
+		}
+		out = append(out, FortifyFunc{Name: base, Fortified: usesChk})
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
+	return out
 }
 
 // computeFortifyCounts compares the libc's fortifiable functions against the

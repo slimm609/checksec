@@ -87,7 +87,7 @@ func (c *scanContext) fortify() {
 	c.fortifiable = checksec.Result{Value: r.Fortifiable, Status: checksec.StatusInfo}
 }
 
-// Field is one column in the file report. The fileFields slice is the single
+// Field is one column in the file report. The FileFields slice is the single
 // source of truth: its order is the table-column / XML-element order, and its
 // keys are the JSON/YAML map keys. Adding a check means appending one Field.
 type Field struct {
@@ -117,7 +117,7 @@ func runRaw(key string, fn func(*elf.File, *os.File) *checksec.Result) func(*sca
 	}
 }
 
-var fileFields = []Field{
+var FileFields = []Field{
 	{"relro", "RELRO", run("RELRO", checksec.RELRO)},
 	{"canary", "Stack Canary", runRaw("canary", checksec.Canary)},
 	{"cfi", "CFI", run("CFI", checksec.Cfi)},
@@ -145,8 +145,21 @@ var fileFields = []Field{
 	}},
 }
 
+// ProcFields extends FileFields with the per-process Seccomp column. The
+// seccomp Result is populated by RunProcChecks (it's PID-derived, not
+// ELF-derived, so Run is nil and RunFileChecks ignores it).
+var ProcFields = append(append([]Field{}, FileFields...), Field{Key: "seccomp", Header: "Seccomp"})
+
+// RunProcChecks runs the file checks on the process's executable and enriches
+// the report with the per-PID seccomp mode.
+func RunProcChecks(pid int, exePath, libc string) FileReport {
+	report := RunFileChecks(exePath, libc)
+	report.Checks["seccomp"] = checksec.Seccomp(pid)
+	return report
+}
+
 // RunFileChecks runs every registered check against filename and returns a
-// fully-populated FileReport. Every key in fileFields is guaranteed present
+// fully-populated FileReport. Every key in FileFields is guaranteed present
 // in the result, even on error paths.
 func RunFileChecks(filename, libc string) FileReport {
 	ctx := newScanContext(filename, libc)
@@ -154,9 +167,9 @@ func RunFileChecks(filename, libc string) FileReport {
 
 	report := FileReport{
 		Name:   filename,
-		Checks: make(map[string]checksec.Result, len(fileFields)),
+		Checks: make(map[string]checksec.Result, len(FileFields)),
 	}
-	for _, f := range fileFields {
+	for _, f := range FileFields {
 		report.Checks[f.Key] = f.Run(ctx)
 	}
 	return report

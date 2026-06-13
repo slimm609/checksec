@@ -13,11 +13,11 @@ import (
 // TestFileFields_RegistryWellFormed asserts the single-source-of-truth registry
 // is internally consistent: non-empty, unique keys, every field renderable.
 func TestFileFields_RegistryWellFormed(t *testing.T) {
-	if len(fileFields) == 0 {
-		t.Fatal("fileFields registry is empty")
+	if len(FileFields) == 0 {
+		t.Fatal("FileFields registry is empty")
 	}
 	seen := map[string]bool{}
-	for _, f := range fileFields {
+	for _, f := range FileFields {
 		if f.Key == "" {
 			t.Errorf("field with empty Key: %+v", f)
 		}
@@ -36,14 +36,14 @@ func TestFileFields_RegistryWellFormed(t *testing.T) {
 
 // TestFilePrinter_AllFieldsInAllFormats is the structural guarantee that makes
 // the CFI-dropped-from-XML class of bug impossible: every registered field must
-// appear in every output format. Adding a field to fileFields automatically
+// appear in every output format. Adding a field to FileFields automatically
 // extends this assertion.
 func TestFilePrinter_AllFieldsInAllFormats(t *testing.T) {
 	report := FileReport{
 		Name:   "/bin/sentinel",
-		Checks: make(map[string]checksec.Result, len(fileFields)),
+		Checks: make(map[string]checksec.Result, len(FileFields)),
 	}
-	for _, f := range fileFields {
+	for _, f := range FileFields {
 		report.Checks[f.Key] = checksec.Result{
 			Value:  "SENTINEL_" + f.Key,
 			Status: checksec.StatusGood,
@@ -55,7 +55,7 @@ func TestFilePrinter_AllFieldsInAllFormats(t *testing.T) {
 			var buf bytes.Buffer
 			FilePrinter(&buf, format, []FileReport{report}, PrintOptions{NoBanner: true, NoHeader: true})
 			out := buf.String()
-			for _, f := range fileFields {
+			for _, f := range FileFields {
 				if !strings.Contains(out, "SENTINEL_"+f.Key) {
 					t.Errorf("%s output dropped field %q\n---\n%s", format, f.Key, out)
 				}
@@ -73,7 +73,7 @@ func TestFilePrinter_TableHeaderMatchesRegistry(t *testing.T) {
 	var buf bytes.Buffer
 	FilePrinter(&buf, "table", []FileReport{}, PrintOptions{NoBanner: true, NoHeader: false})
 	out := buf.String()
-	for _, f := range fileFields {
+	for _, f := range FileFields {
 		if !strings.Contains(out, f.Header) {
 			t.Errorf("table header missing %q\n---\n%s", f.Header, out)
 		}
@@ -110,7 +110,7 @@ func TestRunFileChecks_PopulatesEveryRegisteredField(t *testing.T) {
 	if report.Name != bin {
 		t.Errorf("report.Name = %q, want %q", report.Name, bin)
 	}
-	for _, f := range fileFields {
+	for _, f := range FileFields {
 		res, ok := report.Checks[f.Key]
 		if !ok {
 			t.Errorf("RunFileChecks omitted field %q", f.Key)
@@ -123,8 +123,8 @@ func TestRunFileChecks_PopulatesEveryRegisteredField(t *testing.T) {
 			t.Errorf("field %q has empty Status", f.Key)
 		}
 	}
-	if len(report.Checks) != len(fileFields) {
-		t.Errorf("report has %d checks, registry has %d", len(report.Checks), len(fileFields))
+	if len(report.Checks) != len(FileFields) {
+		t.Errorf("report has %d checks, registry has %d", len(report.Checks), len(FileFields))
 	}
 }
 
@@ -132,10 +132,33 @@ func TestRunFileChecks_PopulatesEveryRegisteredField(t *testing.T) {
 // produces an error Result rather than a missing key — formats stay aligned.
 func TestRunFileChecks_ErrorPathStillPopulates(t *testing.T) {
 	report := RunFileChecks("/nonexistent/binary/path", "")
-	for _, f := range fileFields {
+	for _, f := range FileFields {
 		if _, ok := report.Checks[f.Key]; !ok {
 			t.Errorf("error path dropped field %q", f.Key)
 		}
+	}
+}
+
+// TestRunProcChecks_AddsSeccomp asserts the proc-mode wrapper enriches the
+// report with a seccomp field and that ProcFields contains it.
+func TestRunProcChecks_AddsSeccomp(t *testing.T) {
+	bin := buildLinuxELF(t)
+	report := RunProcChecks(-1, bin, "") // -1 → no /proc → seccomp Unknown
+	if _, ok := report.Checks["seccomp"]; !ok {
+		t.Fatal("RunProcChecks did not populate seccomp")
+	}
+	// ProcFields must be FileFields + seccomp.
+	if len(ProcFields) != len(FileFields)+1 {
+		t.Fatalf("ProcFields len = %d, want %d", len(ProcFields), len(FileFields)+1)
+	}
+	if ProcFields[len(ProcFields)-1].Key != "seccomp" {
+		t.Errorf("last ProcFields key = %q, want seccomp", ProcFields[len(ProcFields)-1].Key)
+	}
+	// And rendering with ProcFields must include it.
+	var buf bytes.Buffer
+	FilePrinter(&buf, "csv", []FileReport{report}, PrintOptions{NoBanner: true, Fields: ProcFields})
+	if !strings.Contains(buf.String(), "Seccomp") {
+		t.Errorf("ProcFields CSV output missing Seccomp column:\n%s", buf.String())
 	}
 }
 
@@ -177,7 +200,7 @@ func TestRunFileChecks_SurvivesUnlinkAfterOpen(t *testing.T) {
 	}
 
 	report := RunFileChecks(bin, "")
-	for _, f := range fileFields {
+	for _, f := range FileFields {
 		res := report.Checks[f.Key]
 		if strings.HasPrefix(res.Value, "Error checking") {
 			t.Errorf("check %q re-opened by path after unlink: %+v", f.Key, res)

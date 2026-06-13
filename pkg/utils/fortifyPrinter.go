@@ -14,14 +14,15 @@ import (
 // FortifyReport is the detailed FORTIFY_SOURCE breakdown for one binary. It is
 // the wire format for JSON/YAML/XML directly and the source for table output.
 type FortifyReport struct {
-	Name          string          `json:"name"           xml:"name,attr"`
-	FortifySource checksec.Result `json:"fortify_source" xml:"fortify_source"`
-	LibcSupport   checksec.Result `json:"libcSupport"    xml:"libcSupport"`
-	Fortified     string          `json:"fortified"      xml:"fortified"`
-	Fortifiable   string          `json:"fortifyable"    xml:"fortifyable"`
-	NoFortify     string          `json:"noFortify"      xml:"noFortify"`
-	NumLibcFunc   string          `json:"numLibcFunc"    xml:"numLibcFunc"`
-	NumFileFunc   string          `json:"numFileFunc"    xml:"numFileFunc"`
+	Name          string                 `json:"name"           xml:"name,attr"`
+	FortifySource checksec.Result        `json:"fortify_source" xml:"fortify_source"`
+	LibcSupport   checksec.Result        `json:"libcSupport"    xml:"libcSupport"`
+	Fortified     string                 `json:"fortified"      xml:"fortified"`
+	Fortifiable   string                 `json:"fortifyable"    xml:"fortifyable"`
+	NoFortify     string                 `json:"noFortify"      xml:"noFortify"`
+	NumLibcFunc   string                 `json:"numLibcFunc"    xml:"numLibcFunc"`
+	NumFileFunc   string                 `json:"numFileFunc"    xml:"numFileFunc"`
+	Functions     []checksec.FortifyFunc `json:"functions"      xml:"functions>function"`
 }
 
 // RunFortifyCheck runs the detailed fortify analysis and adapts it into the
@@ -46,6 +47,7 @@ func RunFortifyCheck(file, libc string) FortifyReport {
 		NoFortify:     r.NoFortify,
 		NumLibcFunc:   r.NumLibcFunc,
 		NumFileFunc:   r.NumFileFunc,
+		Functions:     r.Functions,
 	}
 }
 
@@ -99,8 +101,20 @@ func writeFortifyTable(w io.Writer, r FortifyReport, opts PrintOptions) {
 		output.ColorPrinter(r.FortifySource.Value, string(r.FortifySource.Status)))
 	fmt.Fprintln(w, "------ EXECUTABLE-FILE ------- | -------- LIBC --------")
 	fmt.Fprintln(w, "Fortifiable library functions  | Checked function names")
-	// TODO: add function breakdown
-	fmt.Fprintln(w, "Coming Soon")
+	if len(r.Functions) == 0 {
+		fmt.Fprintln(w, output.ColorPrinter("(none referenced)", "italic"))
+	}
+	for _, fn := range r.Functions {
+		if fn.Fortified {
+			fmt.Fprintf(w, "%-30s | %s\n",
+				output.ColorPrinter(fn.Name, "green"),
+				output.ColorPrinter("__"+fn.Name+"_chk", "green"))
+		} else {
+			fmt.Fprintf(w, "%-30s | %s\n",
+				output.ColorPrinter(fn.Name, "red"),
+				output.ColorPrinter("unchecked", "red"))
+		}
+	}
 	fmt.Fprintf(w, "\n%s\n", output.ColorPrinter("SUMMARY", "green"))
 	fmt.Fprintf(w, "* Number of checked functions in libc                : %s\n", output.ColorPrinter(r.NumLibcFunc, "unset"))
 	fmt.Fprintf(w, "* Total number of library functions in the executable: %s\n", output.ColorPrinter(r.NumFileFunc, "unset"))

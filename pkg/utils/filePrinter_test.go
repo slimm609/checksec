@@ -15,7 +15,7 @@ import (
 
 func sampleReport() FileReport {
 	r := FileReport{Name: "bin", Checks: map[string]checksec.Result{}}
-	for _, f := range fileFields {
+	for _, f := range FileFields {
 		r.Checks[f.Key] = checksec.Result{Value: "v_" + f.Key, Status: checksec.StatusGood}
 	}
 	return r
@@ -61,7 +61,7 @@ func TestFilePrinter_TableNonEmpty(t *testing.T) {
 
 // TestFilePrinter_CSVParsesAndMatchesRegistry asserts CSV output parses with
 // encoding/csv, has one header row + one data row per report, and column count
-// equals len(fileFields)+1 (the trailing Name column).
+// equals len(FileFields)+1 (the trailing Name column).
 func TestFilePrinter_CSVParsesAndMatchesRegistry(t *testing.T) {
 	reports := []FileReport{sampleReport(), sampleReport()}
 	reports[1].Name = "bin2"
@@ -77,14 +77,14 @@ func TestFilePrinter_CSVParsesAndMatchesRegistry(t *testing.T) {
 	if len(rows) != wantRows {
 		t.Fatalf("got %d CSV rows, want %d\n%s", len(rows), wantRows, buf.String())
 	}
-	wantCols := len(fileFields) + 1 // checks + Name
+	wantCols := len(FileFields) + 1 // checks + Name
 	for i, row := range rows {
 		if len(row) != wantCols {
 			t.Fatalf("row %d has %d columns, want %d: %v", i, len(row), wantCols, row)
 		}
 	}
 	// Header row must match registry headers in order.
-	for i, f := range fileFields {
+	for i, f := range FileFields {
 		if rows[0][i] != f.Header {
 			t.Errorf("header[%d] = %q, want %q", i, rows[0][i], f.Header)
 		}
@@ -143,14 +143,14 @@ func TestFilePrinter_TableAlignedWithColor(t *testing.T) {
 	for i, l := range lines {
 		plain[i] = ansi.ReplaceAllString(l, "")
 	}
-	// Second column header is fileFields[1].Header; find its offset on the
+	// Second column header is FileFields[1].Header; find its offset on the
 	// header line and assert each row's second-column value starts there too.
-	col2 := strings.Index(plain[0], fileFields[1].Header)
+	col2 := strings.Index(plain[0], FileFields[1].Header)
 	if col2 <= 0 {
 		t.Fatalf("could not locate column 2 header in %q", plain[0])
 	}
 	for i, l := range plain[1:] {
-		want := reports[i].Checks[fileFields[1].Key].Value
+		want := reports[i].Checks[FileFields[1].Key].Value
 		if got := strings.Index(l, want); got != col2 {
 			t.Errorf("row %d column 2 misaligned: header at %d, value %q at %d\n%s",
 				i, col2, want, got, strings.Join(plain, "\n"))
@@ -160,18 +160,40 @@ func TestFilePrinter_TableAlignedWithColor(t *testing.T) {
 
 func TestColumnWidths(t *testing.T) {
 	r := FileReport{Name: "x", Checks: map[string]checksec.Result{}}
-	for _, f := range fileFields {
+	for _, f := range FileFields {
 		r.Checks[f.Key] = checksec.Result{Value: "ab"}
 	}
 	long := strings.Repeat("z", 40)
-	r.Checks[fileFields[0].Key] = checksec.Result{Value: long}
+	r.Checks[FileFields[0].Key] = checksec.Result{Value: long}
 
-	w := columnWidths([]FileReport{r})
+	w := columnWidths([]FileReport{r}, FileFields)
 	if w[0] != len(long) {
 		t.Errorf("col 0 width = %d, want %d", w[0], len(long))
 	}
-	if w[1] != len(fileFields[1].Header) {
-		t.Errorf("col 1 width = %d, want header len %d", w[1], len(fileFields[1].Header))
+	if w[1] != len(FileFields[1].Header) {
+		t.Errorf("col 1 width = %d, want header len %d", w[1], len(FileFields[1].Header))
+	}
+}
+
+// TestFilePrinter_CustomFieldList asserts opts.Fields overrides the column set
+// for ordered formats — the mechanism proc/procAll use to add Seccomp.
+func TestFilePrinter_CustomFieldList(t *testing.T) {
+	custom := append(append([]Field{}, FileFields...), Field{Key: "extra", Header: "Extra"})
+	r := sampleReport()
+	r.Checks["extra"] = checksec.Result{Value: "EXTRA_VAL", Status: checksec.StatusGood}
+
+	for _, format := range []string{"table", "csv", "xml"} {
+		var buf bytes.Buffer
+		FilePrinter(&buf, format, []FileReport{r}, PrintOptions{NoBanner: true, NoHeader: false, Fields: custom})
+		if !strings.Contains(buf.String(), "EXTRA_VAL") {
+			t.Errorf("%s: custom field not rendered\n%s", format, buf.String())
+		}
+	}
+	// Default field list must NOT include the extra column.
+	var buf bytes.Buffer
+	FilePrinter(&buf, "csv", []FileReport{r}, PrintOptions{NoBanner: true})
+	if strings.Contains(buf.String(), "EXTRA_VAL") {
+		t.Error("default field list leaked custom column")
 	}
 }
 
