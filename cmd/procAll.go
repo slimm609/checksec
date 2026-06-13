@@ -64,6 +64,7 @@ var procAllCmd = &cobra.Command{
 		}
 		utils.FilePrinter(cmd.OutOrStdout(), outputFormat, reports,
 			utils.PrintOptions{NoBanner: noBanner, NoHeader: noHeader, Fields: utils.ProcFields})
+		applyFailIf(reports)
 	},
 }
 

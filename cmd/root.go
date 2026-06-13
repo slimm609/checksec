@@ -16,6 +16,7 @@ var (
 	noHeader     bool
 	noWarnings   bool
 	colorMode    string
+	failIf       string
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -38,6 +39,7 @@ func Execute() {
 	rootCmd.PersistentFlags().BoolVarP(&noHeader, "no-headers", "", false, "disable the headers")
 	rootCmd.PersistentFlags().BoolVarP(&noWarnings, "no-warnings", "", false, "disable warnings")
 	rootCmd.PersistentFlags().StringVar(&colorMode, "color", "auto", "Color output mode (auto, always, never)")
+	rootCmd.PersistentFlags().StringVar(&failIf, "fail-if", "", "Exit non-zero if any listed check (comma-separated keys, e.g. relro,canary,pie) is not StatusGood")
 
 	cobra.OnInitialize(func() {
 		output.NoWarnings = noWarnings

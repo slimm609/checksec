@@ -34,8 +34,10 @@ var procCmd = &cobra.Command{
 		utils.CheckElfExists(file)
 		pid, _ := strconv.Atoi(proc)
 		report := utils.RunProcChecks(pid, file, libc)
-		utils.FilePrinter(cmd.OutOrStdout(), outputFormat, []utils.FileReport{report},
+		reports := []utils.FileReport{report}
+		utils.FilePrinter(cmd.OutOrStdout(), outputFormat, reports,
 			utils.PrintOptions{NoBanner: noBanner, NoHeader: noHeader, Fields: utils.ProcFields})
+		applyFailIf(reports)
 	},
 }
 

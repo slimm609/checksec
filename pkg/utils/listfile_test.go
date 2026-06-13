@@ -36,6 +36,43 @@ func TestReadPathList(t *testing.T) {
 	}
 }
 
+// TestRunListChecksParallel asserts the parallel scanner returns one report
+// per input path, in input order, and produces results identical to the
+// serial path.
+func TestRunListChecksParallel(t *testing.T) {
+	bin := buildLinuxELF(t)
+	paths := []string{bin, "/nonexistent/a", bin, "/nonexistent/b"}
+
+	serial := RunListChecks(paths, "")
+	parallel := RunListChecksParallel(paths, "", 4)
+
+	if len(parallel) != len(paths) {
+		t.Fatalf("parallel returned %d reports, want %d", len(parallel), len(paths))
+	}
+	for i := range paths {
+		if parallel[i].Name != paths[i] {
+			t.Errorf("parallel[%d].Name = %q, want %q (order not preserved)", i, parallel[i].Name, paths[i])
+		}
+		if parallel[i].Checks["relro"].Value != serial[i].Checks["relro"].Value {
+			t.Errorf("parallel[%d] relro = %q, serial = %q", i,
+				parallel[i].Checks["relro"].Value, serial[i].Checks["relro"].Value)
+		}
+	}
+}
+
+func TestRunListChecksParallel_WorkersClamp(t *testing.T) {
+	bin := buildLinuxELF(t)
+	// workers <= 0 must default to a sane value, not hang or panic.
+	got := RunListChecksParallel([]string{bin}, "", 0)
+	if len(got) != 1 {
+		t.Fatalf("expected 1 report with workers=0, got %d", len(got))
+	}
+	got = RunListChecksParallel(nil, "", 4)
+	if len(got) != 0 {
+		t.Fatalf("expected 0 reports for nil input, got %d", len(got))
+	}
+}
+
 func TestRunListChecks(t *testing.T) {
 	bin := buildLinuxELF(t)
 	reports := RunListChecks([]string{bin, "/nonexistent/path"}, "")

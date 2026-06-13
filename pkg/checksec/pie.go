@@ -12,13 +12,17 @@ import (
 func classifyPIE(t elf.Type, hasInterp bool, flags1 []uint64) (string, Status) {
 	switch t {
 	case elf.ET_DYN:
-		if len(flags1) > 0 && flags1[0]&uint64(elf.DF_1_PIE) != 0 {
+		hasPIEFlag := len(flags1) > 0 && flags1[0]&uint64(elf.DF_1_PIE) != 0
+		switch {
+		case hasPIEFlag && !hasInterp:
+			// Static-PIE (gcc/clang --static-pie, musl): self-relocating PIE
+			// with no dynamic linker.
+			return "Static PIE", StatusGood
+		case hasPIEFlag, hasInterp:
 			return "PIE Enabled", StatusGood
+		default:
+			return "DSO", StatusInfo
 		}
-		if hasInterp {
-			return "PIE Enabled", StatusGood
-		}
-		return "DSO", StatusInfo
 	case elf.ET_REL:
 		return "REL", StatusWarn
 	default:

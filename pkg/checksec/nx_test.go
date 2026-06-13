@@ -68,14 +68,14 @@ func TestNX(t *testing.T) {
 			description:    "Binary with GNU_STACK segment with execute permission should show NX disabled",
 		},
 		{
-			name:     "NX disabled - no GNU_STACK segment",
+			name:     "no GNU_STACK segment → kernel default (distinct from explicit exec stack)",
 			filename: "/test/binary_no_stack",
 			mockProgs: []mockProgHeader{
 				{progType: elf.PT_LOAD, flags: elf.PF_R | elf.PF_X}, // Different segment type
 			},
-			expectedOutput: "NX disabled",
-			expectedColor:  "red",
-			description:    "Binary without GNU_STACK segment should show NX disabled",
+			expectedOutput: "No GNU_STACK",
+			expectedColor:  StatusWarn,
+			description:    "Missing PT_GNU_STACK means kernel default applies — must be distinguished from PT_GNU_STACK+PF_X",
 		},
 		{
 			name:           "N/A - no program headers",
@@ -299,13 +299,15 @@ func TestNX_ReturnValueValidation(t *testing.T) {
 	}
 
 	validOutputs := map[string]bool{
-		"NX enabled":  true,
-		"NX disabled": true,
-		"N/A":         true,
+		"NX enabled":   true,
+		"NX disabled":  true,
+		"No GNU_STACK": true,
+		"N/A":          true,
 	}
 
 	validColors := map[Status]bool{
 		StatusGood: true,
+		StatusWarn: true,
 		StatusBad:  true,
 		StatusNA:   true,
 	}
