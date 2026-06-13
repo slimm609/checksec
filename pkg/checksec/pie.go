@@ -4,7 +4,7 @@ import (
 	"debug/elf"
 )
 
-func PIE(name string, binary *elf.File) *Result {
+func PIE(binary *elf.File) *Result {
 	switch binary.Type {
 	case elf.ET_DYN:
 		return &Result{Value: "PIE Enabled", Status: StatusGood}

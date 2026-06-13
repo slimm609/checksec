@@ -2,23 +2,11 @@ package checksec
 
 import (
 	"debug/elf"
-	"fmt"
 )
 
-func RELRO(name string) (*Result, error) {
-	relroHeader := false
-	bindNow := false
-
-	// To get the dynamic values
-	// Open the ELF binary file
-	file, err := elf.Open(name)
-	if err != nil {
-		return nil, fmt.Errorf("error opening ELF file: %w", err)
-	}
-	defer file.Close()
-
+func RELRO(file *elf.File) *Result {
 	if len(file.Progs) == 0 {
-		return &Result{Value: "N/A", Status: StatusNA}, nil
+		return &Result{Value: "N/A", Status: StatusNA}
 	}
 
 	// check bind and flags and flags1.
@@ -28,20 +16,21 @@ func RELRO(name string) (*Result, error) {
 	// this is depending on the compiler version used.
 	bind, _ := file.DynValue(elf.DT_BIND_NOW)
 	if len(bind) == 0 {
-		bind, _ = DynValueFromPTDynamic(file, elf.DT_BIND_NOW, name)
+		bind, _ = DynValueFromPTDynamic(file, elf.DT_BIND_NOW)
 	}
 	flags, _ := file.DynValue(elf.DT_FLAGS)
 	if len(flags) == 0 {
-		flags, _ = DynValueFromPTDynamic(file, elf.DT_FLAGS, name)
+		flags, _ = DynValueFromPTDynamic(file, elf.DT_FLAGS)
 	}
 
 	flags1, _ := file.DynValue(elf.DT_FLAGS_1)
 	if len(flags1) == 0 {
-		flags1, _ = DynValueFromPTDynamic(file, elf.DT_FLAGS_1, name)
+		flags1, _ = DynValueFromPTDynamic(file, elf.DT_FLAGS_1)
 	}
 
-	bindNow = relroBindNow(bind, flags, flags1)
+	bindNow := relroBindNow(bind, flags, flags1)
 
+	relroHeader := false
 	for _, prog := range file.Progs {
 		if prog.Type == elf.PT_GNU_RELRO {
 			relroHeader = true
@@ -49,11 +38,11 @@ func RELRO(name string) (*Result, error) {
 	}
 
 	if bindNow {
-		return &Result{Value: "Full RELRO", Status: StatusGood}, nil
+		return &Result{Value: "Full RELRO", Status: StatusGood}
 	} else if relroHeader {
-		return &Result{Value: "Partial RELRO", Status: StatusWarn}, nil
+		return &Result{Value: "Partial RELRO", Status: StatusWarn}
 	}
-	return &Result{Value: "No RELRO", Status: StatusBad}, nil
+	return &Result{Value: "No RELRO", Status: StatusBad}
 }
 
 // relroBindNow reports whether the dynamic-section flags indicate bind-now (the

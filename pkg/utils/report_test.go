@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"encoding/json"
+	"os"
 	"strings"
 	"testing"
 
@@ -49,7 +50,7 @@ func TestFilePrinter_AllFieldsInAllFormats(t *testing.T) {
 		}
 	}
 
-	for _, format := range []string{"json", "yaml", "xml", "table"} {
+	for _, format := range []string{"json", "yaml", "xml", "csv", "table"} {
 		t.Run(format, func(t *testing.T) {
 			var buf bytes.Buffer
 			FilePrinter(&buf, format, []FileReport{report}, PrintOptions{NoBanner: true, NoHeader: true})
@@ -134,6 +135,52 @@ func TestRunFileChecks_ErrorPathStillPopulates(t *testing.T) {
 	for _, f := range fileFields {
 		if _, ok := report.Checks[f.Key]; !ok {
 			t.Errorf("error path dropped field %q", f.Key)
+		}
+	}
+}
+
+// TestRunFileChecks_OpensTargetExactlyOnce is the structural guarantee that the
+// ELF is opened once by scanContext and shared across every check. Verified by
+// counting calls through the openTarget hook — any check that re-opened by path
+// would not go through this hook, but the registry no longer passes c.path to
+// checks, so they cannot.
+func TestRunFileChecks_OpensTargetExactlyOnce(t *testing.T) {
+	bin := buildLinuxELF(t)
+
+	orig := openTarget
+	defer func() { openTarget = orig }()
+	var opens int
+	openTarget = func(path string) (*scanContext, error) {
+		opens++
+		return orig(path)
+	}
+
+	_ = RunFileChecks(bin, "")
+	if opens != 1 {
+		t.Fatalf("openTarget called %d times, want 1", opens)
+	}
+}
+
+// TestRunFileChecks_SurvivesUnlinkAfterOpen proves no check re-opens by path:
+// the binary is unlinked immediately after scanContext acquires its handle, so
+// any path-based elf.Open inside a check would fail and surface as an Error
+// result. All checks must instead read from the shared open descriptor.
+func TestRunFileChecks_SurvivesUnlinkAfterOpen(t *testing.T) {
+	bin := buildLinuxELF(t)
+
+	orig := openTarget
+	defer func() { openTarget = orig }()
+	openTarget = func(path string) (*scanContext, error) {
+		c, err := orig(path)
+		_ = os.Remove(path) // unlink AFTER the handle is acquired
+		return c, err
+	}
+
+	report := RunFileChecks(bin, "")
+	for _, f := range fileFields {
+		res := report.Checks[f.Key]
+		if strings.HasPrefix(res.Value, "Error checking") {
+			t.Errorf("check %q re-opened by path after unlink: %+v", f.Key, res)
 		}
 	}
 }

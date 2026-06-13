@@ -2,6 +2,8 @@ package utils
 
 import (
 	"debug/elf"
+	"fmt"
+	"os"
 
 	"github.com/slimm609/checksec/v3/pkg/checksec"
 )
@@ -13,11 +15,13 @@ type FileReport struct {
 	Checks map[string]checksec.Result `json:"checks" yaml:"checks"`
 }
 
-// scanContext holds per-binary state shared across check thunks so the ELF is
-// opened once and expensive results (fortify) are computed once.
+// scanContext holds per-binary state shared across check thunks. The target is
+// opened exactly once (raw + parsed view) and every check reads from these
+// handles — no check re-opens by path.
 type scanContext struct {
 	path string
-	elf  *elf.File
+	raw  *os.File  // underlying descriptor (for FunctionsFromSymbolTable)
+	elf  *elf.File // parsed view of raw
 	libc string
 
 	fortifyOnce bool
@@ -26,26 +30,51 @@ type scanContext struct {
 	fortifiable checksec.Result // count of fortifiable calls
 }
 
-func newScanContext(path, libc string) *scanContext {
-	c := &scanContext{path: path, libc: libc}
-	if f, err := elf.Open(path); err == nil {
-		c.elf = f
+// openTarget is the single point where the scan target is opened. Indirection
+// for testability (open-count assertion, post-open unlink).
+var openTarget = func(path string) (*scanContext, error) {
+	raw, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("cannot open %s: %w", path, err)
 	}
+	ef, err := elf.NewFile(raw)
+	if err != nil {
+		_ = raw.Close()
+		return nil, fmt.Errorf("not an ELF file %s: %w", path, err)
+	}
+	return &scanContext{path: path, raw: raw, elf: ef}, nil
+}
+
+func newScanContext(path, libc string) *scanContext {
+	c, err := openTarget(path)
+	if err != nil {
+		// Return a context with nil handles; every thunk will yield Err().
+		return &scanContext{path: path, libc: libc}
+	}
+	c.libc = libc
 	return c
 }
 
 func (c *scanContext) Close() {
-	if c.elf != nil {
-		_ = c.elf.Close()
+	if c.raw != nil {
+		_ = c.raw.Close()
 	}
 }
 
 // fortify runs the fortify check once and caches the three derived columns.
+// Fortify still needs the path (for libc auto-resolution via ldd) but reuses
+// the already-open ELF for the target's own symbol scan.
 func (c *scanContext) fortify() {
 	if c.fortifyOnce {
 		return
 	}
 	c.fortifyOnce = true
+	if c.elf == nil {
+		c.fortifyRes = checksec.Err("Fortify")
+		c.fortified = checksec.Result{Value: "N/A", Status: checksec.StatusInfo}
+		c.fortifiable = checksec.Result{Value: "N/A", Status: checksec.StatusInfo}
+		return
+	}
 	r, err := checksec.Fortify(c.path, c.elf, c.libc)
 	if err != nil || r == nil {
 		c.fortifyRes = checksec.Err("Fortify")
@@ -67,38 +96,37 @@ type Field struct {
 	Run    func(*scanContext) checksec.Result
 }
 
-// run wraps a (path → *Result, error) check into a registry thunk that yields
-// a value-typed Result, mapping errors to checksec.Err.
-func run(key string, fn func(string) (*checksec.Result, error)) func(*scanContext) checksec.Result {
+// run wraps an (*elf.File → *Result) check into a registry thunk.
+func run(key string, fn func(*elf.File) *checksec.Result) func(*scanContext) checksec.Result {
 	return func(c *scanContext) checksec.Result {
-		r, err := fn(c.path)
-		if err != nil || r == nil {
+		if c.elf == nil {
 			return checksec.Err(key)
 		}
-		return *r
+		return *fn(c.elf)
+	}
+}
+
+// runRaw wraps an (*elf.File, *os.File → *Result) check (for symbol-table
+// fallbacks that need raw ReadAt).
+func runRaw(key string, fn func(*elf.File, *os.File) *checksec.Result) func(*scanContext) checksec.Result {
+	return func(c *scanContext) checksec.Result {
+		if c.elf == nil {
+			return checksec.Err(key)
+		}
+		return *fn(c.elf, c.raw)
 	}
 }
 
 var fileFields = []Field{
 	{"relro", "RELRO", run("RELRO", checksec.RELRO)},
-	{"canary", "Stack Canary", run("canary", checksec.Canary)},
+	{"canary", "Stack Canary", runRaw("canary", checksec.Canary)},
 	{"cfi", "CFI", run("CFI", checksec.Cfi)},
-	{"nx", "NX", func(c *scanContext) checksec.Result {
-		if c.elf == nil {
-			return checksec.Err("NX")
-		}
-		return *checksec.NX(c.path, c.elf)
-	}},
-	{"pie", "PIE", func(c *scanContext) checksec.Result {
-		if c.elf == nil {
-			return checksec.Err("PIE")
-		}
-		return *checksec.PIE(c.path, c.elf)
-	}},
+	{"nx", "NX", run("NX", checksec.NX)},
+	{"pie", "PIE", run("PIE", checksec.PIE)},
 	{"rpath", "RPATH", run("RPATH", checksec.RPATH)},
 	{"runpath", "RUNPATH", run("RUNPATH", checksec.RUNPATH)},
 	{"symbols", "Symbols", run("SYMBOLS", checksec.SYMBOLS)},
-	{"safestack", "SafeStack", run("SafeStack", checksec.SafeStack)},
+	{"safestack", "SafeStack", runRaw("SafeStack", checksec.SafeStack)},
 	{"stack_clash", "Stack Clash", run("StackClash", checksec.StackClash)},
 	{"fortify_source", "FORTIFY", func(c *scanContext) checksec.Result {
 		c.fortify()

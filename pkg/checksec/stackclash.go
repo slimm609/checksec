@@ -3,7 +3,6 @@ package checksec
 import (
 	"debug/elf"
 	"encoding/binary"
-	"fmt"
 	"strings"
 )
 
@@ -61,18 +60,9 @@ func (s stackClashState) merge(other stackClashState) stackClashState {
 	return scUnknown
 }
 
-// StackClash reports whether the binary at name was built with
+// StackClash reports whether the binary was built with
 // -fstack-clash-protection, based on annobin .gnu.build.attributes notes.
-func StackClash(name string) (*Result, error) {
-	if name == "" {
-		return nil, fmt.Errorf("filename cannot be empty")
-	}
-	file, err := elf.Open(name)
-	if err != nil {
-		return nil, fmt.Errorf("error opening ELF file: %w", err)
-	}
-	defer file.Close()
-
+func StackClash(file *elf.File) *Result {
 	state := scUnknown
 	for _, sec := range file.Sections {
 		if !strings.HasPrefix(sec.Name, annobinSectionPrefix) {
@@ -89,7 +79,7 @@ func StackClash(name string) (*Result, error) {
 	}
 
 	r := state.result()
-	return &r, nil
+	return &r
 }
 
 // classifyAnnobinStackClash walks a .gnu.build.attributes payload and returns

@@ -137,7 +137,7 @@ func TestNX(t *testing.T) {
 			mockBinary := createMockElfFile(tt.mockProgs)
 
 			// Call the NX function
-			result := NX(tt.filename, mockBinary)
+			result := NX(mockBinary)
 
 			// Validate results
 			if result == nil {
@@ -164,7 +164,7 @@ func TestNX_SecurityValidation(t *testing.T) {
 		// Test defensive programming - secure implementation should handle nil binary gracefully
 		// This validates the security fix per our security rules: "ALWAYS validate input before processing"
 
-		result := NX("test", nil)
+		result := NX(nil)
 
 		if result == nil {
 			t.Fatal("NX() returned nil result for nil binary")
@@ -192,7 +192,7 @@ func TestNX_SecurityValidation(t *testing.T) {
 		}
 
 		mockBinary := createMockElfFile(excessiveProgs)
-		result := NX("/test/dos_test", mockBinary)
+		result := NX(mockBinary)
 
 		if result == nil {
 			t.Fatal("NX() returned nil result for excessive program headers")
@@ -249,7 +249,7 @@ func TestNX_EdgeCases(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockBinary := createMockElfFile(tt.mockProgs)
-			result := NX(tt.filename, mockBinary)
+			result := NX(mockBinary)
 
 			// Should not panic or crash
 			if result == nil {
@@ -282,7 +282,7 @@ func BenchmarkNX(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		result := NX("/test/benchmark", mockBinary)
+		result := NX(mockBinary)
 		if result == nil {
 			b.Fatal("NX() returned nil")
 		}
@@ -313,7 +313,7 @@ func TestNX_ReturnValueValidation(t *testing.T) {
 	for i, progs := range testCases {
 		t.Run(fmt.Sprintf("validation_case_%d", i), func(t *testing.T) {
 			mockBinary := createMockElfFile(progs)
-			result := NX("test", mockBinary)
+			result := NX(mockBinary)
 
 			if result == nil {
 				t.Fatal("NX() returned nil")

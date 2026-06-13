@@ -28,15 +28,14 @@ type FortifyReport struct {
 // typed FortifyReport. On error every field is still populated so all output
 // formats stay aligned.
 func RunFortifyCheck(file, libc string) FortifyReport {
-	r, err := checksec.Fortify(file, nil, libc)
+	ctx := newScanContext(file, libc)
+	defer ctx.Close()
+	if ctx.elf == nil {
+		return fortifyErrReport(file)
+	}
+	r, err := checksec.Fortify(file, ctx.elf, libc)
 	if err != nil || r == nil {
-		return FortifyReport{
-			Name:          file,
-			FortifySource: checksec.Err("Fortify"),
-			LibcSupport:   checksec.Result{Value: "N/A", Status: checksec.StatusInfo},
-			Fortified:     "N/A", Fortifiable: "N/A", NoFortify: "N/A",
-			NumLibcFunc: "N/A", NumFileFunc: "N/A",
-		}
+		return fortifyErrReport(file)
 	}
 	return FortifyReport{
 		Name:          file,
@@ -47,6 +46,16 @@ func RunFortifyCheck(file, libc string) FortifyReport {
 		NoFortify:     r.NoFortify,
 		NumLibcFunc:   r.NumLibcFunc,
 		NumFileFunc:   r.NumFileFunc,
+	}
+}
+
+func fortifyErrReport(file string) FortifyReport {
+	return FortifyReport{
+		Name:          file,
+		FortifySource: checksec.Err("Fortify"),
+		LibcSupport:   checksec.Result{Value: "N/A", Status: checksec.StatusInfo},
+		Fortified:     "N/A", Fortifiable: "N/A", NoFortify: "N/A",
+		NumLibcFunc: "N/A", NumFileFunc: "N/A",
 	}
 }
 

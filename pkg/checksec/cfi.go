@@ -1,13 +1,8 @@
 package checksec
 
 import (
-	"context"
 	"debug/elf"
 	"encoding/binary"
-	"fmt"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 type x86CET struct {
@@ -34,55 +29,20 @@ const (
 )
 
 // Cfi - Check for Control Flow Integrity features
-func Cfi(name string) (*Result, error) {
-	// Input validation
-	if name == "" {
-		return nil, fmt.Errorf("filename cannot be empty")
-	}
-
-	// Clean the file path to prevent directory traversal
-	cleanPath := filepath.Clean(name)
-
-	// Check file exists and is accessible
-	if _, err := os.Stat(cleanPath); err != nil {
-		return nil, fmt.Errorf("cannot access file: %w", err)
-	}
-
-	// Open with timeout context to prevent hanging operations
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	// Use context for file operations
-	select {
-	case <-ctx.Done():
-		return nil, fmt.Errorf("operation timed out")
-	default:
-	}
-
-	f, err := os.Open(cleanPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open file: %w", err)
-	}
-	defer f.Close()
-
-	file, err := elf.NewFile(f)
-	if err != nil {
-		return nil, fmt.Errorf("invalid ELF file: %w", err)
-	}
-
+func Cfi(file *elf.File) *Result {
 	res := &Result{}
 	var hwOutput string
 	var hwColor Status
 	notes := file.Section(".note.gnu.property")
 	if notes == nil {
 		resUnknown(res)
-		return res, nil
+		return res
 	}
 
 	propertyData, err := notes.Data()
 	if err != nil {
 		resUnknown(res)
-		return res, nil
+		return res
 	}
 
 	// Property data layout of the relevant sections in ELFCLASS64
@@ -123,7 +83,7 @@ func Cfi(name string) (*Result, error) {
 		// No known HW CFI parsed
 		if clangMode == "none" {
 			resUnknown(res)
-			return res, nil
+			return res
 		}
 		// Only Clang CFI detected
 		res.Status = StatusGood
@@ -132,7 +92,7 @@ func Cfi(name string) (*Result, error) {
 		} else {
 			res.Value = "Clang CFI: Single-Module"
 		}
-		return res, nil
+		return res
 	}
 
 	// Combine HW and Clang CFI info
@@ -145,7 +105,7 @@ func Cfi(name string) (*Result, error) {
 		res.Value = hwOutput + " | Clang CFI: Single-Module"
 	}
 
-	return res, nil
+	return res
 }
 
 // parseX86CETFromNotes walks a .note.gnu.property payload and returns the x86

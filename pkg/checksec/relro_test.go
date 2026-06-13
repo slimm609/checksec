@@ -25,12 +25,8 @@ func buildLinuxELF(t *testing.T) string {
 }
 
 func TestRELRO_StaticGoElf(t *testing.T) {
-	bin := buildLinuxELF(t)
-
-	result, err := RELRO(bin)
-	if err != nil {
-		t.Fatalf("RELRO() error = %v", err)
-	}
+	ef, _ := openELF(t, buildLinuxELF(t))
+	result := RELRO(ef)
 	if result == nil {
 		t.Fatal("RELRO() returned nil")
 	}
@@ -40,7 +36,7 @@ func TestRELRO_StaticGoElf(t *testing.T) {
 		"No RELRO":      true,
 	}
 	if !validOutputs[result.Value] {
-		t.Errorf("unexpected Output = %q", result.Value)
+		t.Errorf("unexpected Value = %q", result.Value)
 	}
 	validStatus := map[Status]bool{StatusGood: true, StatusWarn: true, StatusBad: true}
 	if !validStatus[result.Status] {
@@ -49,20 +45,13 @@ func TestRELRO_StaticGoElf(t *testing.T) {
 }
 
 func TestRELRO_NoProgHeaders(t *testing.T) {
-	bin := "../../tests/binaries/output/rel.o"
-	if _, err := os.Stat(bin); err != nil {
-		t.Skipf("rel.o fixture not found: %v", err)
-	}
-
-	result, err := RELRO(bin)
-	if err != nil {
-		t.Fatalf("RELRO() error = %v", err)
-	}
+	ef, _ := openELF(t, requireFixture(t, "rel.o"))
+	result := RELRO(ef)
 	if result == nil {
 		t.Fatal("RELRO() returned nil")
 	}
 	validOutputs := map[string]bool{"N/A": true, "No RELRO": true}
 	if !validOutputs[result.Value] {
-		t.Errorf("unexpected Output for rel.o = %q", result.Value)
+		t.Errorf("unexpected Value for rel.o = %q", result.Value)
 	}
 }

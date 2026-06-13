@@ -21,7 +21,7 @@ func TestPIE(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			binary := &elf.File{FileHeader: elf.FileHeader{Type: tt.elfType}}
-			result := PIE("test", binary)
+			result := PIE(binary)
 			if result == nil {
 				t.Fatal("PIE() returned nil")
 			}

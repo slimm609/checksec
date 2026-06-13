@@ -3,9 +3,7 @@ package checksec
 import (
 	"bytes"
 	"debug/elf"
-	"fmt"
 	"os"
-	"path/filepath"
 )
 
 // SafeStackInit symbol used by SafeStack-enabled binaries.
@@ -16,33 +14,14 @@ func hasSafeStackSymbol(name string) bool {
 }
 
 // SafeStack checks for SafeStack support by searching for __safestack_init.
-func SafeStack(name string) (*Result, error) {
-	if name == "" {
-		return nil, fmt.Errorf("filename cannot be empty")
-	}
-
-	cleanPath := filepath.Clean(name)
-	if _, err := os.Stat(cleanPath); err != nil {
-		return nil, fmt.Errorf("cannot access file: %w", err)
-	}
-
-	f, err := os.Open(cleanPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open file: %w", err)
-	}
-	defer f.Close()
-
-	file, err := elf.NewFile(f)
-	if err != nil {
-		return nil, fmt.Errorf("invalid ELF file: %w", err)
-	}
-
+// raw may be nil; when present it enables the stripped-binary fallback.
+func SafeStack(file *elf.File, raw *os.File) *Result {
 	found := &Result{Value: "SafeStack Found", Status: StatusGood}
 
 	if symbols, err := file.Symbols(); err == nil {
 		for _, symbol := range symbols {
 			if hasSafeStackSymbol(symbol.Name) {
-				return found, nil
+				return found
 			}
 		}
 	}
@@ -50,18 +29,20 @@ func SafeStack(name string) (*Result, error) {
 	if importedSymbols, err := file.ImportedSymbols(); err == nil {
 		for _, symbol := range importedSymbols {
 			if hasSafeStackSymbol(symbol.Name) {
-				return found, nil
+				return found
 			}
 		}
 	}
 
-	if dynamicFunctions, err := FunctionsFromSymbolTable(f); err == nil {
-		for _, symbol := range dynamicFunctions {
-			if hasSafeStackSymbol(symbol.Name) {
-				return found, nil
+	if raw != nil {
+		if dynamicFunctions, err := FunctionsFromSymbolTable(raw); err == nil {
+			for _, symbol := range dynamicFunctions {
+				if hasSafeStackSymbol(symbol.Name) {
+					return found
+				}
 			}
 		}
 	}
 
-	return &Result{Value: "No SafeStack Found", Status: StatusBad}, nil
+	return &Result{Value: "No SafeStack Found", Status: StatusBad}
 }

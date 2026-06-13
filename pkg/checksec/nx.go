@@ -2,19 +2,15 @@ package checksec
 
 import (
 	"debug/elf"
-	"path/filepath"
 )
 
 // NX analyzes the NX (No eXecute) bit status of an ELF binary
 // It checks for the presence of PT_GNU_STACK segment and whether it has execute permissions
-func NX(name string, binary *elf.File) *Result {
+func NX(binary *elf.File) *Result {
 	// Input validation - follow security rule: "ALWAYS validate input before processing"
 	if binary == nil {
 		return &Result{Value: "Error: Invalid binary", Status: StatusBad}
 	}
-
-	// Sanitize filename for logging - follow security rule: "NEVER log full file paths in production"
-	_ = filepath.Base(name) // We don't use this currently but shows proper path handling
 
 	// Check if binary has program headers
 	if len(binary.Progs) == 0 {

@@ -2,7 +2,6 @@ package checksec
 
 import (
 	"encoding/binary"
-	"strings"
 	"testing"
 )
 
@@ -111,22 +110,10 @@ func TestStackClashStateResult(t *testing.T) {
 	}
 }
 
-func TestStackClash_InputValidation(t *testing.T) {
-	if _, err := StackClash(""); err == nil || !strings.Contains(err.Error(), "filename cannot be empty") {
-		t.Errorf("expected empty-filename error, got %v", err)
-	}
-	if _, err := StackClash("/nonexistent/path"); err == nil {
-		t.Errorf("expected error for nonexistent path, got nil")
-	}
-}
-
 func TestStackClash_ELFWithoutAnnobin(t *testing.T) {
 	// A pure-Go ELF has no .gnu.build.attributes — must report Unknown.
-	bin := buildLinuxELF(t)
-	res, err := StackClash(bin)
-	if err != nil {
-		t.Fatalf("StackClash() error = %v", err)
-	}
+	ef, _ := openELF(t, buildLinuxELF(t))
+	res := StackClash(ef)
 	if res.Value != "Unknown" || res.Status != StatusWarn {
 		t.Errorf("StackClash() = %+v, want {Unknown, StatusWarn}", res)
 	}

@@ -1,13 +1,9 @@
 package checksec
 
 import (
-	"context"
 	"debug/elf"
-	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
-	"time"
 )
 
 // StackChk to check for stack_chk_fail value
@@ -33,48 +29,16 @@ func isCanarySymbol(name string) bool {
 	return false
 }
 
-// Canary - Check for canary bits
-func Canary(name string) (*Result, error) {
-	// Input validation
-	if name == "" {
-		return nil, fmt.Errorf("filename cannot be empty")
-	}
-
-	// Clean the file path to prevent directory traversal
-	cleanPath := filepath.Clean(name)
-
-	// Check file exists and is accessible
-	if _, err := os.Stat(cleanPath); err != nil {
-		return nil, fmt.Errorf("cannot access file: %w", err)
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	select {
-	case <-ctx.Done():
-		return nil, fmt.Errorf("operation timed out")
-	default:
-	}
-
-	f, err := os.Open(cleanPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open file: %w", err)
-	}
-	defer f.Close()
-
-	file, err := elf.NewFile(f)
-	if err != nil {
-		return nil, fmt.Errorf("invalid ELF file: %w", err)
-	}
-
+// Canary - Check for canary bits. raw may be nil; when present it enables the
+// stripped-binary fallback via FunctionsFromSymbolTable.
+func Canary(file *elf.File, raw *os.File) *Result {
 	found := &Result{Value: "Canary Found", Status: StatusGood}
 
 	// Check symbols with proper error handling
 	if symbols, err := file.Symbols(); err == nil {
 		for _, symbol := range symbols {
 			if isCanarySymbol(symbol.Name) {
-				return found, nil
+				return found
 			}
 		}
 	}
@@ -83,19 +47,21 @@ func Canary(name string) (*Result, error) {
 	if importedSymbols, err := file.ImportedSymbols(); err == nil {
 		for _, imp := range importedSymbols {
 			if isCanarySymbol(imp.Name) {
-				return found, nil
+				return found
 			}
 		}
 	}
 
-	// Check dynamic functions
-	if dynamicFunctions, err := FunctionsFromSymbolTable(f); err == nil {
-		for _, symbol := range dynamicFunctions {
-			if isCanarySymbol(symbol.Name) {
-				return found, nil
+	// Check dynamic functions (stripped-binary fallback)
+	if raw != nil {
+		if dynamicFunctions, err := FunctionsFromSymbolTable(raw); err == nil {
+			for _, symbol := range dynamicFunctions {
+				if isCanarySymbol(symbol.Name) {
+					return found
+				}
 			}
 		}
 	}
 
-	return &Result{Value: "No Canary Found", Status: StatusBad}, nil
+	return &Result{Value: "No Canary Found", Status: StatusBad}
 }
