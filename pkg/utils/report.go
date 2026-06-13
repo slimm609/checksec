@@ -99,6 +99,7 @@ var fileFields = []Field{
 	{"runpath", "RUNPATH", run("RUNPATH", checksec.RUNPATH)},
 	{"symbols", "Symbols", run("SYMBOLS", checksec.SYMBOLS)},
 	{"safestack", "SafeStack", run("SafeStack", checksec.SafeStack)},
+	{"stack_clash", "Stack Clash", run("StackClash", checksec.StackClash)},
 	{"fortify_source", "FORTIFY", func(c *scanContext) checksec.Result {
 		c.fortify()
 		return c.fortifyRes
