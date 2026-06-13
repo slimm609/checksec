@@ -128,6 +128,9 @@ var fileFields = []Field{
 	{"symbols", "Symbols", run("SYMBOLS", checksec.SYMBOLS)},
 	{"safestack", "SafeStack", runRaw("SafeStack", checksec.SafeStack)},
 	{"stack_clash", "Stack Clash", run("StackClash", checksec.StackClash)},
+	{"separate_code", "W^X Seg", run("SeparateCode", checksec.SeparateCode)},
+	{"selfrando", "Selfrando", run("Selfrando", checksec.Selfrando)},
+	{"sanitizers", "Sanitizers", run("Sanitizers", checksec.Sanitizers)},
 	{"fortify_source", "FORTIFY", func(c *scanContext) checksec.Result {
 		c.fortify()
 		return c.fortifyRes
