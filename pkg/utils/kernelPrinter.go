@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
@@ -38,6 +39,23 @@ func KernelPrinter(w io.Writer, format string, checks []checksec.KernelCheck, op
 		}
 		_, _ = w.Write(b)
 		fmt.Fprintln(w)
+	case "csv":
+		cw := csv.NewWriter(w)
+		if !opts.NoHeader {
+			row := make([]string, len(kernelColumns))
+			for i, col := range kernelColumns {
+				row[i] = col.header
+			}
+			_ = cw.Write(row)
+		}
+		for _, c := range checks {
+			row := make([]string, len(kernelColumns))
+			for i, col := range kernelColumns {
+				row[i], _ = col.cell(c)
+			}
+			_ = cw.Write(row)
+		}
+		cw.Flush()
 	default:
 		writeKernelTable(w, checks, opts)
 	}

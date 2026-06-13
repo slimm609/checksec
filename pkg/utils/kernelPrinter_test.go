@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bytes"
+	"encoding/csv"
 	"encoding/json"
 	"encoding/xml"
 	"strings"
@@ -23,7 +24,7 @@ func sampleKernelChecks() []checksec.KernelCheck {
 // file printer: every field of every check appears in every output format.
 func TestKernelPrinter_AllFieldsInAllFormats(t *testing.T) {
 	checks := sampleKernelChecks()
-	for _, format := range []string{"json", "yaml", "xml", "table"} {
+	for _, format := range []string{"json", "yaml", "xml", "csv", "table"} {
 		t.Run(format, func(t *testing.T) {
 			var buf bytes.Buffer
 			KernelPrinter(&buf, format, checks, PrintOptions{NoBanner: true, NoHeader: true})
@@ -71,8 +72,26 @@ func TestKernelPrinter_TableHeader(t *testing.T) {
 	}
 }
 
+func TestKernelPrinter_CSVParsesAndMatchesColumns(t *testing.T) {
+	checks := sampleKernelChecks()
+	var buf bytes.Buffer
+	KernelPrinter(&buf, "csv", checks, PrintOptions{NoBanner: true, NoHeader: false})
+	rows, err := csv.NewReader(&buf).ReadAll()
+	if err != nil {
+		t.Fatalf("CSV not parseable: %v\n%s", err, buf.String())
+	}
+	if len(rows) != 1+len(checks) {
+		t.Fatalf("got %d rows, want %d", len(rows), 1+len(checks))
+	}
+	for i, col := range kernelColumns {
+		if rows[0][i] != col.header {
+			t.Errorf("header[%d] = %q, want %q", i, rows[0][i], col.header)
+		}
+	}
+}
+
 func TestKernelPrinter_EmptyInput(t *testing.T) {
-	for _, format := range []string{"json", "yaml", "xml", "table"} {
+	for _, format := range []string{"json", "yaml", "xml", "csv", "table"} {
 		var buf bytes.Buffer
 		KernelPrinter(&buf, format, []checksec.KernelCheck{}, PrintOptions{NoBanner: true, NoHeader: true})
 	}

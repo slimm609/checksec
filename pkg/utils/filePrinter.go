@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
@@ -35,9 +36,32 @@ func FilePrinter(w io.Writer, format string, reports []FileReport, opts PrintOpt
 		_, _ = w.Write(b)
 	case "xml":
 		writeXML(w, reports)
+	case "csv":
+		writeCSV(w, reports, opts)
 	default:
 		writeTable(w, reports, opts)
 	}
+}
+
+// writeCSV renders reports as RFC 4180 CSV. Column order matches fileFields,
+// with the file name as the trailing column.
+func writeCSV(w io.Writer, reports []FileReport, opts PrintOptions) {
+	cw := csv.NewWriter(w)
+	if !opts.NoHeader {
+		row := make([]string, 0, len(fileFields)+1)
+		for _, f := range fileFields {
+			row = append(row, f.Header)
+		}
+		_ = cw.Write(append(row, "Name"))
+	}
+	for _, r := range reports {
+		row := make([]string, 0, len(fileFields)+1)
+		for _, f := range fileFields {
+			row = append(row, r.Checks[f.Key].Value)
+		}
+		_ = cw.Write(append(row, r.Name))
+	}
+	cw.Flush()
 }
 
 // writeTable renders reports as an aligned, colourised table. Column order and

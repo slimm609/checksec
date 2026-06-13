@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bytes"
+	"encoding/csv"
 	"encoding/json"
 	"encoding/xml"
 	"regexp"
@@ -58,8 +59,59 @@ func TestFilePrinter_TableNonEmpty(t *testing.T) {
 	}
 }
 
+// TestFilePrinter_CSVParsesAndMatchesRegistry asserts CSV output parses with
+// encoding/csv, has one header row + one data row per report, and column count
+// equals len(fileFields)+1 (the trailing Name column).
+func TestFilePrinter_CSVParsesAndMatchesRegistry(t *testing.T) {
+	reports := []FileReport{sampleReport(), sampleReport()}
+	reports[1].Name = "bin2"
+
+	var buf bytes.Buffer
+	FilePrinter(&buf, "csv", reports, PrintOptions{NoBanner: true, NoHeader: false})
+
+	rows, err := csv.NewReader(&buf).ReadAll()
+	if err != nil {
+		t.Fatalf("CSV not parseable: %v\n%s", err, buf.String())
+	}
+	wantRows := 1 + len(reports) // header + data
+	if len(rows) != wantRows {
+		t.Fatalf("got %d CSV rows, want %d\n%s", len(rows), wantRows, buf.String())
+	}
+	wantCols := len(fileFields) + 1 // checks + Name
+	for i, row := range rows {
+		if len(row) != wantCols {
+			t.Fatalf("row %d has %d columns, want %d: %v", i, len(row), wantCols, row)
+		}
+	}
+	// Header row must match registry headers in order.
+	for i, f := range fileFields {
+		if rows[0][i] != f.Header {
+			t.Errorf("header[%d] = %q, want %q", i, rows[0][i], f.Header)
+		}
+	}
+	if rows[0][wantCols-1] != "Name" {
+		t.Errorf("last header = %q, want Name", rows[0][wantCols-1])
+	}
+	// Data row must carry the report name in the last column.
+	if rows[1][wantCols-1] != "bin" || rows[2][wantCols-1] != "bin2" {
+		t.Errorf("data rows missing names: %v / %v", rows[1], rows[2])
+	}
+}
+
+func TestFilePrinter_CSVNoHeader(t *testing.T) {
+	var buf bytes.Buffer
+	FilePrinter(&buf, "csv", []FileReport{sampleReport()}, PrintOptions{NoBanner: true, NoHeader: true})
+	rows, err := csv.NewReader(&buf).ReadAll()
+	if err != nil {
+		t.Fatalf("CSV not parseable: %v", err)
+	}
+	if len(rows) != 1 {
+		t.Fatalf("expected 1 data row with NoHeader, got %d", len(rows))
+	}
+}
+
 func TestFilePrinter_EmptyReports(t *testing.T) {
-	for _, format := range []string{"json", "yaml", "xml", "table"} {
+	for _, format := range []string{"json", "yaml", "xml", "csv", "table"} {
 		var buf bytes.Buffer
 		FilePrinter(&buf, format, []FileReport{}, PrintOptions{NoBanner: true, NoHeader: true})
 		// Must not panic; json/yaml emit "[]" / "[]\n", xml emits root, table emits nothing.
