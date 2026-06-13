@@ -108,7 +108,7 @@ func TestX86Notes_SkipsNon4ByteProperty(t *testing.T) {
 	feat := buildPropertyNote(bo, GnuPropertyX86Feature1Flag, GnuPropertyX86FeatureIBT|GnuPropertyX86FeatureSHSTK)
 	data := append(lead, feat...)
 
-	got := parseX86CETFromNotes(data, bo)
+	got := parseX86CETFromNotes(data, bo, 8)
 	if !got.ibt || !got.shstk {
 		t.Fatalf("feature property after an 8-byte property was missed: %+v", got)
 	}
@@ -123,7 +123,7 @@ func TestArmNotes_SkipsNon4ByteProperty(t *testing.T) {
 	feat := buildPropertyNote(bo, GnuPropertyArmFeature1Flag, GnuPropertyArmFeaturePAC|GnuPropertyArmFeatureBTI)
 	data := append(lead, feat...)
 
-	got := parseArmPACBTIFromNotes(data, bo)
+	got := parseArmPACBTIFromNotes(data, bo, 8)
 	if !got.pac || !got.bti {
 		t.Fatalf("feature property after an 8-byte property was missed: %+v", got)
 	}
@@ -136,7 +136,7 @@ func TestProp_X86Notes_SingleRecordOracle(t *testing.T) {
 		rapid.Check(t, func(t *rapid.T) {
 			mask := rapid.Uint32().Draw(t, "mask")
 			note := buildPropertyNote(bo, GnuPropertyX86Feature1Flag, mask)
-			if got, want := parseX86CETFromNotes(note, bo), parseBitmaskForx86CET(mask); got != want {
+			if got, want := parseX86CETFromNotes(note, bo, 8), parseBitmaskForx86CET(mask); got != want {
 				t.Fatalf("mask=%#x got=%+v want=%+v", mask, got, want)
 			}
 		})
@@ -150,7 +150,7 @@ func TestProp_ArmNotes_SingleRecordOracle(t *testing.T) {
 		rapid.Check(t, func(t *rapid.T) {
 			mask := rapid.Uint32().Draw(t, "mask")
 			note := buildPropertyNote(bo, GnuPropertyArmFeature1Flag, mask)
-			if got, want := parseArmPACBTIFromNotes(note, bo), parseBitmaskForArmPACBTI(mask); got != want {
+			if got, want := parseArmPACBTIFromNotes(note, bo, 8), parseBitmaskForArmPACBTI(mask); got != want {
 				t.Fatalf("mask=%#x got=%+v want=%+v", mask, got, want)
 			}
 		})
@@ -166,7 +166,7 @@ func TestProp_X86Notes_LastRecordWins(t *testing.T) {
 		m2 := rapid.Uint32().Draw(t, "mask2")
 		data := append(buildPropertyNote(bo, GnuPropertyX86Feature1Flag, m1),
 			buildPropertyNote(bo, GnuPropertyX86Feature1Flag, m2)...)
-		if got, want := parseX86CETFromNotes(data, bo), parseBitmaskForx86CET(m2); got != want {
+		if got, want := parseX86CETFromNotes(data, bo, 8), parseBitmaskForx86CET(m2); got != want {
 			t.Fatalf("m1=%#x m2=%#x got=%+v want=%+v", m1, m2, got, want)
 		}
 	})
@@ -177,8 +177,8 @@ func TestProp_NoteParsers_NeverPanic(t *testing.T) {
 	for _, bo := range []binary.ByteOrder{binary.LittleEndian, binary.BigEndian} {
 		rapid.Check(t, func(t *rapid.T) {
 			data := rapid.SliceOfN(rapid.Byte(), 0, 256).Draw(t, "data")
-			_ = parseX86CETFromNotes(data, bo)
-			_ = parseArmPACBTIFromNotes(data, bo)
+			_ = parseX86CETFromNotes(data, bo, 8)
+			_ = parseArmPACBTIFromNotes(data, bo, 8)
 		})
 	}
 }

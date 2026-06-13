@@ -15,8 +15,14 @@ type armPACBTI struct {
 	bti bool
 }
 
+type riscvCFI struct {
+	lp bool // Zicfilp landing pads
+	ss bool // Zicfiss shadow stack
+}
+
 const GnuPropertyArmFeature1Flag uint32 = 0xc0000000
 const GnuPropertyX86Feature1Flag uint32 = 0xc0000002
+const GnuPropertyRiscvFeature1Flag uint32 = 0xc0000000
 
 const (
 	GnuPropertyX86FeatureIBT uint32 = 1 << iota
@@ -26,6 +32,11 @@ const (
 const (
 	GnuPropertyArmFeatureBTI uint32 = 1 << iota
 	GnuPropertyArmFeaturePAC
+)
+
+const (
+	GnuPropertyRiscvFeatureCFILP uint32 = 1 << iota // Zicfilp (unlabeled landing pads)
+	GnuPropertyRiscvFeatureCFISS                    // Zicfiss (shadow stack)
 )
 
 // Cfi - Check for Control Flow Integrity features
@@ -45,25 +56,7 @@ func Cfi(file *elf.File) *Result {
 		return res
 	}
 
-	// Property data layout of the relevant sections in ELFCLASS64
-	// |0                  |1
-	// |0|1|2|3|4|5|6|7|8|9|0|1|2|3|4|5|
-	// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-	// | type  |datasz | btmsk |  pad  |
-	// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-	if file.Class == elf.ELFCLASS64 && file.Machine == elf.EM_X86_64 {
-		// x86-64, check for Shadow Stack and IBT
-		// https://docs.kernel.org/next/x86/shstk.html
-		// https://www.intel.com/content/www/us/en/developer/articles/technical/technical-look-control-flow-enforcement-technology.html
-		hwOutput, hwColor = cetOutputString(parseX86CETFromNotes(propertyData, file.ByteOrder))
-	} else if file.Class == elf.ELFCLASS64 && file.Machine == elf.EM_AARCH64 {
-		// AARCH64, check for PAC and BTI
-		// https://docs.kernel.org/arch/arm64/pointer-authentication.html
-		// https://community.arm.com/arm-community-blogs/b/architectures-and-processors-blog/posts/armv8-1-m-pointer-authentication-and-branch-target-identification-extension
-		hwOutput, hwColor = armOutputString(parseArmPACBTIFromNotes(propertyData, file.ByteOrder))
-	} else {
-		// Leave hwOutput empty; fallback to Unknown unless Clang CFI is detected
-	}
+	hwOutput, hwColor = hwCFIDispatch(file.Machine, file.Class, propertyData, file.ByteOrder)
 
 	// Detect Clang CFI presence and classify Single-Module vs Multi-Module
 	clangMode := "none"
@@ -108,60 +101,96 @@ func Cfi(file *elf.File) *Result {
 	return res
 }
 
-// parseX86CETFromNotes walks a .note.gnu.property payload and returns the x86
-// CET (SHSTK/IBT) features advertised. It is bounds-safe on truncated or
-// malformed input: out-of-range reads stop the scan rather than panicking.
-func parseX86CETFromNotes(data []byte, bo binary.ByteOrder) x86CET {
+// hwCFIDispatch selects the per-arch hardware-CFI parser. Returns ("", "") for
+// architectures with no known .note.gnu.property CFI encoding — the caller
+// then falls back to Clang-CFI symbol detection or Unknown.
+func hwCFIDispatch(m elf.Machine, c elf.Class, data []byte, bo binary.ByteOrder) (string, Status) {
+	align := propAlign(c)
+	switch m {
+	case elf.EM_X86_64, elf.EM_386:
+		// x86 CET (Shadow Stack + IBT) — same property encoding for both
+		// 32- and 64-bit x86, only the property-array alignment differs.
+		// https://gitlab.com/x86-psABIs/x86-64-ABI
+		return cetOutputString(parseX86CETFromNotes(data, bo, align))
+	case elf.EM_AARCH64:
+		// AArch64 PAC + BTI.
+		return armOutputString(parseArmPACBTIFromNotes(data, bo, align))
+	case elf.EM_RISCV:
+		// RISC-V Zicfilp (landing pads) + Zicfiss (shadow stack).
+		// binutils include/elf/common.h: GNU_PROPERTY_RISCV_FEATURE_1_AND.
+		return riscvOutputString(parseRiscvCFIFromNotes(data, bo, align))
+	default:
+		return "", ""
+	}
+}
+
+// propAlign returns the GNU property-array entry alignment for the ELF class:
+// 8 bytes for ELFCLASS64, 4 bytes for ELFCLASS32.
+func propAlign(c elf.Class) int {
+	if c == elf.ELFCLASS32 {
+		return 4
+	}
+	return 8
+}
+
+// walkGNUProperties walks a .note.gnu.property payload, calling fn for each
+// 4-byte (datasz==4) property whose pr_type matches want. The payload is
+// padded to align bytes per entry. Bounds-safe on truncated/malformed input.
+func walkGNUProperties(data []byte, bo binary.ByteOrder, align int, want uint32, fn func(mask uint32)) {
+	alignUp := func(n uint32) int { return int((uint64(n) + uint64(align-1)) &^ uint64(align-1)) }
+	i := 0
+	for i+8 <= len(data) {
+		ptype := bo.Uint32(data[i : i+4])
+		datasz := bo.Uint32(data[i+4 : i+8])
+		i += 8
+		payloadLen := alignUp(datasz)
+		if i+int(datasz) > len(data) {
+			break
+		}
+		if datasz == 4 && ptype == want {
+			fn(bo.Uint32(data[i : i+4]))
+		}
+		i += payloadLen
+	}
+}
+
+func parseX86CETFromNotes(data []byte, bo binary.ByteOrder, align int) x86CET {
 	var parsed x86CET
-	i := 0
-	for i+8 <= len(data) {
-		notetype := bo.Uint32(data[i : i+4])
-		datasz := bo.Uint32(data[i+4 : i+8])
-		i += 8
-
-		// The payload is datasz bytes, padded to 8-byte (ELFCLASS64) alignment.
-		// Advance by the full padded length so non-feature properties (datasz != 4)
-		// don't desync the scan and hide a following feature property.
-		payloadLen := align8(datasz)
-		if i+int(datasz) > len(data) {
-			break
-		}
-		if datasz == 4 && notetype == GnuPropertyX86Feature1Flag {
-			parsed = parseBitmaskForx86CET(bo.Uint32(data[i : i+4]))
-		}
-		i += payloadLen
-	}
+	walkGNUProperties(data, bo, align, GnuPropertyX86Feature1Flag, func(m uint32) {
+		parsed = parseBitmaskForx86CET(m)
+	})
 	return parsed
 }
 
-// align8 rounds n up to the next multiple of 8 (the GNU property note alignment
-// for ELFCLASS64), returned as an int for use as a slice offset.
-func align8(n uint32) int {
-	return int((uint64(n) + 7) &^ 7)
-}
-
-// parseArmPACBTIFromNotes walks a .note.gnu.property payload and returns the
-// AArch64 PAC/BTI features advertised. It is bounds-safe on truncated input.
-func parseArmPACBTIFromNotes(data []byte, bo binary.ByteOrder) armPACBTI {
+func parseArmPACBTIFromNotes(data []byte, bo binary.ByteOrder, align int) armPACBTI {
 	var parsed armPACBTI
-	i := 0
-	for i+8 <= len(data) {
-		notetype := bo.Uint32(data[i : i+4])
-		datasz := bo.Uint32(data[i+4 : i+8])
-		i += 8
-
-		// Advance by the full padded payload so non-feature properties don't
-		// desync the scan (see parseX86CETFromNotes).
-		payloadLen := align8(datasz)
-		if i+int(datasz) > len(data) {
-			break
-		}
-		if datasz == 4 && notetype == GnuPropertyArmFeature1Flag {
-			parsed = parseBitmaskForArmPACBTI(bo.Uint32(data[i : i+4]))
-		}
-		i += payloadLen
-	}
+	walkGNUProperties(data, bo, align, GnuPropertyArmFeature1Flag, func(m uint32) {
+		parsed = parseBitmaskForArmPACBTI(m)
+	})
 	return parsed
+}
+
+func parseRiscvCFIFromNotes(data []byte, bo binary.ByteOrder, align int) riscvCFI {
+	var parsed riscvCFI
+	walkGNUProperties(data, bo, align, GnuPropertyRiscvFeature1Flag, func(m uint32) {
+		parsed.lp = m&GnuPropertyRiscvFeatureCFILP != 0
+		parsed.ss = m&GnuPropertyRiscvFeatureCFISS != 0
+	})
+	return parsed
+}
+
+// riscvOutputString maps parsed RISC-V CFI features to display string + status.
+func riscvOutputString(s riscvCFI) (string, Status) {
+	switch {
+	case s.lp && s.ss:
+		return "Zicfilp & Zicfiss", StatusGood
+	case s.lp:
+		return "Zicfilp & NO Zicfiss", StatusWarn
+	case s.ss:
+		return "NO Zicfilp & Zicfiss", StatusWarn
+	default:
+		return "NO Zicfilp & NO Zicfiss", StatusBad
+	}
 }
 
 // cetOutputString maps parsed x86 CET features to the display string and status.
