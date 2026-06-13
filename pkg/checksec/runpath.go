@@ -6,9 +6,7 @@ import (
 
 // Detect runpath in binary
 func RUNPATH(file *elf.File) *Result {
-	runpath, _ := file.DynValue(elf.DT_RUNPATH)
-	if len(runpath) == 0 {
-		return &Result{Value: "No RUNPATH", Status: StatusGood}
-	}
-	return &Result{Value: "RUNPATH", Status: StatusBad}
+	paths, _ := file.DynString(elf.DT_RUNPATH)
+	r := summarizeRunpath("RUNPATH", paths)
+	return &r
 }

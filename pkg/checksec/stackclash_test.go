@@ -111,10 +111,11 @@ func TestStackClashStateResult(t *testing.T) {
 }
 
 func TestStackClash_ELFWithoutAnnobin(t *testing.T) {
-	// A pure-Go ELF has no .gnu.build.attributes — must report Unknown.
+	// A pure-Go ELF has no .gnu.build.attributes and no stack-clash probes —
+	// the heuristic fallback runs and reports "No Probes".
 	ef, _ := openELF(t, buildLinuxELF(t))
 	res := StackClash(ef)
-	if res.Value != "Unknown" || res.Status != StatusWarn {
-		t.Errorf("StackClash() = %+v, want {Unknown, StatusWarn}", res)
+	if res.Value != "No Probes" || res.Status != StatusWarn {
+		t.Errorf("StackClash() = %+v, want {No Probes, StatusWarn}", res)
 	}
 }

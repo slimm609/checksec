@@ -131,6 +131,8 @@ var FileFields = []Field{
 	{"separate_code", "W^X Seg", run("SeparateCode", checksec.SeparateCode)},
 	{"selfrando", "Selfrando", run("Selfrando", checksec.Selfrando)},
 	{"sanitizers", "Sanitizers", run("Sanitizers", checksec.Sanitizers)},
+	{"fortify_level", "FORTIFY Lvl", run("FortifyLevel", checksec.FortifyLevel)},
+	{"glibcxx_assert", "GLIBCXX Assert", run("GlibcxxAssertions", checksec.GlibcxxAssertions)},
 	{"fortify_source", "FORTIFY", func(c *scanContext) checksec.Result {
 		c.fortify()
 		return c.fortifyRes

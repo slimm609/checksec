@@ -1,6 +1,7 @@
 package checksec
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -16,12 +17,13 @@ func TestRPATH_NoRpath(t *testing.T) {
 }
 
 func TestRPATH_WithRpath(t *testing.T) {
-	// The committed "rpath" fixture is a real ELF carrying DT_RPATH ([./]).
+	// The committed "rpath" fixture is a real ELF carrying DT_RPATH (./).
 	ef, _ := openELF(t, requireFixture(t, "rpath"))
 	result := RPATH(ef)
-	if result.Value != "RPATH" {
-		t.Errorf("Value = %q, want %q", result.Value, "RPATH")
+	if !strings.HasPrefix(result.Value, "RPATH [") {
+		t.Errorf("Value = %q, want prefix %q", result.Value, "RPATH [")
 	}
+	// "./" is relative → insecure.
 	if result.Status != StatusBad {
 		t.Errorf("Status = %q, want %q", result.Status, StatusBad)
 	}
