@@ -16,6 +16,7 @@ var (
 	noHeader     bool
 	noWarnings   bool
 	colorMode    string
+	failIf       string
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -32,12 +33,13 @@ func SetVersionInfo(version, commit, date string) {
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	rootCmd.PersistentFlags().StringVarP(&outputFormat, "output", "o", "table", "Output format (table, xml, json or yaml)")
+	rootCmd.PersistentFlags().StringVarP(&outputFormat, "output", "o", "table", "Output format (table, json, yaml, xml, csv)")
 	rootCmd.PersistentFlags().StringVarP(&libc, "libc", "l", "", "Set libc location (useful for FORTIFY check on offline embedded file-system)")
 	rootCmd.PersistentFlags().BoolVarP(&noBanner, "no-banner", "", false, "disable the banner")
 	rootCmd.PersistentFlags().BoolVarP(&noHeader, "no-headers", "", false, "disable the headers")
 	rootCmd.PersistentFlags().BoolVarP(&noWarnings, "no-warnings", "", false, "disable warnings")
 	rootCmd.PersistentFlags().StringVar(&colorMode, "color", "auto", "Color output mode (auto, always, never)")
+	rootCmd.PersistentFlags().StringVar(&failIf, "fail-if", "", "Exit non-zero if any listed check (comma-separated keys, e.g. relro,canary,pie) is not StatusGood")
 
 	cobra.OnInitialize(func() {
 		output.NoWarnings = noWarnings

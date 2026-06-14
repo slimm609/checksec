@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
@@ -42,6 +41,9 @@ func TestCheckFileExists_Positive(t *testing.T) {
 }
 
 func TestCheckDirExists_Positive(t *testing.T) {
+	if _, err := os.Stat("../../tests/binaries/output"); err != nil {
+		t.Skipf("fixture dir missing: %v", err)
+	}
 	if !CheckDirExists("../../tests/binaries/output") {
 		t.Errorf("CheckDirExists(fixture dir) = false, want true")
 	}
@@ -83,36 +85,18 @@ func TestGetAllFilesFromDir_Recursive(t *testing.T) {
 	}
 }
 
-// TestRunFileChecks_RealFixture exercises the real check wrappers (relroFn,
-// canaryFn, ... fortifyFn) end-to-end against a committed fixture, rather than
-// the stubbed hooks used by TestRunFileChecks_UsesHooksAndAggregates.
+// TestRunFileChecks_RealFixture exercises the real check pipeline end-to-end
+// against a committed fixture.
 func TestRunFileChecks_RealFixture(t *testing.T) {
 	requireFixtureBytes(t)
 
-	data, color := RunFileChecks(fixtureELF, "")
-	if len(data) == 0 || len(color) == 0 {
-		t.Fatal("RunFileChecks returned empty results")
-	}
-
-	// The aggregated data must be valid JSON-serialisable and contain checks.
-	raw, err := json.Marshal(data)
-	if err != nil {
-		t.Fatalf("marshal data: %v", err)
-	}
-	var decoded []map[string]interface{}
-	if err := json.Unmarshal(raw, &decoded); err != nil {
-		t.Fatalf("unmarshal data: %v", err)
-	}
-	if len(decoded) != 1 {
-		t.Fatalf("expected 1 result entry, got %d", len(decoded))
-	}
-	checks, ok := decoded[0]["checks"].(map[string]interface{})
-	if !ok {
-		t.Fatalf("missing checks map in %#v", decoded[0])
+	report := RunFileChecks(fixtureELF, "")
+	if report.Name != fixtureELF {
+		t.Errorf("Name = %q, want %q", report.Name, fixtureELF)
 	}
 	for _, key := range []string{"relro", "canary", "nx", "pie", "rpath", "runpath", "symbols"} {
-		if _, present := checks[key]; !present {
-			t.Errorf("checks map missing %q", key)
+		if _, ok := report.Checks[key]; !ok {
+			t.Errorf("checks missing %q", key)
 		}
 	}
 }

@@ -13,6 +13,13 @@ import (
 	uroot "github.com/u-root/u-root/pkg/ldd"
 )
 
+// FortifyFunc is one fortifiable libc function the target binary references,
+// and whether it uses the __*_chk (fortified) variant.
+type FortifyFunc struct {
+	Name      string `json:"name"      xml:"name,attr"`
+	Fortified bool   `json:"fortified" xml:"fortified,attr"`
+}
+
 type fortify struct {
 	Output           string
 	Color            string
@@ -23,32 +30,28 @@ type fortify struct {
 	LibcSupportColor string
 	NumLibcFunc      string
 	NumFileFunc      string
+	Functions        []FortifyFunc
 }
 
-// Fortify reports FORTIFY_SOURCE coverage for the binary at name. The binary
-// argument is accepted for API symmetry with the other checks but is unused;
-// the file is re-opened by path internally. ldd may be a pre-resolved libc path,
-// or "" to resolve it automatically.
+// Fortify reports FORTIFY_SOURCE coverage for the binary at name. The already-
+// open binary is reused for the target's symbol scan; name is needed only for
+// libc auto-resolution via ldd. ldd may be a pre-resolved libc path, or "" to
+// resolve it automatically.
 func Fortify(name string, binary *elf.File, ldd string) (*fortify, error) {
-	_ = binary
 	// limit to only checks that can actually be foritifed
 	// https://github.com/gcc-mirror/gcc/blob/master/gcc/builtins.def#L1112
 	supportedFuncs := []string{"__memcpy_chk", "__memmove_chk", "__mempcpy_chk", "__memset_chk", "__stpcpy_chk", "__stpncpy_chk", "__strcat_chk", "__strcpy_chk", "__strncat_chk", "__strncpy_chk", "__snprintf_chk", "__sprintf_chk", "__vsnprintf_chk", "__vsprintf_chk", "__fprintf_chk", "__printf_chk", "__vfprintf_chk", "__vprintf_chk"}
 	sort.Strings(supportedFuncs)
 
 	if ldd == "" {
-		resolved, err := getLdd(name)
-		if err != nil {
-			return nil, err
-		}
-		ldd = resolved
+		ldd = getLdd(name, binary)
 	}
 
-	return fortifyWithLdd(name, ldd, supportedFuncs)
+	return fortifyWithLdd(binary, ldd, supportedFuncs)
 }
 
 // fortifyWithLdd runs the fortify analysis given a resolved libc path (ldd).
-func fortifyWithLdd(name, ldd string, supportedFuncs []string) (*fortify, error) {
+func fortifyWithLdd(file *elf.File, ldd string, supportedFuncs []string) (*fortify, error) {
 	res := fortify{}
 	var chkFuncLibs []string
 	var funcLibs []string
@@ -96,23 +99,10 @@ func fortifyWithLdd(name, ldd string, supportedFuncs []string) (*fortify, error)
 		res.NumLibcFunc = "0"
 	}
 
-	f, err := os.Open(name)
-	if err != nil {
-		return nil, fmt.Errorf("error opening ELF file: %w", err)
-	}
-	defer f.Close()
-
-	file, err := elf.NewFile(f)
-	if err != nil {
-		return nil, fmt.Errorf("error parsing ELF file: %w", err)
-	}
-
 	dynSymbols, err := file.DynamicSymbols()
 	if err != nil {
-		dynSymbols, err = FunctionsFromSymbolTable(f)
-		if err != nil {
-			return nil, fmt.Errorf("error getting dynamic symbols from ELF file: %w", err)
-		}
+		// No .dynsym — static binary; nothing fortifiable via libc.
+		dynSymbols = nil
 	}
 
 	// Iterate through dynamic symbols and print their information
@@ -121,6 +111,7 @@ func fortifyWithLdd(name, ldd string, supportedFuncs []string) (*fortify, error)
 	}
 
 	checked, total = computeFortifyCounts(chkFuncLibs, funcLibs, fileFunc)
+	res.Functions = fortifyBreakdown(chkFuncLibs, funcLibs, fileFunc)
 
 	if checked > 0 {
 		res.Output = "Yes"
@@ -157,6 +148,28 @@ func fortifyLibcFuncs(libcSyms []elf.Symbol, supportedFuncs []string) (chkFuncs,
 	return chkFuncs, baseFuncs
 }
 
+// fortifyBreakdown returns one entry per fortifiable libc base function that
+// the target binary references (either as the base name or the _chk variant),
+// sorted by base name. Fortified=true if the _chk variant is present.
+func fortifyBreakdown(chkFuncs, baseFuncs, fileFuncs []string) []FortifyFunc {
+	inFile := make(map[string]bool, len(fileFuncs))
+	for _, f := range fileFuncs {
+		inFile[f] = true
+	}
+	var out []FortifyFunc
+	for i, base := range baseFuncs {
+		chk := chkFuncs[i]
+		usesChk := inFile[chk]
+		usesBase := inFile[base]
+		if !usesChk && !usesBase {
+			continue
+		}
+		out = append(out, FortifyFunc{Name: base, Fortified: usesChk})
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
+	return out
+}
+
 // computeFortifyCounts compares the libc's fortifiable functions against the
 // functions present in the target binary. It returns the number of fortified
 // calls and the total fortifiable count (fortified plus fortifiable-but-unprotected).
@@ -179,33 +192,31 @@ func computeFortifyCounts(chkFuncs, baseFuncs, fileFuncs []string) (fortified, f
 	return fortified, fortifiable
 }
 
-func getLdd(filename string) (string, error) {
+// getLdd resolves the libc path for the binary at filename. The already-open
+// ELF is reused for the PT_DYNAMIC check; the path itself is required only by
+// uroot.FList (which inspects the on-disk binary's dependencies).
+func getLdd(filename string, file *elf.File) string {
 	dynamic := false
-	file, err := elf.Open(filename)
-	if err != nil {
-		return "", fmt.Errorf("error opening ELF file: %w", err)
-	}
-	defer file.Close()
 	for _, prog := range file.Progs {
 		if prog.Type == elf.PT_DYNAMIC {
 			dynamic = true
 		}
 	}
 
-	filename, _ = filepath.Abs(filename)
+	abs, _ := filepath.Abs(filename)
 
-	files, _ := uroot.FList(filename)
+	files, _ := uroot.FList(abs)
 	if dynamic && len(files) == 0 {
-		output.Warnf("Warning: %s: Dynamic Binary found but missing libc. Fortify results will be skipped", filename)
-		return "unk", nil
+		output.Warnf("Warning: %s: Dynamic Binary found but missing libc. Fortify results will be skipped", abs)
+		return "unk"
 	}
 
 	for _, libc := range files {
 		if strings.Contains(libc, "libc.") {
-			return libc, nil
+			return libc
 		}
 	}
-	return "none", nil
+	return "none"
 }
 
 func isInSlice(item string, slice []string) bool {

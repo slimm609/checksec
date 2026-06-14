@@ -2,8 +2,6 @@ package checksec
 
 import (
 	"debug/elf"
-	"os"
-	"path/filepath"
 	"testing"
 )
 
@@ -51,118 +49,12 @@ func TestArmPACBTI(t *testing.T) {
 	}
 }
 
-func TestCfi_InputValidation(t *testing.T) {
-	tests := []struct {
-		name        string
-		filename    string
-		expectError bool
-		errorMsg    string
-	}{
-		{
-			name:        "empty filename",
-			filename:    "",
-			expectError: true,
-			errorMsg:    "filename cannot be empty",
-		},
-		{
-			name:        "non-existent file",
-			filename:    "/path/to/nonexistent/file",
-			expectError: true,
-			errorMsg:    "cannot access file",
-		},
-		{
-			name:        "directory traversal attempt",
-			filename:    "../../../etc/passwd",
-			expectError: true,
-			errorMsg:    "cannot access file",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result, err := Cfi(tt.filename)
-
-			if tt.expectError {
-				if err == nil {
-					t.Errorf("Expected error but got none")
-					return
-				}
-				if tt.errorMsg != "" && !contains(err.Error(), tt.errorMsg) {
-					t.Errorf("Expected error message containing '%s', got '%s'", tt.errorMsg, err.Error())
-				}
-			} else {
-				if err != nil {
-					t.Errorf("Unexpected error: %v", err)
-					return
-				}
-				if result == nil {
-					t.Errorf("Expected result but got nil")
-				}
-			}
-		})
-	}
-}
-
-func TestCfi_InvalidELF(t *testing.T) {
-	// Create a temporary file that's not an ELF
-	tmpFile, err := os.CreateTemp("", "test-*.txt")
-	if err != nil {
-		t.Fatalf("Failed to create temp file: %v", err)
-	}
-	defer os.Remove(tmpFile.Name())
-	defer tmpFile.Close()
-
-	// Write some non-ELF content
-	_, err = tmpFile.WriteString("This is not an ELF file")
-	if err != nil {
-		t.Fatalf("Failed to write to temp file: %v", err)
-	}
-
-	result, err := Cfi(tmpFile.Name())
-
-	if err == nil {
-		t.Errorf("Expected error for non-ELF file, but got none")
-		return
-	}
-	if !contains(err.Error(), "invalid ELF file") {
-		t.Errorf("Expected 'invalid ELF file' error, got: %s", err.Error())
-	}
-	if result != nil {
-		t.Errorf("Expected nil result for error case, got: %v", result)
-	}
-}
-
-func TestCfi_PathTraversal(t *testing.T) {
-	// Test various path traversal attempts
-	maliciousPaths := []string{
-		"../../../etc/passwd",
-		"..\\..\\..\\windows\\system32\\config\\sam",
-		"....//....//....//etc/passwd",
-		"/tmp/../../../etc/passwd",
-	}
-
-	for _, path := range maliciousPaths {
-		t.Run("path_traversal_"+filepath.Base(path), func(t *testing.T) {
-			result, err := Cfi(path)
-
-			// Should either fail with access error or be cleaned by filepath.Clean
-			if err == nil {
-				// If it doesn't error, the path should have been cleaned
-				cleanPath := filepath.Clean(path)
-				if cleanPath == path {
-					t.Errorf("Path traversal attempt should have been cleaned or failed: %s", path)
-				}
-			} else {
-				// Should fail with access error or invalid ELF file error
-				if !contains(err.Error(), "cannot access file") && !contains(err.Error(), "invalid ELF file") {
-					t.Errorf("Expected access error or invalid ELF file error for path traversal, got: %s", err.Error())
-				}
-			}
-
-			if result != nil {
-				t.Errorf("Expected nil result for malicious path, got: %v", result)
-			}
-		})
+func TestCfi_LinuxELFNoNotes(t *testing.T) {
+	// A pure-Go binary has no .note.gnu.property → Unknown.
+	ef, _ := openELF(t, buildLinuxELF(t))
+	res := Cfi(ef)
+	if res.Value != "Unknown" || res.Status != StatusWarn {
+		t.Fatalf("expected Unknown/StatusWarn, got %+v", res)
 	}
 }
 
@@ -215,15 +107,15 @@ func TestParseBitmaskForArmPACBTI_EdgeCases(t *testing.T) {
 }
 
 func TestResUnknown(t *testing.T) {
-	cfi := &CfiResult{}
+	cfi := &Result{}
 	resUnknown(cfi)
 
-	if cfi.Color != "yellow" {
-		t.Errorf("Expected color 'yellow', got '%s'", cfi.Color)
+	if cfi.Status != StatusWarn {
+		t.Errorf("Expected status %q, got %q", StatusWarn, cfi.Status)
 	}
 
-	if cfi.Output != "Unknown" {
-		t.Errorf("Expected output 'Unknown', got '%s'", cfi.Output)
+	if cfi.Value != "Unknown" {
+		t.Errorf("Expected value 'Unknown', got %q", cfi.Value)
 	}
 }
 

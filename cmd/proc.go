@@ -3,10 +3,10 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"strconv"
 
 	"github.com/slimm609/checksec/v3/pkg/utils"
-
-	"path/filepath"
 
 	"github.com/spf13/cobra"
 )
@@ -32,8 +32,12 @@ var procCmd = &cobra.Command{
 		}
 
 		utils.CheckElfExists(file)
-		data, color := utils.RunFileChecks(file, libc)
-		utils.FilePrinter(outputFormat, data, color, noBanner, noHeader)
+		pid, _ := strconv.Atoi(proc)
+		report := utils.RunProcChecks(pid, file, libc)
+		reports := []utils.FileReport{report}
+		utils.FilePrinter(cmd.OutOrStdout(), outputFormat, reports,
+			utils.PrintOptions{NoBanner: noBanner, NoHeader: noHeader, Fields: utils.ProcFields})
+		applyFailIf(reports)
 	},
 }
 

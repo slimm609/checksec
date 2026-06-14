@@ -18,8 +18,7 @@ var procAllCmd = &cobra.Command{
 	Short: "Check all running processes",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		var Elements []interface{}
-		var ElementColors []interface{}
+		var reports []utils.FileReport
 		processes, _ := process.Processes()
 		for _, process := range processes {
 			proc := process.Pid
@@ -61,11 +60,11 @@ var procAllCmd = &cobra.Command{
 			if !utils.CheckIfElf(file) {
 				continue
 			}
-			data, color := utils.RunFileChecks(file, libc)
-			Elements = append(Elements, data...)
-			ElementColors = append(ElementColors, color...)
+			reports = append(reports, utils.RunProcChecks(int(proc), file, libc))
 		}
-		utils.FilePrinter(outputFormat, Elements, ElementColors, noBanner, noHeader)
+		utils.FilePrinter(cmd.OutOrStdout(), outputFormat, reports,
+			utils.PrintOptions{NoBanner: noBanner, NoHeader: noHeader, Fields: utils.ProcFields})
+		applyFailIf(reports)
 	},
 }
 

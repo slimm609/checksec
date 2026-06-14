@@ -18,15 +18,10 @@ var dirCmd = &cobra.Command{
 		dir := args[0]
 		recursive, _ := cmd.Flags().GetBool("recursive")
 		utils.CheckDirExists(dir)
-		var Elements []interface{}
-		var ElementColors []interface{}
-		for _, file := range utils.GetAllFilesFromDir(dir, recursive) {
-			data, color := utils.RunFileChecks(file, libc)
-			Elements = append(Elements, data...)
-			ElementColors = append(ElementColors, color...)
-		}
-		utils.FilePrinter(outputFormat, Elements, ElementColors, noBanner, noHeader)
-
+		paths := utils.GetAllFilesFromDir(dir, recursive)
+		reports := utils.RunListChecksParallel(paths, libc, 0)
+		utils.FilePrinter(cmd.OutOrStdout(), outputFormat, reports, utils.PrintOptions{NoBanner: noBanner, NoHeader: noHeader})
+		applyFailIf(reports)
 	},
 }
 

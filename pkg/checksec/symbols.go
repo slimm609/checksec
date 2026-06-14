@@ -10,44 +10,24 @@ import (
 	"github.com/slimm609/checksec/v3/pkg/output"
 )
 
-type symbols struct {
-	Output string
-	Color  string
-}
-
 // SYMBOLS detects usage of elf symbols
-func SYMBOLS(name string) (*symbols, error) {
-	res := symbols{}
-	file, err := elf.Open(name)
-	if err != nil {
-		return nil, fmt.Errorf("error opening ELF file: %w", err)
-	}
-	defer file.Close()
-
+func SYMBOLS(file *elf.File) *Result {
 	symbols, _ := file.Symbols()
 	if len(symbols) == 0 {
-		res.Output = "No Symbols"
-		res.Color = "green"
-	} else {
-		res.Output = fmt.Sprintf("%d symbols", len(symbols))
-		res.Color = "red"
+		return &Result{Value: "No Symbols", Status: StatusGood}
 	}
-	return &res, nil
+	return &Result{Value: fmt.Sprintf("%d symbols", len(symbols)), Status: StatusBad}
 }
 
-func DynValueFromPTDynamic(file *elf.File, tag elf.DynTag, names ...string) ([]uint64, error) {
+func DynValueFromPTDynamic(file *elf.File, tag elf.DynTag) ([]uint64, error) {
 	var res []uint64
-	name := "unknown"
-	if len(names) > 0 {
-		name = names[0]
-	}
 
 	for _, prog := range file.Progs {
 		if prog.Type == elf.PT_DYNAMIC {
 			data := make([]byte, prog.Filesz)
 			_, err := prog.ReadAt(data, 0)
 			if err != nil {
-				output.Warnf("Error reading dynamic section for %s: %v", name, err)
+				output.Warnf("Error reading dynamic section: %v", err)
 				return res, err
 			}
 
@@ -98,10 +78,10 @@ func FunctionsFromSymbolTable(file *os.File) ([]elf.Symbol, error) {
 		return functions, err
 	}
 
-	symTabOffset, _ := DynValueFromPTDynamic(f, elf.DT_SYMTAB, file.Name())
-	strTabOffset, _ := DynValueFromPTDynamic(f, elf.DT_STRTAB, file.Name())
-	strTabSize, _ := DynValueFromPTDynamic(f, elf.DT_STRSZ, file.Name())
-	symEntSizeVals, _ := DynValueFromPTDynamic(f, elf.DT_SYMENT, file.Name())
+	symTabOffset, _ := DynValueFromPTDynamic(f, elf.DT_SYMTAB)
+	strTabOffset, _ := DynValueFromPTDynamic(f, elf.DT_STRTAB)
+	strTabSize, _ := DynValueFromPTDynamic(f, elf.DT_STRSZ)
+	symEntSizeVals, _ := DynValueFromPTDynamic(f, elf.DT_SYMENT)
 
 	if symTabOffset == nil || strTabSize == nil || strTabOffset == nil {
 		return functions, err

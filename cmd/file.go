@@ -18,8 +18,9 @@ var fileCmd = &cobra.Command{
 		file := args[0]
 
 		utils.CheckElfExists(file)
-		data, color := utils.RunFileChecks(file, libc)
-		utils.FilePrinter(outputFormat, data, color, noBanner, noHeader)
+		reports := []utils.FileReport{utils.RunFileChecks(file, libc)}
+		utils.FilePrinter(cmd.OutOrStdout(), outputFormat, reports, utils.PrintOptions{NoBanner: noBanner, NoHeader: noHeader})
+		applyFailIf(reports)
 	},
 }
 

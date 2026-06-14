@@ -13,23 +13,16 @@ func TestKernelConfig_ValidConfig(t *testing.T) {
 		t.Skipf("kernel.config fixture not found: %v", err)
 	}
 
-	results, colors := KernelConfig(fixture)
-
+	results := KernelConfig(fixture)
 	if len(results) == 0 {
 		t.Fatal("KernelConfig() returned no results")
 	}
-	if len(results) != len(colors) {
-		t.Fatalf("results length %d != colors length %d", len(results), len(colors))
-	}
-
 	for i, r := range results {
-		m, ok := r.(map[string]interface{})
-		if !ok {
-			t.Errorf("result[%d] is %T, want map[string]interface{}", i, r)
-			continue
+		if r.Name == "" || r.Desc == "" || r.Type == "" {
+			t.Errorf("result[%d] has empty metadata: %+v", i, r)
 		}
-		if len(m) == 0 {
-			t.Errorf("result[%d] map is empty", i)
+		if r.Result.Value == "" || r.Result.Status == "" {
+			t.Errorf("result[%d] has empty result: %+v", i, r)
 		}
 	}
 }
@@ -57,11 +50,17 @@ func TestKernelConfig_GzippedConfig(t *testing.T) {
 		t.Fatalf("write gzip: %v", err)
 	}
 
-	results, colors := KernelConfig(gzPath)
-	if len(results) != len(colors) {
-		t.Fatalf("results length %d != colors length %d", len(results), len(colors))
-	}
+	results := KernelConfig(gzPath)
 	if len(results) == 0 {
 		t.Error("expected non-empty results from gzipped config")
+	}
+	var found bool
+	for _, r := range results {
+		if r.Name == "CONFIG_STACKPROTECTOR" && r.Result.Value == "Enabled" {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected CONFIG_STACKPROTECTOR=Enabled in results, got %+v", results)
 	}
 }
