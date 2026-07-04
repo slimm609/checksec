@@ -127,6 +127,31 @@ func TestLLMExploitSubBlock(t *testing.T) {
 	}
 }
 
+func TestWriteLLMEndToEnd(t *testing.T) {
+	reports := []FileReport{{Name: "./x", Checks: map[string]checksec.Result{
+		"pie": {Value: "No PIE", Status: checksec.StatusBad},
+	}}}
+	var buf bytes.Buffer
+	writeLLM(&buf, reports, PrintOptions{})
+	out := buf.String()
+	for _, want := range []string{"AUTHORITATIVE", "## Checks present", "## Target: ./x", "- [!] pie ="} {
+		if !strings.Contains(out, want) {
+			t.Errorf("missing %q in:\n%s", want, out)
+		}
+	}
+}
+
+func TestWriteLLMNoPreamble(t *testing.T) {
+	reports := []FileReport{{Name: "./x", Checks: map[string]checksec.Result{
+		"pie": {Value: "No PIE", Status: checksec.StatusBad},
+	}}}
+	var buf bytes.Buffer
+	writeLLM(&buf, reports, PrintOptions{LLMNoPreamble: true})
+	if strings.Contains(buf.String(), "AUTHORITATIVE") {
+		t.Error("--llm-no-preamble must strip the directive")
+	}
+}
+
 func lineContaining(s, sub string) string {
 	for _, l := range strings.Split(s, "\n") {
 		if strings.Contains(l, sub) {

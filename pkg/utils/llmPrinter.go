@@ -110,3 +110,27 @@ func writeLLMExploit(w io.Writer, r *exploit.Report) {
 	}
 	fmt.Fprintln(w)
 }
+
+// writeLLM assembles the full "llm" output format: an optional grounding
+// preamble, the shared knowledge block, and one target section (plus an
+// exploitability sub-block, when present) per report.
+func writeLLM(w io.Writer, reports []FileReport, opts PrintOptions) {
+	hasExploit := false
+	for _, r := range reports {
+		if r.Exploitability != nil {
+			hasExploit = true
+			break
+		}
+	}
+
+	if !opts.LLMNoPreamble {
+		writeLLMPreamble(w, hasExploit)
+	}
+	writeLLMKnowledge(w, reports)
+	for _, r := range reports {
+		writeLLMTarget(w, r)
+		if r.Exploitability != nil {
+			writeLLMExploit(w, r.Exploitability)
+		}
+	}
+}

@@ -23,6 +23,9 @@ type PrintOptions struct {
 	// Chain enables rendering a hypothesis exploit chain (via RenderChain)
 	// for reports that carry exploitability data.
 	Chain bool
+	// LLMNoPreamble suppresses the grounding preamble emitted by writeLLM
+	// for the "llm" output format.
+	LLMNoPreamble bool
 }
 
 func (o PrintOptions) fields() []Field {
@@ -54,6 +57,8 @@ func FilePrinter(w io.Writer, format string, reports []FileReport, opts PrintOpt
 		writeXML(w, reports, opts.fields())
 	case "csv":
 		writeCSV(w, reports, opts.fields(), opts)
+	case "llm":
+		writeLLM(w, reports, opts)
 	default:
 		writeTable(w, reports, opts.fields(), opts)
 	}

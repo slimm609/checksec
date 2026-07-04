@@ -39,7 +39,7 @@ var listfileCmd = &cobra.Command{
 			opts = append(opts, utils.WithExploit(chainEnabled))
 		}
 		reports := utils.RunListChecksParallel(paths, libc, 0, opts...)
-		utils.FilePrinter(cmd.OutOrStdout(), outputFormat, reports, utils.PrintOptions{NoBanner: noBanner, NoHeader: noHeader, Chain: chainEnabled})
+		utils.FilePrinter(cmd.OutOrStdout(), outputFormat, reports, utils.PrintOptions{NoBanner: noBanner, NoHeader: noHeader, Chain: chainEnabled, LLMNoPreamble: llmNoPreamble})
 		applyFailIf(reports)
 	},
 }

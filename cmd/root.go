@@ -19,6 +19,7 @@ var (
 	failIf         string
 	exploitEnabled bool
 	chainEnabled   bool
+	llmNoPreamble  bool
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -35,7 +36,7 @@ func SetVersionInfo(version, commit, date string) {
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	rootCmd.PersistentFlags().StringVarP(&outputFormat, "output", "o", "table", "Output format (table, json, yaml, xml, csv)")
+	rootCmd.PersistentFlags().StringVarP(&outputFormat, "output", "o", "table", "Output format (table, json, yaml, xml, csv, llm)")
 	rootCmd.PersistentFlags().StringVarP(&libc, "libc", "l", "", "Set libc location (useful for FORTIFY check on offline embedded file-system)")
 	rootCmd.PersistentFlags().BoolVarP(&noBanner, "no-banner", "", false, "disable the banner")
 	rootCmd.PersistentFlags().BoolVarP(&noHeader, "no-headers", "", false, "disable the headers")
@@ -44,6 +45,7 @@ func Execute() {
 	rootCmd.PersistentFlags().StringVar(&failIf, "fail-if", "", "Exit non-zero if any listed check (comma-separated keys, e.g. relro,canary,pie) is not StatusGood")
 	rootCmd.PersistentFlags().BoolVar(&exploitEnabled, "exploit", false, "Add static exploitability reasoning")
 	rootCmd.PersistentFlags().BoolVar(&chainEnabled, "chain", false, "Add a hypothesis exploit chain (implies --exploit)")
+	rootCmd.PersistentFlags().BoolVar(&llmNoPreamble, "llm-no-preamble", false, "Omit the grounding preamble from -o llm output")
 
 	cobra.OnInitialize(func() {
 		output.NoWarnings = noWarnings
