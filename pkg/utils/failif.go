@@ -122,7 +122,7 @@ func exploitPredicateDescription(key string) string {
 		return "a VIABLE exploitation verdict was found"
 	}
 	ruleID := strings.TrimPrefix(key, exploitTechniquePrefix)
-	return fmt.Sprintf("technique %q is exploitable (>= REQUIRES-LEAK)", ruleID)
+	return fmt.Sprintf("technique %q is unobstructed (tier >= REQUIRES-LEAK)", ruleID)
 }
 
 func fieldKeys() []string {
