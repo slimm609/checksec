@@ -23,7 +23,7 @@ These persistent flags apply to every command:
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `-o, --output <format>` | `table` | Output format: `table`, `json`, `yaml`, `xml`, `csv`. |
+| `-o, --output <format>` | `table` | Output format: `table`, `json`, `yaml`, `xml`, `csv`, `llm`. |
 | `-l, --libc <path>` | _(auto)_ | Path to libc, used by the FORTIFY check for offline / embedded filesystems. See [Advanced](advanced.md). |
 | `--color <mode>` | `auto` | Color output: `auto`, `always`, `never`. |
 | `--no-banner` | off | Suppress the ASCII banner. |
@@ -104,6 +104,11 @@ The same scan rendered in each format (columns trimmed for space):
           value: Unknown
           status: yellow
     ```
+
+=== "llm"
+
+    Self-grounding Markdown report for pasting into LLM assistants (Claude, ChatGPT, …).
+    See [LLM output](llm.md) for full documentation.
 
 !!! tip "Machine-readable output carries the color too"
 
