@@ -40,7 +40,7 @@ var procCmd = &cobra.Command{
 		report := utils.RunProcChecks(pid, file, libc)
 		reports := []utils.FileReport{report}
 		utils.FilePrinter(cmd.OutOrStdout(), outputFormat, reports,
-			utils.PrintOptions{NoBanner: noBanner, NoHeader: noHeader, Fields: utils.ProcFields})
+			utils.PrintOptions{NoBanner: noBanner, NoHeader: noHeader, Fields: utils.ProcFields, LLMNoPreamble: llmNoPreamble})
 		applyFailIf(reports)
 	},
 }

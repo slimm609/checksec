@@ -16,7 +16,7 @@ func TestWriteLLMKernel(t *testing.T) {
 			Result: checksec.Result{Value: "Disabled", Status: checksec.StatusBad}},
 	}
 	var buf bytes.Buffer
-	writeLLMKernel(&buf, checks)
+	writeLLMKernel(&buf, checks, PrintOptions{})
 	out := buf.String()
 	if !strings.Contains(out, "AUTHORITATIVE") {
 		t.Errorf("kernel llm output needs the preamble:\n%s", out)

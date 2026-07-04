@@ -64,7 +64,7 @@ func TestKnowledgeBlockGroundsOnceAndOmitsFixForGreen(t *testing.T) {
 		}},
 	}
 	var buf bytes.Buffer
-	writeLLMKnowledge(&buf, reports)
+	writeLLMKnowledge(&buf, reports, FileFields)
 	out := buf.String()
 	// pie is non-good in report "a" → Fix present. nx is good everywhere → no Fix.
 	if !strings.Contains(out, "Fix: `-fPIE -pie`") {
@@ -87,7 +87,7 @@ func TestTargetBlockRows(t *testing.T) {
 		"nx":     {Value: "NX enabled", Status: checksec.StatusGood},
 	}}
 	var buf bytes.Buffer
-	writeLLMTarget(&buf, r)
+	writeLLMTarget(&buf, r, FileFields)
 	out := buf.String()
 	if !strings.Contains(out, "## Target: ./myapp") {
 		t.Errorf("missing target header:\n%s", out)
@@ -149,6 +149,22 @@ func TestWriteLLMNoPreamble(t *testing.T) {
 	writeLLM(&buf, reports, PrintOptions{LLMNoPreamble: true})
 	if strings.Contains(buf.String(), "AUTHORITATIVE") {
 		t.Error("--llm-no-preamble must strip the directive")
+	}
+}
+
+func TestWriteLLMProcFieldsIncludesSeccomp(t *testing.T) {
+	r := FileReport{Name: "./myproc", Checks: map[string]checksec.Result{
+		"seccomp": {Value: "Seccomp-BPF", Status: checksec.StatusGood},
+		"pie":     {Value: "No PIE", Status: checksec.StatusBad},
+	}}
+	var buf bytes.Buffer
+	writeLLM(&buf, []FileReport{r}, PrintOptions{Fields: ProcFields})
+	out := buf.String()
+	if !strings.Contains(out, "seccomp") {
+		t.Errorf("knowledge block must mention seccomp when Fields includes it:\n%s", out)
+	}
+	if !strings.Contains(out, "- [ok] seccomp = Seccomp-BPF") {
+		t.Errorf("target block must render seccomp row:\n%s", out)
 	}
 }
 

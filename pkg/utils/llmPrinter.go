@@ -39,13 +39,13 @@ func writeLLMPreamble(w io.Writer, hasExploit bool) {
 	fmt.Fprintln(w)
 }
 
-// presentCheckIDs returns the check ids present across all reports in canonical
-// FileFields order, plus a set of ids that are non-good in at least one report.
-func presentCheckIDs(reports []FileReport) ([]string, map[string]bool) {
+// presentCheckIDs returns the check ids present across all reports in the
+// given field order, plus a set of ids that are non-good in at least one report.
+func presentCheckIDs(reports []FileReport, fields []Field) ([]string, map[string]bool) {
 	seen := map[string]bool{}
 	nonGood := map[string]bool{}
 	var ids []string
-	for _, f := range FileFields {
+	for _, f := range fields {
 		for _, r := range reports {
 			res, ok := r.Checks[f.Key]
 			if !ok {
@@ -64,10 +64,10 @@ func presentCheckIDs(reports []FileReport) ([]string, map[string]bool) {
 }
 
 // writeLLMTarget emits one target block: header + one terse row per present
-// check, in canonical FileFields order.
-func writeLLMTarget(w io.Writer, r FileReport) {
+// check, in the given field order.
+func writeLLMTarget(w io.Writer, r FileReport, fields []Field) {
 	fmt.Fprintf(w, "## Target: %s\n", r.Name)
-	for _, f := range FileFields {
+	for _, f := range fields {
 		res, ok := r.Checks[f.Key]
 		if !ok {
 			continue
@@ -79,8 +79,8 @@ func writeLLMTarget(w io.Writer, r FileReport) {
 
 // writeLLMKnowledge emits the one-per-run "what each check means" block. The
 // Fix clause is included only for checks non-good in at least one target.
-func writeLLMKnowledge(w io.Writer, reports []FileReport) {
-	ids, nonGood := presentCheckIDs(reports)
+func writeLLMKnowledge(w io.Writer, reports []FileReport, fields []Field) {
+	ids, nonGood := presentCheckIDs(reports, fields)
 	fmt.Fprintln(w, "## Checks present here (meaning + fix)")
 	for _, c := range knowledge.Present(ids) {
 		line := fmt.Sprintf("- %-14s %s", c.ID, c.Meaning)
@@ -113,8 +113,10 @@ func writeLLMExploit(w io.Writer, r *exploit.Report) {
 
 // writeLLMKernel renders kernel checks in llm format. Meaning comes from each
 // check's own Desc; findings are grouped by Type.
-func writeLLMKernel(w io.Writer, checks []checksec.KernelCheck) {
-	writeLLMPreamble(w, false)
+func writeLLMKernel(w io.Writer, checks []checksec.KernelCheck, opts PrintOptions) {
+	if !opts.LLMNoPreamble {
+		writeLLMPreamble(w, false)
+	}
 	lastType := ""
 	for _, c := range checks {
 		if c.Type != lastType {
@@ -138,12 +140,14 @@ func writeLLM(w io.Writer, reports []FileReport, opts PrintOptions) {
 		}
 	}
 
+	fields := opts.fields()
+
 	if !opts.LLMNoPreamble {
 		writeLLMPreamble(w, hasExploit)
 	}
-	writeLLMKnowledge(w, reports)
+	writeLLMKnowledge(w, reports, fields)
 	for _, r := range reports {
-		writeLLMTarget(w, r)
+		writeLLMTarget(w, r, fields)
 		if r.Exploitability != nil {
 			writeLLMExploit(w, r.Exploitability)
 		}
