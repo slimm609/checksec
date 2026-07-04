@@ -102,6 +102,9 @@ func writeTable(w io.Writer, reports []FileReport, fields []Field, opts PrintOpt
 			fmt.Fprint(w, output.ColorPrinter(pad(res.Value, widths[i]), string(res.Status)))
 		}
 		fmt.Fprintln(w, output.ColorPrinter(r.Name, "unset"))
+		if r.Exploitability != nil {
+			RenderExploitTable(w, r.Exploitability)
+		}
 	}
 }
 
