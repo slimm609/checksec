@@ -79,6 +79,29 @@ func TestKnowledgeBlockGroundsOnceAndOmitsFixForGreen(t *testing.T) {
 	}
 }
 
+func TestTargetBlockRows(t *testing.T) {
+	r := FileReport{Name: "./myapp", Checks: map[string]checksec.Result{
+		"relro":  {Value: "Partial RELRO", Status: checksec.StatusWarn},
+		"canary": {Value: "No canary", Status: checksec.StatusBad},
+		"nx":     {Value: "NX enabled", Status: checksec.StatusGood},
+	}}
+	var buf bytes.Buffer
+	writeLLMTarget(&buf, r)
+	out := buf.String()
+	if !strings.Contains(out, "## Target: ./myapp") {
+		t.Errorf("missing target header:\n%s", out)
+	}
+	if !strings.Contains(out, "- [~] relro = Partial RELRO") {
+		t.Errorf("missing warn row:\n%s", out)
+	}
+	if !strings.Contains(out, "- [!] canary = No canary") {
+		t.Errorf("missing bad row:\n%s", out)
+	}
+	if !strings.Contains(out, "- [ok] nx = NX enabled") {
+		t.Errorf("missing good row:\n%s", out)
+	}
+}
+
 func lineContaining(s, sub string) string {
 	for _, l := range strings.Split(s, "\n") {
 		if strings.Contains(l, sub) {

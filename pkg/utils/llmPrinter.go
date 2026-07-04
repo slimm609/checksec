@@ -62,6 +62,20 @@ func presentCheckIDs(reports []FileReport) ([]string, map[string]bool) {
 	return ids, nonGood
 }
 
+// writeLLMTarget emits one target block: header + one terse row per present
+// check, in canonical FileFields order.
+func writeLLMTarget(w io.Writer, r FileReport) {
+	fmt.Fprintf(w, "## Target: %s\n", r.Name)
+	for _, f := range FileFields {
+		res, ok := r.Checks[f.Key]
+		if !ok {
+			continue
+		}
+		fmt.Fprintf(w, "- [%s] %s = %s\n", sevGlyph(res.Status), f.Key, res.Value)
+	}
+	fmt.Fprintln(w)
+}
+
 // writeLLMKnowledge emits the one-per-run "what each check means" block. The
 // Fix clause is included only for checks non-good in at least one target.
 func writeLLMKnowledge(w io.Writer, reports []FileReport) {
