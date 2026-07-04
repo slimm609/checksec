@@ -56,6 +56,8 @@ func KernelPrinter(w io.Writer, format string, checks []checksec.KernelCheck, op
 			_ = cw.Write(row)
 		}
 		cw.Flush()
+	case "llm":
+		writeLLMKernel(w, checks)
 	default:
 		writeKernelTable(w, checks, opts)
 	}

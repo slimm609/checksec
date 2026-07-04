@@ -111,6 +111,21 @@ func writeLLMExploit(w io.Writer, r *exploit.Report) {
 	fmt.Fprintln(w)
 }
 
+// writeLLMKernel renders kernel checks in llm format. Meaning comes from each
+// check's own Desc; findings are grouped by Type.
+func writeLLMKernel(w io.Writer, checks []checksec.KernelCheck) {
+	writeLLMPreamble(w, false)
+	lastType := ""
+	for _, c := range checks {
+		if c.Type != lastType {
+			fmt.Fprintf(w, "## %s\n", c.Type)
+			lastType = c.Type
+		}
+		fmt.Fprintf(w, "- [%s] %s = %s   # %s\n", sevGlyph(c.Result.Status), c.Name, c.Result.Value, c.Desc)
+	}
+	fmt.Fprintln(w)
+}
+
 // writeLLM assembles the full "llm" output format: an optional grounding
 // preamble, the shared knowledge block, and one target section (plus an
 // exploitability sub-block, when present) per report.
