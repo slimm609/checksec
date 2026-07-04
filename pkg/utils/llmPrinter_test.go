@@ -50,3 +50,40 @@ func TestPreambleExploitLine(t *testing.T) {
 		t.Error("epistemics line must appear when exploit data present")
 	}
 }
+
+func TestKnowledgeBlockGroundsOnceAndOmitsFixForGreen(t *testing.T) {
+	reports := []FileReport{
+		{Name: "a", Checks: map[string]checksec.Result{
+			"nx":  {Value: "NX enabled", Status: checksec.StatusGood},
+			"pie": {Value: "No PIE", Status: checksec.StatusBad},
+		}},
+		{Name: "b", Checks: map[string]checksec.Result{
+			"nx":  {Value: "NX enabled", Status: checksec.StatusGood},
+			"pie": {Value: "PIE Enabled", Status: checksec.StatusGood},
+		}},
+	}
+	var buf bytes.Buffer
+	writeLLMKnowledge(&buf, reports)
+	out := buf.String()
+	// pie is non-good in report "a" → Fix present. nx is good everywhere → no Fix.
+	if !strings.Contains(out, "Fix: `-fPIE -pie`") {
+		t.Errorf("pie fix must appear:\n%s", out)
+	}
+	nxLine := lineContaining(out, "- nx ")
+	if strings.Contains(nxLine, "Fix:") {
+		t.Errorf("green-everywhere nx must omit Fix, got: %q", nxLine)
+	}
+	// grounded once: only a single "## Checks present" header
+	if strings.Count(out, "## Checks present") != 1 {
+		t.Errorf("knowledge block must appear exactly once:\n%s", out)
+	}
+}
+
+func lineContaining(s, sub string) string {
+	for _, l := range strings.Split(s, "\n") {
+		if strings.Contains(l, sub) {
+			return l
+		}
+	}
+	return ""
+}
