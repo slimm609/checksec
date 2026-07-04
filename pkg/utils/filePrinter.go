@@ -20,6 +20,9 @@ type PrintOptions struct {
 	// the default FileFields registry is used. proc/procAll set this to
 	// ProcFields to add the per-process Seccomp column.
 	Fields []Field
+	// Chain enables rendering a hypothesis exploit chain (via RenderChain)
+	// for reports that carry exploitability data.
+	Chain bool
 }
 
 func (o PrintOptions) fields() []Field {
@@ -104,6 +107,9 @@ func writeTable(w io.Writer, reports []FileReport, fields []Field, opts PrintOpt
 		fmt.Fprintln(w, output.ColorPrinter(r.Name, "unset"))
 		if r.Exploitability != nil {
 			RenderExploitTable(w, r.Exploitability)
+		}
+		if r.Exploitability != nil && opts.Chain {
+			RenderChain(w, r.Exploitability)
 		}
 	}
 }
