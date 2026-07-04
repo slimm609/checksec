@@ -29,7 +29,10 @@ These persistent flags apply to every command:
 | `--no-banner` | off | Suppress the ASCII banner. |
 | `--no-headers` | off | Suppress the column header row. |
 | `--no-warnings` | off | Suppress non-fatal warnings (e.g. unreadable files during a scan). |
-| `--fail-if <keys>` | _(none)_ | Exit non-zero if any listed check is not green. See [CI gating](#ci-gating). |
+| `--fail-if <keys>` | _(none)_ | Exit non-zero if any listed check (or [exploitability predicate](#ci-gating)) fails. See [CI gating](#ci-gating). |
+| `--exploit` | off | Append static [exploitability reasoning](checks/exploitability.md) — which attack techniques the mitigation posture fails to obstruct. |
+| `--chain` | off | Add a hypothesis exploit chain to the exploitability output (implies `--exploit`). |
+| `--llm-no-preamble` | off | Omit the grounding directive from [`-o llm`](llm.md) output (for when you supply your own prompt). |
 
 ## Output formats
 
@@ -116,6 +119,45 @@ The same scan rendered in each format (columns trimmed for space):
     a `value` (the text) and a `status` (`green`, `yellow`, `red`, `unset`,
     `italic`). See [Understanding output](output.md) for what each status means.
 
+## Exploitability reasoning
+
+`--exploit` adds a **so-what layer** on top of the raw checks: instead of only
+reporting the mitigation posture, it reasons about which memory-corruption
+techniques that posture fails to obstruct, and cites the evidence (imports,
+relocations, segment permissions) behind each verdict. The framing is
+**mitigation-obstruction, never "exploitable"** — see the full
+[Exploitability reference](checks/exploitability.md) for the tier model and the
+honesty guarantees.
+
+```bash
+# Append the exploitability section to any output format
+checksec file ./myapp --exploit
+
+# Add a labelled hypothesis exploit chain (implies --exploit)
+checksec file ./myapp --exploit --chain
+
+# Machine-readable — verdicts embed under each report's `exploitability` key
+checksec file ./myapp --exploit -o json
+```
+
+Each verdict carries a **tier** (`VIABLE`, `LIKELY`, `REQUIRES-LEAK`,
+`REQUIRES-INPUT-CONTROL`, `ENABLER`, `BLOCKED`), the technique's rule id, and its
+supporting citations. `--exploit` composes with every output format, including
+[`-o llm`](llm.md), and with [`--fail-if`](#ci-gating) for CI gating.
+
+## LLM-ready output
+
+`-o llm` renders a **self-grounding** Markdown report meant to be pasted into an
+LLM assistant. It ships each finding's meaning and fix plus a grounding directive
+so the model reasons from the tool rather than its training data, and it inlines
+`--exploit` verdicts when present. See [LLM output](llm.md) for the full format.
+
+```bash
+checksec file ./myapp -o llm --exploit          # grounded report + attack techniques
+checksec dir ./bins   -o llm                     # knowledge block emitted once for the whole scan
+checksec file ./myapp -o llm --llm-no-preamble   # drop the directive (bring your own prompt)
+```
+
 ## CI gating
 
 `--fail-if` turns checksec into a build/CI gate. Pass a comma-separated list of
@@ -130,3 +172,25 @@ checksec file ./myapp --fail-if=relro,canary,pie
 The keys are the JSON/YAML keys from the report (`relro`, `canary`, `cfi`, `nx`,
 `pie`, `rpath`, `runpath`, `fortify_source`, …). See each
 [check reference](checks/binary.md) page for the key of a given check.
+
+### Gating on exploitability
+
+When `--exploit` is active, `--fail-if` additionally accepts two exploitability
+predicates:
+
+| Predicate | Exits non-zero when |
+|-----------|---------------------|
+| `exploit.viable` | any technique is reported at the `VIABLE` tier |
+| `exploit.technique=<id>` | technique `<id>` is at tier `REQUIRES-LEAK` or higher |
+
+```bash
+# Fail the build if any attack technique is unobstructed by the binary's mitigations
+checksec file ./myapp --exploit --fail-if=exploit.viable
+
+# Fail specifically if a GOT-overwrite path is open
+checksec file ./myapp --exploit --fail-if=exploit.technique=got-overwrite
+```
+
+Valid technique ids are `stack-bof-overwrite`, `ret2plt`, `ret2libc`,
+`got-overwrite`, `shellcode-injection`, `format-string`, and `ret2dlresolve`
+(see the [Exploitability reference](checks/exploitability.md)).
