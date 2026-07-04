@@ -62,6 +62,7 @@ nav:
   - Understanding output: output.md
   - Checks:
       - Binary hardening: checks/binary.md
+      - Exploitability: checks/exploitability.md
       - FORTIFY: checks/fortify.md
       - Process: checks/process.md
       - Kernel: checks/kernel.md
