@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/slimm609/checksec/v3/pkg/checksec"
+	"github.com/slimm609/checksec/v3/pkg/exploit"
 )
 
 func TestSevGlyph(t *testing.T) {
@@ -99,6 +100,30 @@ func TestTargetBlockRows(t *testing.T) {
 	}
 	if !strings.Contains(out, "- [ok] nx = NX enabled") {
 		t.Errorf("missing good row:\n%s", out)
+	}
+}
+
+func TestLLMExploitSubBlock(t *testing.T) {
+	rep := &exploit.Report{
+		Bar: "Attacker needs a reachable bug; no leak required.",
+		Verdicts: []exploit.Verdict{
+			{RuleID: "stack-bof-overwrite", Technique: "Stack overflow", Tier: exploit.TierViable,
+				Citations: []exploit.Citation{{Kind: "import", Value: "gets"}}},
+			{RuleID: "shellcode-injection", Technique: "Shellcode injection", Tier: exploit.TierBlocked,
+				ObstructedBy: []string{"NX"}, Citations: []exploit.Citation{{Kind: "posture", Value: "NX enabled"}}},
+		},
+	}
+	var buf bytes.Buffer
+	writeLLMExploit(&buf, rep)
+	out := buf.String()
+	if !strings.Contains(out, "### Exploitability") {
+		t.Errorf("missing sub-block header:\n%s", out)
+	}
+	if !strings.Contains(out, "VIABLE") || !strings.Contains(out, "stack-bof-overwrite") {
+		t.Errorf("missing viable line:\n%s", out)
+	}
+	if !strings.Contains(out, "Bar:") {
+		t.Errorf("missing bar:\n%s", out)
 	}
 }
 

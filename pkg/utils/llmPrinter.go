@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"github.com/slimm609/checksec/v3/pkg/checksec"
+	"github.com/slimm609/checksec/v3/pkg/exploit"
 	"github.com/slimm609/checksec/v3/pkg/knowledge"
 )
 
@@ -87,6 +88,25 @@ func writeLLMKnowledge(w io.Writer, reports []FileReport) {
 			line += " Fix: " + c.Remediation + "."
 		}
 		fmt.Fprintln(w, line)
+	}
+	fmt.Fprintln(w)
+}
+
+// writeLLMExploit renders the exploitability verdicts inline in llm format.
+func writeLLMExploit(w io.Writer, r *exploit.Report) {
+	if r == nil {
+		return
+	}
+	fmt.Fprintln(w, "### Exploitability  (static; mitigation-obstruction, not proof)")
+	for _, v := range r.Verdicts {
+		cite := ""
+		if len(v.Citations) > 0 {
+			cite = v.Citations[0].Value
+		}
+		fmt.Fprintf(w, "- %-10s %-22s %s\n", v.Tier.String(), v.RuleID, cite)
+	}
+	if r.Bar != "" {
+		fmt.Fprintf(w, "- Bar: %s\n", r.Bar)
 	}
 	fmt.Fprintln(w)
 }
