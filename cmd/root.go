@@ -10,13 +10,15 @@ import (
 )
 
 var (
-	libc         string
-	outputFormat string
-	noBanner     bool
-	noHeader     bool
-	noWarnings   bool
-	colorMode    string
-	failIf       string
+	libc           string
+	outputFormat   string
+	noBanner       bool
+	noHeader       bool
+	noWarnings     bool
+	colorMode      string
+	failIf         string
+	exploitEnabled bool
+	chainEnabled   bool
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -40,6 +42,8 @@ func Execute() {
 	rootCmd.PersistentFlags().BoolVarP(&noWarnings, "no-warnings", "", false, "disable warnings")
 	rootCmd.PersistentFlags().StringVar(&colorMode, "color", "auto", "Color output mode (auto, always, never)")
 	rootCmd.PersistentFlags().StringVar(&failIf, "fail-if", "", "Exit non-zero if any listed check (comma-separated keys, e.g. relro,canary,pie) is not StatusGood")
+	rootCmd.PersistentFlags().BoolVar(&exploitEnabled, "exploit", false, "Add static exploitability reasoning")
+	rootCmd.PersistentFlags().BoolVar(&chainEnabled, "chain", false, "Add a hypothesis exploit chain (implies --exploit)")
 
 	cobra.OnInitialize(func() {
 		output.NoWarnings = noWarnings

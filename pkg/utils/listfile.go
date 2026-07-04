@@ -27,10 +27,10 @@ func ReadPathList(r io.Reader) ([]string, error) {
 // RunListChecks runs RunFileChecks over every path and returns the reports in
 // input order. Unreadable / non-ELF paths still yield a fully-populated
 // FileReport (every field = Err), so output stays aligned.
-func RunListChecks(paths []string, libc string) []FileReport {
+func RunListChecks(paths []string, libc string, opts ...Option) []FileReport {
 	reports := make([]FileReport, 0, len(paths))
 	for _, p := range paths {
-		reports = append(reports, RunFileChecks(p, libc))
+		reports = append(reports, RunFileChecks(p, libc, opts...))
 	}
 	return reports
 }
@@ -39,7 +39,7 @@ func RunListChecks(paths []string, libc string) []FileReport {
 // worker pool and returns the reports in input order. RunFileChecks is pure
 // (opens its own scanContext, no shared state), so this is data-race-free.
 // workers <= 0 defaults to GOMAXPROCS.
-func RunListChecksParallel(paths []string, libc string, workers int) []FileReport {
+func RunListChecksParallel(paths []string, libc string, workers int, opts ...Option) []FileReport {
 	if len(paths) == 0 {
 		// Non-nil so JSON/YAML marshal as "[]", matching RunListChecks.
 		return []FileReport{}
@@ -59,7 +59,7 @@ func RunListChecksParallel(paths []string, libc string, workers int) []FileRepor
 		go func() {
 			defer wg.Done()
 			for i := range jobs {
-				reports[i] = RunFileChecks(paths[i], libc)
+				reports[i] = RunFileChecks(paths[i], libc, opts...)
 			}
 		}()
 	}

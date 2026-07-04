@@ -19,7 +19,11 @@ var dirCmd = &cobra.Command{
 		recursive, _ := cmd.Flags().GetBool("recursive")
 		utils.CheckDirExists(dir)
 		paths := utils.GetAllFilesFromDir(dir, recursive)
-		reports := utils.RunListChecksParallel(paths, libc, 0)
+		var opts []utils.Option
+		if exploitEnabled || chainEnabled {
+			opts = append(opts, utils.WithExploit(chainEnabled))
+		}
+		reports := utils.RunListChecksParallel(paths, libc, 0, opts...)
 		utils.FilePrinter(cmd.OutOrStdout(), outputFormat, reports, utils.PrintOptions{NoBanner: noBanner, NoHeader: noHeader})
 		applyFailIf(reports)
 	},
