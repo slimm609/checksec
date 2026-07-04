@@ -79,7 +79,15 @@ func EvaluateFailIf(reports []FileReport, required []string) ([]FailIfFailure, e
 // isExploitPredicateKey reports whether key is one of the special exploit.*
 // --fail-if predicates rather than a plain checksec.Result key.
 func isExploitPredicateKey(key string) bool {
-	return key == exploitViableKey || strings.HasPrefix(key, exploitTechniquePrefix)
+	if key == exploitViableKey {
+		return true
+	}
+	// A technique predicate is valid only when it names a real rule id; an empty
+	// or typo'd id is rejected so it can't silently pass as a no-op CI gate.
+	if id, ok := strings.CutPrefix(key, exploitTechniquePrefix); ok {
+		return exploit.IsKnownRuleID(id)
+	}
+	return false
 }
 
 // matchExploitPredicate evaluates an exploit.* --fail-if predicate against a

@@ -36,7 +36,7 @@ var listfileCmd = &cobra.Command{
 		}
 		var opts []utils.Option
 		if exploitEnabled || chainEnabled {
-			opts = append(opts, utils.WithExploit(chainEnabled))
+			opts = append(opts, utils.WithExploit())
 		}
 		reports := utils.RunListChecksParallel(paths, libc, 0, opts...)
 		utils.FilePrinter(cmd.OutOrStdout(), outputFormat, reports, utils.PrintOptions{NoBanner: noBanner, NoHeader: noHeader, Chain: chainEnabled, LLMNoPreamble: llmNoPreamble})

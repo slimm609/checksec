@@ -21,16 +21,16 @@ type FileReport struct {
 // of the base checks.
 type scanOptions struct {
 	exploit bool
-	chain   bool
 }
 
 // Option configures an optional analysis pass on top of the base checks.
 type Option func(*scanOptions)
 
-// WithExploit enables the exploitability reasoning pass (chain=true also
-// prepares chain synthesis for renderers).
-func WithExploit(chain bool) Option {
-	return func(o *scanOptions) { o.exploit = true; o.chain = chain }
+// WithExploit enables the exploitability reasoning pass. Chain synthesis is a
+// render-time concern driven by PrintOptions.Chain, so it is intentionally not
+// an argument here.
+func WithExploit() Option {
+	return func(o *scanOptions) { o.exploit = true }
 }
 
 // scanContext holds per-binary state shared across check thunks. The target is
