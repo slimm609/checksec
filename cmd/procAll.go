@@ -73,6 +73,15 @@ func init() {
 }
 
 func isKthread(pid int32) bool {
+	// Check if /proc/[pid]/exe exists and is accessible
+	// Kernel threads do not have an executable file
+	exePath := filepath.Join("/proc", fmt.Sprint(pid), "exe")
+	if _, err := os.Stat(exePath); err == nil {
+		// exe exists, not a kernel thread
+		return false
+	}
+
+	// Fallback to checking /proc/[pid]/status for Kthread field
 	statusPath := filepath.Join("/proc", fmt.Sprint(pid), "status")
 	data, err := os.ReadFile(statusPath)
 	if err != nil {
