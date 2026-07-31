@@ -123,18 +123,18 @@ func parseKernelConfig(filename string) (map[string]string, error) {
 	if strings.HasSuffix(filename, ".gz") {
 		file, err := os.Open(filename)
 		if err != nil {
-			log.Fatal(err)
+			return nil, fmt.Errorf("failed to open gzip file: %w", err)
 		}
 		defer file.Close()
 		reader, err := gzip.NewReader(file)
 		if err != nil {
-			log.Fatal(err)
+			return nil, fmt.Errorf("failed to create gzip reader: %w", err)
 		}
 		defer reader.Close()
 
 		bytes, err = io.ReadAll(reader)
 		if err != nil {
-			log.Fatal(err)
+			return nil, fmt.Errorf("failed to read gzip content: %w", err)
 		}
 	} else {
 		bytes, err = os.ReadFile(filename)
