@@ -174,20 +174,20 @@ func propAlign(c elf.Class) int {
 // 4-byte (datasz==4) property whose pr_type matches want. The payload is
 // padded to align bytes per entry. Bounds-safe on truncated/malformed input.
 func walkGNUProperties(data []byte, bo binary.ByteOrder, align int, want uint32, fn func(mask uint32)) {
-	alignUp := func(n uint32) int { return int((uint64(n) + uint64(align-1)) &^ uint64(align-1)) }
+	alignUp := func(n uint32) uint64 { return (uint64(n) + uint64(align-1)) &^ uint64(align-1) }
 	i := 0
 	for i+8 <= len(data) {
 		ptype := bo.Uint32(data[i : i+4])
 		datasz := bo.Uint32(data[i+4 : i+8])
 		i += 8
 		payloadLen := alignUp(datasz)
-		if i+int(datasz) > len(data) {
+		if payloadLen > uint64(len(data)-i) {
 			break
 		}
 		if datasz == 4 && ptype == want {
 			fn(bo.Uint32(data[i : i+4]))
 		}
-		i += payloadLen
+		i += int(payloadLen)
 	}
 }
 
