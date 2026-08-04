@@ -17,7 +17,7 @@ func buildLinuxELF(t *testing.T) string {
 		t.Fatalf("write source: %v", err)
 	}
 	cmd := exec.Command("go", "build", "-o", bin, src)
-	cmd.Env = append(os.Environ(), "GOOS=linux", "GOARCH=amd64", "CGO_ENABLED=0")
+	cmd.Env = append(os.Environ(), "GOOS=linux", "GOARCH=amd64", "CGO_ENABLED=0", "GOFLAGS=")
 	if out, err := cmd.CombinedOutput(); err != nil {
 		t.Skipf("cannot build linux test ELF: %v (%s)", err, out)
 	}

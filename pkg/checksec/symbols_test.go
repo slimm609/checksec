@@ -27,7 +27,7 @@ func TestSYMBOLS_Stripped(t *testing.T) {
 		t.Fatalf("write source: %v", err)
 	}
 	cmd := exec.Command("go", "build", "-ldflags=-s -w", "-o", bin, src)
-	cmd.Env = append(os.Environ(), "GOOS=linux", "GOARCH=amd64", "CGO_ENABLED=0")
+	cmd.Env = append(os.Environ(), "GOOS=linux", "GOARCH=amd64", "CGO_ENABLED=0", "GOFLAGS=")
 	if out, err := cmd.CombinedOutput(); err != nil {
 		t.Skipf("cannot build stripped linux test ELF: %v (%s)", err, out)
 	}
