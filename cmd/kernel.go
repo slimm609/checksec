@@ -41,7 +41,7 @@ var kernelCmd = &cobra.Command{
 		utils.CheckFileExists(configFile)
 
 		checks := utils.ParseKernel(configFile)
-		utils.KernelPrinter(cmd.OutOrStdout(), outputFormat, checks, utils.PrintOptions{NoBanner: noBanner, NoHeader: noHeader})
+		utils.KernelPrinter(cmd.OutOrStdout(), outputFormat, checks, utils.PrintOptions{NoBanner: noBanner, NoHeader: noHeader, LLMNoPreamble: llmNoPreamble})
 	},
 }
 

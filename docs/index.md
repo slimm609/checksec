@@ -8,6 +8,12 @@ It was originally written as a bash script by Tobias Klein in 2011
 ([original site](http://www.trapkit.de/tools/checksec.html)). This project is a
 modern rewrite in Go, distributed as a single static binary.
 
+Beyond reporting the raw mitigation posture, checksec can reason about **which
+attack techniques that posture fails to obstruct**
+([exploitability reasoning](checks/exploitability.md), `--exploit`) and emit a
+**self-grounding report you can paste straight into an LLM**
+([`-o llm`](llm.md)).
+
 ## Install
 
 === "Binary release"
@@ -51,6 +57,12 @@ checksec proc 1
 
 # Inspect the running kernel's hardening configuration
 checksec kernel
+
+# Reason about which attack techniques the posture leaves unobstructed
+checksec file /bin/ls --exploit
+
+# Emit a self-grounding report to paste into an LLM assistant
+checksec file /bin/ls -o llm
 ```
 
 Example output:
@@ -78,6 +90,16 @@ Full RELRO      Canary Found   NX enabled   PIE Enabled  No RPATH   No RUNPATH /
 
     Every check explained: what it protects against, how it's detected, every
     possible value, and how to enable it.
+
+-   :material-target: **[Exploitability](checks/exploitability.md)**
+
+    `--exploit` reasons about which attack techniques the mitigation posture
+    fails to obstruct — evidence-cited, honest tiers, never claims "exploitable."
+
+-   :material-robot: **[LLM output](llm.md)**
+
+    `-o llm` emits a self-grounding Markdown report designed to be pasted into an
+    LLM assistant so it reasons from the tool, not from memory.
 
 </div>
 

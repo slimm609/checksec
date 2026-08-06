@@ -6,13 +6,31 @@ import (
 	"os"
 
 	"github.com/slimm609/checksec/v3/pkg/checksec"
+	"github.com/slimm609/checksec/v3/pkg/exploit"
 )
 
 // FileReport is the complete check output for one binary. It is the wire
 // format for JSON/YAML directly and the source for table/XML rendering.
 type FileReport struct {
-	Name   string                     `json:"name"   yaml:"name"`
-	Checks map[string]checksec.Result `json:"checks" yaml:"checks"`
+	Name           string                     `json:"name"   yaml:"name"`
+	Checks         map[string]checksec.Result `json:"checks" yaml:"checks"`
+	Exploitability *exploit.Report            `json:"exploitability,omitempty" yaml:"exploitability,omitempty"`
+}
+
+// scanOptions holds the optional analysis passes RunFileChecks may run on top
+// of the base checks.
+type scanOptions struct {
+	exploit bool
+}
+
+// Option configures an optional analysis pass on top of the base checks.
+type Option func(*scanOptions)
+
+// WithExploit enables the exploitability reasoning pass. Chain synthesis is a
+// render-time concern driven by PrintOptions.Chain, so it is intentionally not
+// an argument here.
+func WithExploit() Option {
+	return func(o *scanOptions) { o.exploit = true }
 }
 
 // scanContext holds per-binary state shared across check thunks. The target is
@@ -163,7 +181,12 @@ func RunProcChecks(pid int, exePath, libc string) FileReport {
 // RunFileChecks runs every registered check against filename and returns a
 // fully-populated FileReport. Every key in FileFields is guaranteed present
 // in the result, even on error paths.
-func RunFileChecks(filename, libc string) FileReport {
+func RunFileChecks(filename, libc string, opts ...Option) FileReport {
+	var o scanOptions
+	for _, fn := range opts {
+		fn(&o)
+	}
+
 	ctx := newScanContext(filename, libc)
 	defer ctx.Close()
 
@@ -173,6 +196,10 @@ func RunFileChecks(filename, libc string) FileReport {
 	}
 	for _, f := range FileFields {
 		report.Checks[f.Key] = f.Run(ctx)
+	}
+	if o.exploit && ctx.elf != nil {
+		r := exploit.Assess(ctx.elf, report.Checks)
+		report.Exploitability = &r
 	}
 	return report
 }

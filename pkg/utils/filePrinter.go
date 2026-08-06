@@ -20,6 +20,12 @@ type PrintOptions struct {
 	// the default FileFields registry is used. proc/procAll set this to
 	// ProcFields to add the per-process Seccomp column.
 	Fields []Field
+	// Chain enables rendering a hypothesis exploit chain (via RenderChain)
+	// for reports that carry exploitability data.
+	Chain bool
+	// LLMNoPreamble suppresses the grounding preamble emitted by writeLLM
+	// for the "llm" output format.
+	LLMNoPreamble bool
 }
 
 func (o PrintOptions) fields() []Field {
@@ -51,6 +57,8 @@ func FilePrinter(w io.Writer, format string, reports []FileReport, opts PrintOpt
 		writeXML(w, reports, opts.fields())
 	case "csv":
 		writeCSV(w, reports, opts.fields(), opts)
+	case "llm":
+		writeLLM(w, reports, opts)
 	default:
 		writeTable(w, reports, opts.fields(), opts)
 	}
@@ -102,6 +110,12 @@ func writeTable(w io.Writer, reports []FileReport, fields []Field, opts PrintOpt
 			fmt.Fprint(w, output.ColorPrinter(pad(res.Value, widths[i]), string(res.Status)))
 		}
 		fmt.Fprintln(w, output.ColorPrinter(r.Name, "unset"))
+		if r.Exploitability != nil {
+			RenderExploitTable(w, r.Exploitability)
+		}
+		if r.Exploitability != nil && opts.Chain {
+			RenderChain(w, r.Exploitability)
+		}
 	}
 }
 

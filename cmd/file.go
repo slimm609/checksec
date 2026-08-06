@@ -18,8 +18,12 @@ var fileCmd = &cobra.Command{
 		file := args[0]
 
 		utils.CheckElfExists(file)
-		reports := []utils.FileReport{utils.RunFileChecks(file, libc)}
-		utils.FilePrinter(cmd.OutOrStdout(), outputFormat, reports, utils.PrintOptions{NoBanner: noBanner, NoHeader: noHeader})
+		var opts []utils.Option
+		if exploitEnabled || chainEnabled {
+			opts = append(opts, utils.WithExploit())
+		}
+		reports := []utils.FileReport{utils.RunFileChecks(file, libc, opts...)}
+		utils.FilePrinter(cmd.OutOrStdout(), outputFormat, reports, utils.PrintOptions{NoBanner: noBanner, NoHeader: noHeader, Chain: chainEnabled, LLMNoPreamble: llmNoPreamble})
 		applyFailIf(reports)
 	},
 }

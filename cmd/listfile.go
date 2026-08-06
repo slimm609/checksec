@@ -34,8 +34,12 @@ var listfileCmd = &cobra.Command{
 		if err != nil {
 			output.Fatalf("reading list: %v", err)
 		}
-		reports := utils.RunListChecksParallel(paths, libc, 0)
-		utils.FilePrinter(cmd.OutOrStdout(), outputFormat, reports, utils.PrintOptions{NoBanner: noBanner, NoHeader: noHeader})
+		var opts []utils.Option
+		if exploitEnabled || chainEnabled {
+			opts = append(opts, utils.WithExploit())
+		}
+		reports := utils.RunListChecksParallel(paths, libc, 0, opts...)
+		utils.FilePrinter(cmd.OutOrStdout(), outputFormat, reports, utils.PrintOptions{NoBanner: noBanner, NoHeader: noHeader, Chain: chainEnabled, LLMNoPreamble: llmNoPreamble})
 		applyFailIf(reports)
 	},
 }
