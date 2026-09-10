@@ -146,8 +146,8 @@ Examples
     Protected symlinks                                            Enabled          Sysctl                fs.protected_symlinks
     Protected hardlinks                                           Enabled          Sysctl                fs.protected_hardlinks
     Ipv4 reverse path filtering                                   Disabled         Sysctl                net.ipv4.conf.all.rp_filter
-    YAMA                                                          Unknown          Sysctl                kernel.yama.ptrace_scope
-    Exec Shield                                                   Unknown          Sysctl                kernel.exec-shield
+    YAMA                                                          N/A              Sysctl                kernel.yama.ptrace_scope
+    Exec Shield                                                   N/A              Sysctl                kernel.exec-shield
     Unprivileged BPF Disabled                                     Disabled         Sysctl                kernel.unprivileged_bpf_disabled
     Vanilla Kernel ASLR                                           Enabled          Sysctl                kernel.randomize_va_space
     Dmesg Restrictions                                            Enabled          Sysctl                kernel.dmesg_restrict

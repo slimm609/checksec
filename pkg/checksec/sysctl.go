@@ -1,7 +1,8 @@
 package checksec
 
 import (
-	"runtime"
+	"errors"
+	"io/fs"
 
 	"github.com/lorenzosaino/go-sysctl"
 )
@@ -69,24 +70,30 @@ var sysctlChecks = []sysctlCheckDef{
 
 // SysctlCheck reads each known security-relevant sysctl and returns its
 // evaluated KernelCheck.
+// resolveSysctlResult maps a raw sysctl read into a Result. A knob the kernel
+// does not expose at all (kernel.exec-shield on modern kernels, or any sysctl
+// on a system without /proc/sys) is reported as N/A rather than Unknown, so
+// "not present" is not confused with "present but unreadable or unrecognized".
+func resolveSysctlResult(raw string, err error, values sysctlValueMap) Result {
+	if errors.Is(err, fs.ErrNotExist) {
+		return Result{Value: "N/A", Status: StatusNA}
+	}
+	if err != nil || raw == "" {
+		return Result{Value: "Unknown", Status: StatusNA}
+	}
+	if r, ok := values[raw]; ok {
+		return r
+	}
+	return Result{Value: "Unknown", Status: StatusNA}
+}
+
 func SysctlCheck() []KernelCheck {
 	results := make([]KernelCheck, 0, len(sysctlChecks))
 	for _, s := range sysctlChecks {
-		raw, _ := sysctl.Get(s.name)
-		var res Result
-		if raw == "" {
-			if runtime.GOOS == "linux" {
-				res = Result{Value: "Unknown", Status: StatusNA}
-			} else {
-				res = Result{Value: "N/A", Status: StatusNA}
-			}
-		} else if r, ok := s.values[raw]; ok {
-			res = r
-		} else {
-			res = Result{Value: "Unknown", Status: StatusNA}
-		}
+		raw, err := sysctl.Get(s.name)
 		results = append(results, KernelCheck{
-			Name: s.name, Desc: s.desc, Type: "Sysctl", Result: res,
+			Name: s.name, Desc: s.desc, Type: "Sysctl",
+			Result: resolveSysctlResult(raw, err, s.values),
 		})
 	}
 	return results
