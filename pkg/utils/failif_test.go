@@ -8,16 +8,19 @@ import (
 )
 
 // TestEvaluateFailIf drives the CI-gate evaluator: given a list of required
-// check keys, return the (file, key) pairs where Status != StatusGood.
+// check keys, return the (file, key) pairs where Status is neither
+// StatusGood nor StatusGreat.
 func TestEvaluateFailIf(t *testing.T) {
 	good := checksec.Result{Value: "ok", Status: checksec.StatusGood}
+	great := checksec.Result{Value: "best", Status: checksec.StatusGreat}
 	bad := checksec.Result{Value: "no", Status: checksec.StatusBad}
 	warn := checksec.Result{Value: "?", Status: checksec.StatusWarn}
 	info := checksec.Result{Value: "-", Status: checksec.StatusInfo}
 
 	reports := []FileReport{
-		{Name: "/a", Checks: map[string]checksec.Result{"relro": good, "canary": bad, "pie": warn}},
-		{Name: "/b", Checks: map[string]checksec.Result{"relro": good, "canary": good, "pie": info}},
+		{Name: "/a", Checks: map[string]checksec.Result{"relro": good, "canary": bad, "pie": warn, "cfi": good}},
+		{Name: "/b", Checks: map[string]checksec.Result{"relro": good, "canary": good, "pie": info, "cfi": good}},
+		{Name: "/c", Checks: map[string]checksec.Result{"cfi": great}},
 	}
 
 	tests := []struct {
@@ -28,6 +31,7 @@ func TestEvaluateFailIf(t *testing.T) {
 	}{
 		{"no requirements → no failures", nil, 0, false},
 		{"all good", []string{"relro"}, 0, false},
+		{"great passes the gate", []string{"cfi"}, 0, false},
 		{"one bad", []string{"canary"}, 1, false},
 		{"warn counts as failure", []string{"pie"}, 2, false},
 		{"multiple keys", []string{"relro", "canary", "pie"}, 3, false},

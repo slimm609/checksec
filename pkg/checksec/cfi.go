@@ -272,8 +272,16 @@ func cetOutputString(s x86CET) (string, Status) {
 // and status. `PAC` denotes return-address signing (backward edge,
 // -mbranch-protection=pac-ret, FEATURE_1_AND PAC bit); `FwdPAC` denotes
 // function-pointer signing (forward edge, -fptrauth-calls, FEATURE_PAUTH).
+//
+// Status policy (four states):
+//   - great: fine-grained forward CFI (FwdPAC) AND backward CFI (PAC)
+//   - good:  coarse-grained forward CFI (BTI) AND backward CFI (PAC)
+//   - warn:  only one of forward/backward enabled
+//   - bad:   neither enabled
 func armOutputString(s armPACBTI) (string, Status) {
-	pac := s.pac || s.fwd
+	forward := s.fwd || s.bti
+	backward := s.pac
+
 	var parts []string
 	if s.pac {
 		parts = append(parts, "PAC")
@@ -290,11 +298,18 @@ func armOutputString(s armPACBTI) (string, Status) {
 		parts = append(parts, "NO BTI")
 	}
 
-	status := StatusBad
-	if pac && s.bti {
-		status = StatusGood
-	} else if pac || s.bti {
+	var status Status
+	switch {
+	case forward && backward:
+		if s.fwd {
+			status = StatusGreat // fine-grained forward + backward
+		} else {
+			status = StatusGood // coarse-grained forward (BTI) + backward
+		}
+	case forward || backward:
 		status = StatusWarn
+	default:
+		status = StatusBad
 	}
 	return strings.Join(parts, " & "), status
 }

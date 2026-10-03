@@ -33,15 +33,18 @@ func TestArmOutputString(t *testing.T) {
 		wantOut    string
 		wantStatus Status
 	}{
+		// great: fine-grained forward (FwdPAC) + backward (PAC)
+		{armPACBTI{pac: true, fwd: true, bti: true}, "PAC & FwdPAC & BTI", StatusGreat},
+		{armPACBTI{pac: true, fwd: true, bti: false}, "PAC & FwdPAC & NO BTI", StatusGreat},
+		// good: coarse-grained forward (BTI) + backward (PAC)
 		{armPACBTI{pac: true, bti: true}, "PAC & BTI", StatusGood},
+		// warn: only one of forward/backward enabled
 		{armPACBTI{pac: true, bti: false}, "PAC & NO BTI", StatusWarn},
 		{armPACBTI{pac: false, bti: true}, "NO PAC & BTI", StatusWarn},
-		{armPACBTI{pac: false, bti: false}, "NO PAC & NO BTI", StatusBad},
-		{armPACBTI{fwd: true, bti: true}, "FwdPAC & BTI", StatusGood},
+		{armPACBTI{fwd: true, bti: true}, "FwdPAC & BTI", StatusWarn},
 		{armPACBTI{fwd: true, bti: false}, "FwdPAC & NO BTI", StatusWarn},
-		{armPACBTI{pac: true, fwd: true, bti: true}, "PAC & FwdPAC & BTI", StatusGood},
-		{armPACBTI{pac: true, fwd: true, bti: false}, "PAC & FwdPAC & NO BTI", StatusWarn},
-		{armPACBTI{pac: false, fwd: true, bti: false}, "FwdPAC & NO BTI", StatusWarn},
+		// bad: neither
+		{armPACBTI{pac: false, bti: false}, "NO PAC & NO BTI", StatusBad},
 	}
 	for _, c := range cases {
 		gotOut, gotStatus := armOutputString(c.in)
@@ -187,8 +190,8 @@ func TestArmNotes_FeatureAndPAuthCombined(t *testing.T) {
 	}
 
 	out, st := armOutputString(parseArmPACBTIFromNotes(append(feat, pauth...), bo, 8))
-	if out != "PAC & FwdPAC & BTI" || st != StatusGood {
-		t.Fatalf("combined notes output = %q/%q, want %q/%q", out, st, "PAC & FwdPAC & BTI", StatusGood)
+	if out != "PAC & FwdPAC & BTI" || st != StatusGreat {
+		t.Fatalf("combined notes output = %q/%q, want %q/%q", out, st, "PAC & FwdPAC & BTI", StatusGreat)
 	}
 }
 

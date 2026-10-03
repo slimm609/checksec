@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - AArch64 forward-edge PAC detection: `GNU_PROPERTY_AARCH64_FEATURE_PAUTH` (0xc0000001, PAuth ABI) emitted by LLVM 19+ `-fptrauth-calls` is now parsed and reported as a `FwdPAC` token, distinct from the `PAC` token (return-address signing via `-mbranch-protection=pac-ret`). A binary with both shows `PAC & FwdPAC & BTI`; the reserved (0, 0) "incompatible" FEATURE_PAUTH tuple is not counted.
+- New `StatusGreat` ("great", bold green) result level, used by the AArch64 CFI check: fine-grained forward CFI (FwdPAC) + backward CFI (PAC) = great, coarse-grained forward CFI (BTI) + backward CFI = green, only one edge = yellow, neither = red. `--fail-if` accepts `great` in addition to `green`.
 
 ## [3.2.0]
 ### Added
