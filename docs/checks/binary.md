@@ -86,8 +86,26 @@ CFI is **architecture-specific** — the value names the relevant feature pair:
 | Arch | Feature pair | Both | One | Neither |
 |------|--------------|:----:|:---:|:-------:|
 | x86 / x86-64 | Shadow stack + IBT | `SHSTK & IBT` (green) | `… & NO …` (yellow) | `NO SHSTK & NO IBT` (red) |
-| ARM (aarch64) | PAC + BTI | `PAC & BTI` (green) | `… & NO …` (yellow) | `NO PAC & NO BTI` (red) |
+| ARM (aarch64) | PAC + BTI (+FwdPAC) | see policy below | `… & NO …` (yellow) | `NO PAC & NO BTI` (red) |
 | RISC-V | Zicfilp + Zicfiss | `Zicfilp & Zicfiss` (green) | `… & NO …` (yellow) | `NO Zicfilp & NO Zicfiss` (red) |
+
+On AArch64 the two PAC edges are reported as separate tokens:
+
+- `PAC` — return-address signing (backward edge), from
+  `-mbranch-protection=pac-ret`, recorded in `GNU_PROPERTY_AARCH64_FEATURE_1_AND`.
+- `FwdPAC` — function-pointer signing (forward edge), from LLVM 19+
+  `-fptrauth-calls`, recorded in `GNU_PROPERTY_AARCH64_FEATURE_PAUTH`
+  (0xc0000001, PAuth ABI). A binary built with both shows
+  `PAC & FwdPAC & BTI`.
+
+The AArch64 status uses four levels, by forward/backward granularity:
+
+| Status | Condition |
+|:------:|-----------|
+| `great` (bold green) | fine-grained forward CFI (`FwdPAC`) **and** backward CFI (`PAC`) |
+| `green` | coarse-grained forward CFI (`BTI`) **and** backward CFI (`PAC`) |
+| `yellow` | only one of forward/backward enabled |
+| `red` | neither enabled |
 
 | Value | Color | Meaning |
 |-------|:-----:|---------|
@@ -96,7 +114,8 @@ CFI is **architecture-specific** — the value names the relevant feature pair:
 **Enable:**
 ```bash
 gcc -fcf-protection=full                 # x86: shadow stack + IBT
-gcc -mbranch-protection=standard         # ARM: PAC + BTI
+gcc -mbranch-protection=standard         # ARM: PAC (return-address) + BTI
+clang -fptrauth-calls                    # ARM: FwdPAC (LLVM 19+, forward-edge)
 gcc -fcf-protection -march=...zicfilp_zicfiss   # RISC-V
 ```
 

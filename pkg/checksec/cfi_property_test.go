@@ -33,9 +33,17 @@ func TestArmOutputString(t *testing.T) {
 		wantOut    string
 		wantStatus Status
 	}{
+		// great: fine-grained forward (FwdPAC) + backward (PAC)
+		{armPACBTI{pac: true, fwd: true, bti: true}, "PAC & FwdPAC & BTI", StatusGreat},
+		{armPACBTI{pac: true, fwd: true, bti: false}, "PAC & FwdPAC & NO BTI", StatusGreat},
+		// good: coarse-grained forward (BTI) + backward (PAC)
 		{armPACBTI{pac: true, bti: true}, "PAC & BTI", StatusGood},
+		// warn: only one of forward/backward enabled
 		{armPACBTI{pac: true, bti: false}, "PAC & NO BTI", StatusWarn},
 		{armPACBTI{pac: false, bti: true}, "NO PAC & BTI", StatusWarn},
+		{armPACBTI{fwd: true, bti: true}, "FwdPAC & BTI", StatusWarn},
+		{armPACBTI{fwd: true, bti: false}, "FwdPAC & NO BTI", StatusWarn},
+		// bad: neither
 		{armPACBTI{pac: false, bti: false}, "NO PAC & NO BTI", StatusBad},
 	}
 	for _, c := range cases {
@@ -126,6 +134,75 @@ func TestArmNotes_SkipsNon4ByteProperty(t *testing.T) {
 	got := parseArmPACBTIFromNotes(data, bo, 8)
 	if !got.pac || !got.bti {
 		t.Fatalf("feature property after an 8-byte property was missed: %+v", got)
+	}
+}
+
+// buildPauthNote assembles a GNU_PROPERTY_AARCH64_FEATURE_PAUTH record:
+// type(4) | datasz(4)=16 | platform identifier(8) | version number(8),
+// matching pauthabielf64 for ELFCLASS64.
+func buildPauthNote(bo binary.ByteOrder, platform, version uint64) []byte {
+	b := make([]byte, 24)
+	bo.PutUint32(b[0:4], GnuPropertyArmFeaturePAuth)
+	bo.PutUint32(b[4:8], 16)
+	bo.PutUint64(b[8:16], platform)
+	bo.PutUint64(b[16:24], version)
+	return b
+}
+
+// A FEATURE_PAUTH record with a non-zero platform identifier (LLVM 19+
+// -fptrauth-calls) enables the forward-PAC token; the reserved (0, 0)
+// "incompatible" tuple must not.
+func TestArmNotes_FwdPACProperty(t *testing.T) {
+	bo := binary.LittleEndian
+	cases := []struct {
+		name     string
+		platform uint64
+		version  uint64
+		wantFwd  bool
+	}{
+		{"baremetal platform 1", 1, 1, true},
+		{"nonzero platform zero version", 0x1000, 0, true},
+		{"reserved incompatible tuple", 0, 0, false},
+		{"invalid platform zero", 0, 1, false},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			got := parseArmPACBTIFromNotes(buildPauthNote(bo, c.platform, c.version), bo, 8)
+			if got.fwd != c.wantFwd {
+				t.Fatalf("platform=%#x version=%#x got fwd=%v, want %v", c.platform, c.version, got.fwd, c.wantFwd)
+			}
+		})
+	}
+}
+
+// FEATURE_1 (backward PAC/BTI) and FEATURE_PAUTH (forward PAC) records can
+// coexist in one property array, in either order.
+func TestArmNotes_FeatureAndPAuthCombined(t *testing.T) {
+	bo := binary.LittleEndian
+	feat := buildPropertyNote(bo, GnuPropertyArmFeature1Flag, GnuPropertyArmFeaturePAC|GnuPropertyArmFeatureBTI)
+	pauth := buildPauthNote(bo, 1, 1)
+
+	for _, data := range [][]byte{append(feat, pauth...), append(pauth, feat...)} {
+		got := parseArmPACBTIFromNotes(data, bo, 8)
+		if !got.pac || !got.fwd || !got.bti {
+			t.Fatalf("combined notes not fully parsed: %+v", got)
+		}
+	}
+
+	out, st := armOutputString(parseArmPACBTIFromNotes(append(feat, pauth...), bo, 8))
+	if out != "PAC & FwdPAC & BTI" || st != StatusGreat {
+		t.Fatalf("combined notes output = %q/%q, want %q/%q", out, st, "PAC & FwdPAC & BTI", StatusGreat)
+	}
+}
+
+// A FEATURE_PAUTH record whose declared datasz overruns the buffer must be
+// dropped without panicking and without setting forward PAC.
+func TestArmNotes_TruncatedPAuthIgnored(t *testing.T) {
+	bo := binary.LittleEndian
+	full := buildPauthNote(bo, 1, 1)
+	truncated := full[:20] // header + only half the payload
+	if got := parseArmPACBTIFromNotes(truncated, bo, 8); got.fwd {
+		t.Fatalf("truncated FEATURE_PAUTH set fwd: %+v", got)
 	}
 }
 

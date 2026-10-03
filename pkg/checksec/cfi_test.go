@@ -136,6 +136,9 @@ func TestConstants(t *testing.T) {
 	if GnuPropertyArmFeaturePAC != 2 {
 		t.Errorf("Expected GnuPropertyArmFeaturePAC to be 2, got %d", GnuPropertyArmFeaturePAC)
 	}
+	if GnuPropertyArmFeaturePAuth != 0xc0000001 {
+		t.Errorf("Expected GnuPropertyArmFeaturePAuth to be 0xc0000001, got 0x%x", GnuPropertyArmFeaturePAuth)
+	}
 
 	// Test flag constants
 	if GnuPropertyArmFeature1Flag != 0xc0000000 {

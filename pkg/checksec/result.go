@@ -6,6 +6,7 @@ package checksec
 type Status string
 
 const (
+	StatusGreat Status = "great"
 	StatusGood  Status = "green"
 	StatusWarn  Status = "yellow"
 	StatusBad   Status = "red"
