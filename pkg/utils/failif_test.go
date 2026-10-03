@@ -20,7 +20,7 @@ func TestEvaluateFailIf(t *testing.T) {
 	reports := []FileReport{
 		{Name: "/a", Checks: map[string]checksec.Result{"relro": good, "canary": bad, "pie": warn, "cfi": good}},
 		{Name: "/b", Checks: map[string]checksec.Result{"relro": good, "canary": good, "pie": info, "cfi": good}},
-		{Name: "/c", Checks: map[string]checksec.Result{"cfi": great}},
+		{Name: "/c", Checks: map[string]checksec.Result{"relro": good, "canary": good, "pie": good, "cfi": great}},
 	}
 
 	tests := []struct {
