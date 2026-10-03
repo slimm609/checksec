@@ -89,6 +89,15 @@ CFI is **architecture-specific** — the value names the relevant feature pair:
 | ARM (aarch64) | PAC + BTI | `PAC & BTI` (green) | `… & NO …` (yellow) | `NO PAC & NO BTI` (red) |
 | RISC-V | Zicfilp + Zicfiss | `Zicfilp & Zicfiss` (green) | `… & NO …` (yellow) | `NO Zicfilp & NO Zicfiss` (red) |
 
+On AArch64 the two PAC edges are reported as separate tokens:
+
+- `PAC` — return-address signing (backward edge), from
+  `-mbranch-protection=pac-ret`, recorded in `GNU_PROPERTY_AARCH64_FEATURE_1_AND`.
+- `FwdPAC` — function-pointer signing (forward edge), from LLVM 19+
+  `-fptrauth-calls`, recorded in `GNU_PROPERTY_AARCH64_FEATURE_PAUTH`
+  (0xc0000001, PAuth ABI). A binary built with both shows
+  `PAC & FwdPAC & BTI`.
+
 | Value | Color | Meaning |
 |-------|:-----:|---------|
 | `Unknown` | yellow | No CFI properties found, or the architecture isn't recognized. |
@@ -96,7 +105,8 @@ CFI is **architecture-specific** — the value names the relevant feature pair:
 **Enable:**
 ```bash
 gcc -fcf-protection=full                 # x86: shadow stack + IBT
-gcc -mbranch-protection=standard         # ARM: PAC + BTI
+gcc -mbranch-protection=standard         # ARM: PAC (return-address) + BTI
+clang -fptrauth-calls                    # ARM: FwdPAC (LLVM 19+, forward-edge)
 gcc -fcf-protection -march=...zicfilp_zicfiss   # RISC-V
 ```
 

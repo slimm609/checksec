@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Added
+- AArch64 forward-edge PAC detection: `GNU_PROPERTY_AARCH64_FEATURE_PAUTH` (0xc0000001, PAuth ABI) emitted by LLVM 19+ `-fptrauth-calls` is now parsed and reported as a `FwdPAC` token, distinct from the `PAC` token (return-address signing via `-mbranch-protection=pac-ret`). A binary with both shows `PAC & FwdPAC & BTI`; the reserved (0, 0) "incompatible" FEATURE_PAUTH tuple is not counted.
+
 ## [3.2.0]
 ### Added
 - SafeStack detection for ELF binaries.

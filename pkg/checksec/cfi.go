@@ -3,6 +3,7 @@ package checksec
 import (
 	"debug/elf"
 	"encoding/binary"
+	"strings"
 )
 
 type x86CET struct {
@@ -11,7 +12,8 @@ type x86CET struct {
 }
 
 type armPACBTI struct {
-	pac bool
+	pac bool // return-address signing (backward edge): -mbranch-protection=pac-ret
+	fwd bool // function-pointer signing (forward edge): -fptrauth-calls (PAuth ABI)
 	bti bool
 }
 
@@ -23,6 +25,12 @@ type riscvCFI struct {
 const GnuPropertyArmFeature1Flag uint32 = 0xc0000000
 const GnuPropertyX86Feature1Flag uint32 = 0xc0000002
 const GnuPropertyRiscvFeature1Flag uint32 = 0xc0000000
+
+// GnuPropertyArmFeaturePAuth marks a binary as using the PAuth ELF ABI
+// signing schema (function-pointer signing, e.g. LLVM 19+ -fptrauth-calls).
+// pauthabielf64: pr_data is two 64-bit words, platform identifier and
+// version number; (0, 0) is reserved as "incompatible".
+const GnuPropertyArmFeaturePAuth uint32 = 0xc0000001
 
 const (
 	GnuPropertyX86FeatureIBT uint32 = 1 << iota
@@ -170,10 +178,11 @@ func propAlign(c elf.Class) int {
 	return 8
 }
 
-// walkGNUProperties walks a .note.gnu.property payload, calling fn for each
-// 4-byte (datasz==4) property whose pr_type matches want. The payload is
-// padded to align bytes per entry. Bounds-safe on truncated/malformed input.
-func walkGNUProperties(data []byte, bo binary.ByteOrder, align int, want uint32, fn func(mask uint32)) {
+// walkGNUProperties walks a .note.gnu.property payload, calling fn with the
+// datasz and payload of every property whose pr_type matches want. The payload
+// is padded to align bytes per entry. Bounds-safe on truncated/malformed
+// input. Callers validate datasz for the record layouts they understand.
+func walkGNUProperties(data []byte, bo binary.ByteOrder, align int, want uint32, fn func(datasz uint32, payload []byte)) {
 	alignUp := func(n uint32) uint64 { return (uint64(n) + uint64(align-1)) &^ uint64(align-1) }
 	i := 0
 	for i+8 <= len(data) {
@@ -184,8 +193,8 @@ func walkGNUProperties(data []byte, bo binary.ByteOrder, align int, want uint32,
 		if payloadLen > uint64(len(data)-i) {
 			break
 		}
-		if datasz == 4 && ptype == want {
-			fn(bo.Uint32(data[i : i+4]))
+		if ptype == want {
+			fn(datasz, data[i:i+int(datasz)])
 		}
 		i += int(payloadLen)
 	}
@@ -193,25 +202,40 @@ func walkGNUProperties(data []byte, bo binary.ByteOrder, align int, want uint32,
 
 func parseX86CETFromNotes(data []byte, bo binary.ByteOrder, align int) x86CET {
 	var parsed x86CET
-	walkGNUProperties(data, bo, align, GnuPropertyX86Feature1Flag, func(m uint32) {
-		parsed = parseBitmaskForx86CET(m)
+	walkGNUProperties(data, bo, align, GnuPropertyX86Feature1Flag, func(datasz uint32, payload []byte) {
+		if datasz == 4 && len(payload) >= 4 {
+			parsed = parseBitmaskForx86CET(bo.Uint32(payload))
+		}
 	})
 	return parsed
 }
 
 func parseArmPACBTIFromNotes(data []byte, bo binary.ByteOrder, align int) armPACBTI {
 	var parsed armPACBTI
-	walkGNUProperties(data, bo, align, GnuPropertyArmFeature1Flag, func(m uint32) {
-		parsed = parseBitmaskForArmPACBTI(m)
+	walkGNUProperties(data, bo, align, GnuPropertyArmFeature1Flag, func(datasz uint32, payload []byte) {
+		if datasz == 4 && len(payload) >= 4 {
+			parsed = parseBitmaskForArmPACBTI(bo.Uint32(payload))
+		}
+	})
+	walkGNUProperties(data, bo, align, GnuPropertyArmFeaturePAuth, func(datasz uint32, payload []byte) {
+		// pauthabielf64: pr_data = { platform identifier, version number }.
+		// (0, 0) is reserved to mean "incompatible with the PAuth ABI", so a
+		// zero platform identifier must not count as forward PAC.
+		if datasz == 16 && len(payload) >= 16 && bo.Uint64(payload[0:8]) != 0 {
+			parsed.fwd = true
+		}
 	})
 	return parsed
 }
 
 func parseRiscvCFIFromNotes(data []byte, bo binary.ByteOrder, align int) riscvCFI {
 	var parsed riscvCFI
-	walkGNUProperties(data, bo, align, GnuPropertyRiscvFeature1Flag, func(m uint32) {
-		parsed.lp = m&GnuPropertyRiscvFeatureCFILP != 0
-		parsed.ss = m&GnuPropertyRiscvFeatureCFISS != 0
+	walkGNUProperties(data, bo, align, GnuPropertyRiscvFeature1Flag, func(datasz uint32, payload []byte) {
+		if datasz == 4 && len(payload) >= 4 {
+			m := bo.Uint32(payload)
+			parsed.lp = m&GnuPropertyRiscvFeatureCFILP != 0
+			parsed.ss = m&GnuPropertyRiscvFeatureCFISS != 0
+		}
 	})
 	return parsed
 }
@@ -244,18 +268,35 @@ func cetOutputString(s x86CET) (string, Status) {
 	}
 }
 
-// armOutputString maps parsed AArch64 PAC/BTI features to the display string and status.
+// armOutputString maps parsed AArch64 PAC/BTI features to the display string
+// and status. `PAC` denotes return-address signing (backward edge,
+// -mbranch-protection=pac-ret, FEATURE_1_AND PAC bit); `FwdPAC` denotes
+// function-pointer signing (forward edge, -fptrauth-calls, FEATURE_PAUTH).
 func armOutputString(s armPACBTI) (string, Status) {
-	switch {
-	case s.pac && s.bti:
-		return "PAC & BTI", StatusGood
-	case s.pac:
-		return "PAC & NO BTI", StatusWarn
-	case s.bti:
-		return "NO PAC & BTI", StatusWarn
-	default:
-		return "NO PAC & NO BTI", StatusBad
+	pac := s.pac || s.fwd
+	var parts []string
+	if s.pac {
+		parts = append(parts, "PAC")
 	}
+	if s.fwd {
+		parts = append(parts, "FwdPAC")
+	}
+	if len(parts) == 0 {
+		parts = append(parts, "NO PAC")
+	}
+	if s.bti {
+		parts = append(parts, "BTI")
+	} else {
+		parts = append(parts, "NO BTI")
+	}
+
+	status := StatusBad
+	if pac && s.bti {
+		status = StatusGood
+	} else if pac || s.bti {
+		status = StatusWarn
+	}
+	return strings.Join(parts, " & "), status
 }
 
 func parseBitmaskForx86CET(bitmask uint32) x86CET {

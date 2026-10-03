@@ -123,6 +123,34 @@ func TestGNUPropertyPayload_Malformed(t *testing.T) {
 	}
 }
 
+// TestGNUPropertyPayloadAArch64FwdPAC exercises the full section-level path
+// (note wrapper strip → property walk) for an AArch64 binary carrying both
+// FEATURE_1 (pac-ret + BTI) and FEATURE_PAUTH (-fptrauth-calls) properties,
+// as LLVM 19+ emits them.
+func TestGNUPropertyPayloadAArch64FwdPAC(t *testing.T) {
+	le := binary.LittleEndian
+
+	feat := buildPropertyNote(le, GnuPropertyArmFeature1Flag, GnuPropertyArmFeaturePAC|GnuPropertyArmFeatureBTI)
+	pauth := buildPauthNote(le, 1, 1)
+	desc := append(feat, pauth...)
+
+	raw := make([]byte, 16, 16+len(desc))
+	le.PutUint32(raw[0:4], 4)                 // namesz
+	le.PutUint32(raw[4:8], uint32(len(desc))) // descsz
+	le.PutUint32(raw[8:12], 5)                // NT_GNU_PROPERTY_TYPE_0
+	copy(raw[12:16], "GNU\x00")
+	raw = append(raw, desc...)
+
+	payload := gnuPropertyPayload(raw, le)
+	if payload == nil {
+		t.Fatalf("gnuPropertyPayload rejected well-formed AArch64 note section")
+	}
+	got := parseArmPACBTIFromNotes(payload, le, 8)
+	if !got.pac || !got.fwd || !got.bti {
+		t.Fatalf("AArch64 fwd+backward PAC parse = %+v, want {pac,fwd,bti} all true", got)
+	}
+}
+
 // TestCfi_RealELFWithCET uses the Go stdlib's own ELF test fixture (always
 // present) which carries .note.gnu.property with IBT+SHSTK. End-to-end
 // regression guard for the note-header-offset bug.
