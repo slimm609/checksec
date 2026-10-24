@@ -21,11 +21,16 @@ var sanitizerSigs = []sanitizerSig{
 	{"LSAN", []string{"__lsan_"}},
 }
 
-// classifySanitizers returns the "+"-joined set of sanitizers whose runtime
-// symbols appear in the given symbol-name list, or "None".
-func classifySanitizers(symbols []string) string {
+// ClassifySanitizers returns the "+"-joined set of sanitizers whose runtime
+// symbols appear in the given symbol-name list, or "None". Names starting with
+// three underscores have one stripped first, so Darwin's "___asan_" spelling
+// matches the ELF "__asan_" prefixes while ELF "__asan_" names are untouched.
+func ClassifySanitizers(symbols []string) string {
 	found := make(map[string]bool, len(sanitizerSigs))
 	for _, name := range symbols {
+		if strings.HasPrefix(name, "___") {
+			name = name[1:]
+		}
 		for _, sig := range sanitizerSigs {
 			if found[sig.label] {
 				continue
@@ -77,6 +82,6 @@ func Sanitizers(file *elf.File) *Result {
 			names = append(names, s.Name)
 		}
 	}
-	r := sanitizerResult(classifySanitizers(names))
+	r := sanitizerResult(ClassifySanitizers(names))
 	return &r
 }
