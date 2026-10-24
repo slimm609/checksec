@@ -2,6 +2,8 @@
 # Build the committed Mach-O fixtures. Runs on a macOS host with Apple clang,
 # lipo, codesign and strip. CI does not run this; it reads the committed files.
 set -euo pipefail
+# Homebrew GNU binutils can shadow Apple's strip/nm and corrupt Mach-O output.
+export PATH="/usr/bin:/bin:${PATH}"
 
 if [[ "$(uname -s)" != "Darwin" ]]; then
   echo "build_macho_fixtures.sh must run on macOS (needs Apple clang, lipo, codesign)" >&2
@@ -38,8 +40,8 @@ cp "${OUT}/exec_arm64" "${OUT}/debuggable_arm64"
 codesign -f -s - --entitlements entitlements-debug.plist "${OUT}/debuggable_arm64"
 cp "${OUT}/exec_arm64" "${OUT}/unsigned_arm64"
 codesign --remove-signature "${OUT}/unsigned_arm64"
-# Left unsigned: strip invalidates the linker signature and ad-hoc re-signing fails strict validation.
 strip -o "${OUT}/stripped_arm64" "${OUT}/exec_arm64"
+codesign -s - "${OUT}/stripped_arm64"
 
 # asan links a copy of the runtime dylib next to the binary on some SDKs; the
 # fixture only needs the import names, so drop any sidecar.
