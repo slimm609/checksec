@@ -23,9 +23,10 @@ Checksec can scan linux files from OSX however, some checks may be limited due t
 
 File checks also read Mach-O binaries, thin or universal; a universal binary yields one row per slice:
 
-    $ checksec file /Applications/Safari.app/Contents/MacOS/Safari --no-banner
-    PIE           NX           Stack Canary   ...   Signature              Hardened   Name
-    PIE Enabled   NX enabled   Canary Found   ...   Signed [APPLE]         Enabled    .../Safari [arm64e]
+    $ checksec file /bin/ls --no-banner
+    PIE          NX          Stack Canary  Symbols     ...  CFI  FORTIFY  ...  Signature  Hardened  ...  Fixups          ...  Min OS       Name
+    PIE Enabled  NX enabled  Canary Found  No Symbols  ...  N/A  No       ...  Signed     Disabled  ...  Lazy binding    ...  macOS 10.14  /bin/ls [x86_64]
+    PIE Enabled  NX enabled  Canary Found  No Symbols  ...  PAC  No       ...  Signed     Disabled  ...  Chained fixups  ...  macOS 11.0   /bin/ls [arm64e]
 
 
 Examples
