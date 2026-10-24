@@ -6,6 +6,7 @@ import (
 
 	"github.com/slimm609/checksec/v3/pkg/checksec"
 	"github.com/slimm609/checksec/v3/pkg/exploit"
+	"github.com/slimm609/checksec/v3/pkg/target"
 )
 
 // exploitViableKey is the special --fail-if key that fails a report if any
@@ -45,10 +46,11 @@ func EvaluateFailIf(reports []FileReport, required []string) ([]FailIfFailure, e
 	if len(required) == 0 {
 		return nil, nil
 	}
-	known := make(map[string]bool, len(FileFields)+len(ProcFields))
-	for _, f := range ProcFields { // ProcFields ⊇ FileFields
+	known := make(map[string]bool, len(ProcFields)+len(MachOFields))
+	for _, f := range AllFields() {
 		known[f.Key] = true
 	}
+	known["seccomp"] = true
 	for _, k := range required {
 		if !known[k] && !isExploitPredicateKey(k) {
 			return nil, fmt.Errorf("unknown --fail-if key %q (valid keys: %s)", k, strings.Join(fieldKeys(), ", "))
@@ -56,6 +58,7 @@ func EvaluateFailIf(reports []FileReport, required []string) ([]FailIfFailure, e
 	}
 	var fails []FailIfFailure
 	for _, r := range reports {
+		own := registryKeys(FieldsFor(target.Format(r.Format)))
 		for _, k := range required {
 			if matched, isExploitKey := matchExploitPredicate(r, k); isExploitKey {
 				if matched {
@@ -68,6 +71,9 @@ func EvaluateFailIf(reports []FileReport, required []string) ([]FailIfFailure, e
 				continue
 			}
 			res, ok := r.Checks[k]
+			if !ok && !own[k] {
+				continue // key belongs to another format: not applicable to this report
+			}
 			if !ok || res.Status != checksec.StatusGood {
 				fails = append(fails, FailIfFailure{File: r.Name, Key: k, Result: res})
 			}
@@ -133,10 +139,19 @@ func exploitPredicateDescription(key string) string {
 	return fmt.Sprintf("technique %q is unobstructed (tier >= REQUIRES-LEAK)", ruleID)
 }
 
-func fieldKeys() []string {
-	keys := make([]string, len(ProcFields))
-	for i, f := range ProcFields {
-		keys[i] = f.Key
+func registryKeys(fields []Field) map[string]bool {
+	m := make(map[string]bool, len(fields))
+	for _, f := range fields {
+		m[f.Key] = true
 	}
-	return keys
+	return m
+}
+
+func fieldKeys() []string {
+	all := AllFields()
+	keys := make([]string, 0, len(all)+1)
+	for _, f := range all {
+		keys = append(keys, f.Key)
+	}
+	return append(keys, "seccomp")
 }

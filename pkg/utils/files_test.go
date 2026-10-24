@@ -39,9 +39,9 @@ func TestGetAllFilesFromDir(t *testing.T) {
 	_ = os.WriteFile(bad, []byte("dummy"), 0o644)
 
 	// stub CheckIfElf to only accept good
-	orig := checkIfElfFn
-	defer func() { checkIfElfFn = orig }()
-	checkIfElfFn = func(path string) bool { return filepath.Base(path) == "elf1" }
+	orig := isSupportedBinaryFn
+	defer func() { isSupportedBinaryFn = orig }()
+	isSupportedBinaryFn = func(path string) bool { return filepath.Base(path) == "elf1" }
 
 	got := GetAllFilesFromDir(dir, false)
 	if len(got) != 1 || filepath.Base(got[0]) != "elf1" {
