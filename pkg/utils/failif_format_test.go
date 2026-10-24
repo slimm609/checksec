@@ -10,9 +10,7 @@ import (
 // Review Focus 5: core keys gate both formats; a format-specific key skips
 // reports whose registry lacks it.
 func TestEvaluateFailIf_MixedFormats(t *testing.T) {
-	good := checksec.Result{Value: "ok", Status: checksec.StatusGood}
 	bad := checksec.Result{Value: "no", Status: checksec.StatusBad}
-	_ = good
 	reports := []FileReport{
 		{Name: "/elf", Format: string(target.ELF), Checks: map[string]checksec.Result{"relro": bad, "pie": bad}},
 		{Name: "/macho", Format: string(target.MachO), Checks: map[string]checksec.Result{"pie": bad, "hardened_runtime": bad}},
