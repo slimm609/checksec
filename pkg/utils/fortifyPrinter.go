@@ -31,12 +31,16 @@ type FortifyReport struct {
 // typed FortifyReport. On error every field is still populated so all output
 // formats stay aligned.
 func RunFortifyCheck(file, libc string) FortifyReport {
-	ctx := newScanContext(file, libc)
-	defer ctx.Close()
-	if ctx.elf == nil {
+	ctxs, err := openTarget(file)
+	if err != nil || len(ctxs) == 0 {
 		return fortifyErrReport(file)
 	}
-	r, err := checksec.Fortify(file, ctx.elf, libc)
+	defer ctxs[0].Close()
+	ef := ctxs[0].elf()
+	if ef == nil {
+		return fortifyErrReport(file)
+	}
+	r, err := checksec.Fortify(file, ef, libc)
 	if err != nil || r == nil {
 		return fortifyErrReport(file)
 	}

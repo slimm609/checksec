@@ -30,18 +30,13 @@ func ReadPathList(r io.Reader) ([]string, error) {
 func RunListChecks(paths []string, libc string, opts ...Option) []FileReport {
 	reports := make([]FileReport, 0, len(paths))
 	for _, p := range paths {
-		reports = append(reports, RunFileChecks(p, libc, opts...))
+		reports = append(reports, RunPathChecks(p, libc, opts...)...)
 	}
 	return reports
 }
 
-// RunListChecksParallel runs RunFileChecks over every path using a bounded
-// worker pool and returns the reports in input order. RunFileChecks is pure
-// (opens its own scanContext, no shared state), so this is data-race-free.
-// workers <= 0 defaults to GOMAXPROCS.
 func RunListChecksParallel(paths []string, libc string, workers int, opts ...Option) []FileReport {
 	if len(paths) == 0 {
-		// Non-nil so JSON/YAML marshal as "[]", matching RunListChecks.
 		return []FileReport{}
 	}
 	if workers <= 0 {
@@ -51,7 +46,7 @@ func RunListChecksParallel(paths []string, libc string, workers int, opts ...Opt
 		workers = len(paths)
 	}
 
-	reports := make([]FileReport, len(paths))
+	perPath := make([][]FileReport, len(paths))
 	jobs := make(chan int)
 	var wg sync.WaitGroup
 	for w := 0; w < workers; w++ {
@@ -59,7 +54,7 @@ func RunListChecksParallel(paths []string, libc string, workers int, opts ...Opt
 		go func() {
 			defer wg.Done()
 			for i := range jobs {
-				reports[i] = RunFileChecks(paths[i], libc, opts...)
+				perPath[i] = RunPathChecks(paths[i], libc, opts...)
 			}
 		}()
 	}
@@ -68,5 +63,10 @@ func RunListChecksParallel(paths []string, libc string, workers int, opts ...Opt
 	}
 	close(jobs)
 	wg.Wait()
+
+	reports := make([]FileReport, 0, len(paths))
+	for _, rs := range perPath {
+		reports = append(reports, rs...)
+	}
 	return reports
 }
