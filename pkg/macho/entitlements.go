@@ -86,6 +86,9 @@ func parseEntitlementsXML(b []byte) map[string]bool {
 				pendingKey = ""
 			case "key":
 				inKey = depth == 1
+				if inKey {
+					pendingKey = ""
+				}
 			case "true", "false":
 				if depth == 1 && pendingKey != "" {
 					out[pendingKey] = t.Name.Local == "true"
@@ -96,7 +99,7 @@ func parseEntitlementsXML(b []byte) map[string]bool {
 			}
 		case xml.CharData:
 			if inKey {
-				pendingKey = strings.TrimSpace(string(t))
+				pendingKey += string(t) // key text may arrive as several tokens (e.g. CDATA)
 			}
 		case xml.EndElement:
 			switch t.Name.Local {
@@ -105,6 +108,9 @@ func parseEntitlementsXML(b []byte) map[string]bool {
 			case "array":
 				depth -= 100
 			case "key":
+				if inKey {
+					pendingKey = strings.TrimSpace(pendingKey)
+				}
 				inKey = false
 			}
 		}

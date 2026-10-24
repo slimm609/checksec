@@ -79,6 +79,36 @@ func TestParseSuperBlob_SignedWithTeam(t *testing.T) {
 	}
 }
 
+func TestParseSuperBlob_SignatureSlotWrongMagic(t *testing.T) {
+	sb := superBlob(map[uint32][]byte{
+		csSlotCodeDirectory: codeDirectory(0, "com.example.app", ""),
+		csSlotSignature:     blob(0xdeadbeef, []byte{1, 2, 3, 4, 5, 6, 7, 8, 9}),
+	})
+	info, err := parseSuperBlob(sb)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.HasCMS {
+		t.Errorf("wrong-magic signature slot must not set HasCMS: %+v", info)
+	}
+	info.Present = true
+	if v, _ := classifySignature(info); v != "Ad-hoc" {
+		t.Errorf("got %q, want Ad-hoc", v)
+	}
+	good := superBlob(map[uint32][]byte{
+		csSlotCodeDirectory: codeDirectory(0, "com.example.app", "ABCDE12345"),
+		csSlotSignature:     blob(csMagicBlobWrapper, []byte{0x30, 0x82, 0x01, 0x00}),
+	})
+	gi, err := parseSuperBlob(good)
+	if err != nil {
+		t.Fatal(err)
+	}
+	gi.Present = true
+	if v, _ := classifySignature(gi); v != "Signed [ABCDE12345]" {
+		t.Errorf("correct magic: got %q", v)
+	}
+}
+
 func TestParseSuperBlob_AdHocEmptyCMS(t *testing.T) {
 	sb := superBlob(map[uint32][]byte{
 		csSlotCodeDirectory: codeDirectory(csFlagAdhoc, "a.out", ""),

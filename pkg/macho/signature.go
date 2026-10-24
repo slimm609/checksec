@@ -141,8 +141,10 @@ func parseSuperBlob(b []byte) (CodeSignatureInfo, error) {
 				info.EntitlementsDER = body[8:]
 			}
 		case csSlotSignature:
-			info.HasCMS = true
-			info.CMSEmpty = length == 8
+			if magic == csMagicBlobWrapper {
+				info.HasCMS = true
+				info.CMSEmpty = length == 8
+			}
 		}
 	}
 	if !sawCD {

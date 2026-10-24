@@ -12,6 +12,16 @@ const plistHdr = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">`
 
+func TestParseEntitlementsXML_SplitKeyCharData(t *testing.T) {
+	x := plistHdr + `<dict>
+  <key>com.apple.security.<![CDATA[get-task]]>-allow</key><true/>
+</dict></plist>`
+	m := parseEntitlementsXML([]byte(x))
+	if !m["com.apple.security.get-task-allow"] {
+		t.Errorf("split key must be reassembled, got %v", m)
+	}
+}
+
 func TestParseEntitlementsXML_TopLevelBooleans(t *testing.T) {
 	x := plistHdr + `<dict>
   <key>com.apple.security.get-task-allow</key><true/>

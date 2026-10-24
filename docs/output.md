@@ -80,6 +80,8 @@ known, its architecture.
 - **XML:** `<file name="..." format="macho" arch="arm64">` with its own
   `<checks>` list.
 
+The example below is illustrative; its values are not captured from a real run.
+
 ```text
 RELRO           Stack Canary   NX           PIE           ...   Name
 Full RELRO      Canary Found   NX enabled   PIE Enabled   ...   ./server

@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CSV columns are now the union of all formats' checks plus a `Format` column; cells that do not apply to a row are empty.
 - Table output groups rows by format, each group with its own header.
 - `--fail-if` skips keys not defined for a report's format; unknown keys are still rejected.
+- A `--fail-if` key that applies to none of the scanned targets is now an error (non-zero exit) instead of passing silently; this covers `seccomp` outside `proc` mode.
 - `--exploit` is ELF-only; on non-ELF targets it prints one warning per run naming the first non-ELF target. `fortifyFile` rejects non-ELF input.
 - `FileFields` is now an alias of `ELFFields`.
 
