@@ -31,6 +31,16 @@ var registry = map[string]Check{
 	"fortified":      {ID: "fortified", Name: "Fortified", Meaning: "Count of fortified call sites."},
 	"fortifyable":    {ID: "fortifyable", Name: "Fortifiable", Meaning: "Count of fortifiable call sites."},
 	"seccomp":        {ID: "seccomp", Name: "Seccomp", Meaning: "Process seccomp-bpf syscall filtering (proc mode)."},
+	// Mach-O specific keys. Core keys (pie, nx, canary, ...) share the entries above.
+	"signature":        {ID: "signature", Name: "Signature", Meaning: "Embedded code signature kind (structure only; trust is not verified).", Remediation: "`codesign -s <identity> --options runtime`"},
+	"hardened_runtime": {ID: "hardened_runtime", Name: "Hardened Runtime", Meaning: "Blocks DYLD injection, unsigned dylibs and debugger attach.", Remediation: "`codesign --options runtime`"},
+	"entitlements":     {ID: "entitlements", Name: "Entitlements", Meaning: "Entitlements that weaken the hardened runtime (get-task-allow, disable-library-validation, ...).", Remediation: "remove debug/injection entitlements from release signing"},
+	"encrypted":        {ID: "encrypted", Name: "Encrypted", Meaning: "FairPlay-encrypted __TEXT (App Store builds)."},
+	"fixups":           {ID: "fixups", Name: "Fixups", Meaning: "Chained fixups / bind-at-load: no writable lazy-pointer table (RELRO analogue).", Remediation: "target macOS 12+ or link `-Wl,-bind_at_load`"},
+	"dyld_env":         {ID: "dyld_env", Name: "DYLD Env", Meaning: "LC_DYLD_ENVIRONMENT sets DYLD_* variables for the binary itself.", Remediation: "remove `-Wl,-dyld_env`"},
+	"restrict":         {ID: "restrict", Name: "Restrict", Meaning: "__RESTRICT segment: dyld ignores DYLD_* variables (legacy)."},
+	"arc":              {ID: "arc", Name: "ARC", Meaning: "Objective-C automatic reference counting.", Remediation: "compile `-fobjc-arc`"},
+	"min_os":           {ID: "min_os", Name: "Min OS", Meaning: "Deployment target (platform and minimum version)."},
 }
 
 func Lookup(id string) (Check, bool) {

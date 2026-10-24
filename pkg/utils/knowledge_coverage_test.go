@@ -7,13 +7,12 @@ import (
 )
 
 // TestEveryCheckHasKnowledge guards the invariant documented in
-// pkg/knowledge/knowledge.go: the registry must cover every id in
-// FileFields, plus "seccomp" (only added via ProcFields, since it is
-// process-derived rather than ELF-derived). Adding a Field without a
-// matching knowledge.Check entry must fail this test.
+// pkg/knowledge/knowledge.go: the registry must cover every id in every
+// format registry, plus "seccomp" (process-derived, only in ProcFields).
 func TestEveryCheckHasKnowledge(t *testing.T) {
-	ids := make([]string, 0, len(FileFields)+1)
-	for _, f := range FileFields {
+	all := AllFields()
+	ids := make([]string, 0, len(all)+1)
+	for _, f := range all {
 		ids = append(ids, f.Key)
 	}
 	ids = append(ids, "seccomp")
