@@ -6,6 +6,7 @@ import (
 
 	"github.com/slimm609/checksec/v3/pkg/checksec"
 	"github.com/slimm609/checksec/v3/pkg/exploit"
+	"github.com/slimm609/checksec/v3/pkg/target"
 )
 
 // exploitViableKey is the special --fail-if key that fails a report if any
@@ -41,21 +42,31 @@ func ParseFailIfKeys(s string) []string {
 
 // EvaluateFailIf returns every (file, key) where the named check's Status is
 // not StatusGood. An unknown key is an error so typos don't pass silently.
+// EvaluateFailIf checks each report against the required --fail-if keys and
+// returns one failure per report/key that is not green. Unknown keys are an
+// error. A key that a report neither carries in Checks nor defines in its
+// format's registry is skipped for that report, but a non-exploit key that is
+// evaluated in no report at all (for example hardened_runtime on an ELF-only
+// run, or seccomp outside proc mode) is an error, so the gate fails closed.
+// Exploit predicates are evaluated per report and never trigger that error.
 func EvaluateFailIf(reports []FileReport, required []string) ([]FailIfFailure, error) {
 	if len(required) == 0 {
 		return nil, nil
 	}
-	known := make(map[string]bool, len(FileFields)+len(ProcFields))
-	for _, f := range ProcFields { // ProcFields ⊇ FileFields
+	known := make(map[string]bool, len(ProcFields)+len(MachOFields))
+	for _, f := range AllFields() {
 		known[f.Key] = true
 	}
+	known["seccomp"] = true
 	for _, k := range required {
 		if !known[k] && !isExploitPredicateKey(k) {
 			return nil, fmt.Errorf("unknown --fail-if key %q (valid keys: %s)", k, strings.Join(fieldKeys(), ", "))
 		}
 	}
 	var fails []FailIfFailure
+	evaluated := make(map[string]bool, len(required))
 	for _, r := range reports {
+		own := registryKeys(FieldsFor(target.Format(r.Format)))
 		for _, k := range required {
 			if matched, isExploitKey := matchExploitPredicate(r, k); isExploitKey {
 				if matched {
@@ -68,10 +79,26 @@ func EvaluateFailIf(reports []FileReport, required []string) ([]FailIfFailure, e
 				continue
 			}
 			res, ok := r.Checks[k]
+			if !ok && !own[k] {
+				continue // key belongs to another format: not applicable to this report
+			}
+			evaluated[k] = true
 			if !ok || res.Status != checksec.StatusGood {
 				fails = append(fails, FailIfFailure{File: r.Name, Key: k, Result: res})
 			}
 		}
+	}
+	var unused []string
+	for _, k := range required {
+		if !evaluated[k] && !isExploitPredicateKey(k) {
+			unused = append(unused, fmt.Sprintf("%q", k))
+		}
+	}
+	if len(unused) == 1 {
+		return fails, fmt.Errorf("--fail-if key %s does not apply to any scanned target", unused[0])
+	}
+	if len(unused) > 1 {
+		return fails, fmt.Errorf("--fail-if keys %s do not apply to any scanned target", strings.Join(unused, ", "))
 	}
 	return fails, nil
 }
@@ -133,10 +160,19 @@ func exploitPredicateDescription(key string) string {
 	return fmt.Sprintf("technique %q is unobstructed (tier >= REQUIRES-LEAK)", ruleID)
 }
 
-func fieldKeys() []string {
-	keys := make([]string, len(ProcFields))
-	for i, f := range ProcFields {
-		keys[i] = f.Key
+func registryKeys(fields []Field) map[string]bool {
+	m := make(map[string]bool, len(fields))
+	for _, f := range fields {
+		m[f.Key] = true
 	}
-	return keys
+	return m
+}
+
+func fieldKeys() []string {
+	all := AllFields()
+	keys := make([]string, 0, len(all)+1)
+	for _, f := range all {
+		keys = append(keys, f.Key)
+	}
+	return append(keys, "seccomp")
 }

@@ -40,6 +40,7 @@ var listfileCmd = &cobra.Command{
 		}
 		reports := utils.RunListChecksParallel(paths, libc, 0, opts...)
 		utils.FilePrinter(cmd.OutOrStdout(), outputFormat, reports, utils.PrintOptions{NoBanner: noBanner, NoHeader: noHeader, Chain: chainEnabled, LLMNoPreamble: llmNoPreamble})
+		warnExploitNonELF(reports)
 		applyFailIf(reports)
 	},
 }

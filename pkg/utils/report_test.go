@@ -173,7 +173,7 @@ func TestRunFileChecks_OpensTargetExactlyOnce(t *testing.T) {
 	orig := openTarget
 	defer func() { openTarget = orig }()
 	var opens int
-	openTarget = func(path string) (*scanContext, error) {
+	openTarget = func(path string) ([]*scanContext, error) {
 		opens++
 		return orig(path)
 	}
@@ -193,7 +193,7 @@ func TestRunFileChecks_SurvivesUnlinkAfterOpen(t *testing.T) {
 
 	orig := openTarget
 	defer func() { openTarget = orig }()
-	openTarget = func(path string) (*scanContext, error) {
+	openTarget = func(path string) ([]*scanContext, error) {
 		c, err := orig(path)
 		_ = os.Remove(path) // unlink AFTER the handle is acquired
 		return c, err

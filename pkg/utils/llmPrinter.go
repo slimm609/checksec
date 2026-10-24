@@ -66,7 +66,11 @@ func presentCheckIDs(reports []FileReport, fields []Field) ([]string, map[string
 // writeLLMTarget emits one target block: header + one terse row per present
 // check, in the given field order.
 func writeLLMTarget(w io.Writer, r FileReport, fields []Field) {
-	fmt.Fprintf(w, "## Target: %s\n", r.Name)
+	format := r.Format
+	if format == "" {
+		format = "elf"
+	}
+	fmt.Fprintf(w, "## Target: %s (%s)\n", r.Name, format)
 	for _, f := range fields {
 		res, ok := r.Checks[f.Key]
 		if !ok {
@@ -140,14 +144,17 @@ func writeLLM(w io.Writer, reports []FileReport, opts PrintOptions) {
 		}
 	}
 
-	fields := opts.fields()
+	knowledgeFields := opts.Fields
+	if knowledgeFields == nil {
+		knowledgeFields = AllFields()
+	}
 
 	if !opts.LLMNoPreamble {
 		writeLLMPreamble(w, hasExploit)
 	}
-	writeLLMKnowledge(w, reports, fields)
+	writeLLMKnowledge(w, reports, knowledgeFields)
 	for _, r := range reports {
-		writeLLMTarget(w, r, fields)
+		writeLLMTarget(w, r, fieldsForReport(r, opts))
 		if r.Exploitability != nil {
 			writeLLMExploit(w, r.Exploitability)
 		}

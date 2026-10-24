@@ -73,26 +73,25 @@ func TestFilePrinter_CSVParsesAndMatchesRegistry(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CSV not parseable: %v\n%s", err, buf.String())
 	}
-	wantRows := 1 + len(reports) // header + data
+	wantRows := 1 + len(reports)
 	if len(rows) != wantRows {
 		t.Fatalf("got %d CSV rows, want %d\n%s", len(rows), wantRows, buf.String())
 	}
-	wantCols := len(FileFields) + 1 // checks + Name
+	all := AllFields()
+	wantCols := len(all) + 2 // union checks + Format + Name
 	for i, row := range rows {
 		if len(row) != wantCols {
 			t.Fatalf("row %d has %d columns, want %d: %v", i, len(row), wantCols, row)
 		}
 	}
-	// Header row must match registry headers in order.
-	for i, f := range FileFields {
+	for i, f := range all {
 		if rows[0][i] != f.Header {
 			t.Errorf("header[%d] = %q, want %q", i, rows[0][i], f.Header)
 		}
 	}
-	if rows[0][wantCols-1] != "Name" {
-		t.Errorf("last header = %q, want Name", rows[0][wantCols-1])
+	if rows[0][wantCols-2] != "Format" || rows[0][wantCols-1] != "Name" {
+		t.Errorf("last headers = %q %q, want Format Name", rows[0][wantCols-2], rows[0][wantCols-1])
 	}
-	// Data row must carry the report name in the last column.
 	if rows[1][wantCols-1] != "bin" || rows[2][wantCols-1] != "bin2" {
 		t.Errorf("data rows missing names: %v / %v", rows[1], rows[2])
 	}

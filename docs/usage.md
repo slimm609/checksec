@@ -173,6 +173,15 @@ The keys are the JSON/YAML keys from the report (`relro`, `canary`, `cfi`, `nx`,
 `pie`, `rpath`, `runpath`, `fortify_source`, …). See each
 [check reference](checks/binary.md) page for the key of a given check.
 
+On a mixed tree, a key that a report's format does not define is skipped for
+that report. Use core keys (`pie`, `canary`, `nx`, `symbols`, `rpath`) to gate
+both formats, and format-specific keys (`relro`, `hardened_runtime`,
+`signature`) where they apply. A key that applies to none of the scanned
+targets (for example `hardened_runtime` on an ELF-only run, or `seccomp`
+outside `proc` mode) is an error and exits non-zero. `--exploit` is ELF-only and prints one warning
+per run, naming the first non-ELF target, when the run includes other formats.
+See [Mach-O hardening checks](checks/macho.md) for the Mach-O keys.
+
 ### Gating on exploitability
 
 When `--exploit` is active, `--fail-if` additionally accepts two exploitability

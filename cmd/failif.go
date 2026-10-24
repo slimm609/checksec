@@ -28,3 +28,17 @@ func applyFailIf(reports []utils.FileReport) {
 	}
 	os.Exit(1)
 }
+
+// warnExploitNonELF emits one warning per run when --exploit was requested
+// but some reports are not ELF, since exploitability reasoning is ELF-only.
+func warnExploitNonELF(reports []utils.FileReport) {
+	if !exploitEnabled && !chainEnabled {
+		return
+	}
+	for _, r := range reports {
+		if r.Format != "" && r.Format != "elf" {
+			output.Warnf("--exploit is ELF-only; skipped for non-ELF targets (e.g. %s)", r.Name)
+			return
+		}
+	}
+}

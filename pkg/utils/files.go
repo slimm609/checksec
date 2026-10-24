@@ -9,13 +9,38 @@ import (
 	"path/filepath"
 
 	"github.com/slimm609/checksec/v3/pkg/output"
+	"github.com/slimm609/checksec/v3/pkg/target"
 )
 
 // Indirections for testability
 var (
-	checkFileExistsFn = CheckFileExists
-	checkIfElfFn      = CheckIfElf
+	checkFileExistsFn   = CheckFileExists
+	checkIfElfFn        = CheckIfElf
+	isSupportedBinaryFn = IsSupportedBinary
 )
+
+// IsSupportedBinary reports whether path is a format checksec has a check
+// registry for (ELF or Mach-O, thin or fat). It reads only the magic.
+func IsSupportedBinary(path string) bool {
+	f, err := os.Open(path)
+	if err != nil {
+		return false
+	}
+	defer f.Close()
+	return target.Supported(target.Detect(f))
+}
+
+// CheckBinaryExists exits with an error unless path exists and is a supported
+// binary format. Used by `file`; the ELF-only commands keep CheckElfExists.
+func CheckBinaryExists(path string) bool {
+	if !checkFileExistsFn(path) {
+		output.Fatalf("File not found: %v", path)
+	}
+	if !isSupportedBinaryFn(path) {
+		output.Fatalf("File is not a supported binary (ELF or Mach-O): %v", path)
+	}
+	return true
+}
 
 // CheckElfExists - Check if file exists and is an Elf file
 func CheckElfExists(fileName string) bool {
@@ -71,7 +96,7 @@ func CheckFileExists(fileName string) bool {
 	return true
 }
 
-// GetAllFilesFromDir - get the list of all elf files from a directory (or recursively)
+// GetAllFilesFromDir - get the list of all supported binaries from a directory (or recursively)
 func GetAllFilesFromDir(dirName string, recursive bool) []string {
 	var results []string
 	var fileList []string
@@ -81,7 +106,7 @@ func GetAllFilesFromDir(dirName string, recursive bool) []string {
 			if err != nil {
 				return fs.SkipDir
 			}
-			if !file.IsDir() && checkIfElfFn(path) && file.Type().IsRegular() {
+			if !file.IsDir() && isSupportedBinaryFn(path) && file.Type().IsRegular() {
 				results = append(results, path)
 			}
 
@@ -94,7 +119,7 @@ func GetAllFilesFromDir(dirName string, recursive bool) []string {
 			if dirInfo == nil {
 				continue
 			}
-			if j != "." && !dirInfo.IsDir() && checkIfElfFn(j) {
+			if j != "." && !dirInfo.IsDir() && isSupportedBinaryFn(j) {
 				results = append(results, j)
 			}
 		}

@@ -1,4 +1,6 @@
-# Binary hardening checks
+# ELF hardening checks
+
+For Mach-O binaries see [Mach-O hardening checks](macho.md). Keys listed in that page's "Core keys" table mean the same thing on both formats.
 
 These checks run against an ELF executable or shared object. Each section lists
 what the mitigation protects against, how checksec detects it, every value it

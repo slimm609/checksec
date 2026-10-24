@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/slimm609/checksec/v3/pkg/output"
 	"github.com/slimm609/checksec/v3/pkg/utils"
 
 	"github.com/spf13/cobra"
@@ -13,7 +14,10 @@ var fortifyFileCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		file := args[0]
-		utils.CheckElfExists(file)
+		utils.CheckFileExists(file)
+		if !utils.CheckIfElf(file) {
+			output.Fatalf("fortify breakdown requires an ELF target: %v\n", file)
+		}
 		report := utils.RunFortifyCheck(file, libc)
 		utils.FortifyPrinter(cmd.OutOrStdout(), outputFormat, report, utils.PrintOptions{NoBanner: noBanner, NoHeader: noHeader})
 	},

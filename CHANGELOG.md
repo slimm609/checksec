@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.0]
+### Added
+- Mach-O support for `file`, `dir`, and `listfile` (thin and universal binaries), with eighteen checks: `pie`, `nx`, `canary`, `symbols`, `rpath`, `separate_code`, `cfi` (PAC), `fortify_source`, `sanitizers`, `signature`, `hardened_runtime`, `entitlements`, `encrypted`, `fixups`, `dyld_env`, `restrict`, `arc`, `min_os`. See `docs/checks/macho.md`.
+- `format` and `arch` fields on every file report (JSON/YAML keys, XML attributes).
+- One report per universal (fat) Mach-O slice, named `<path> [<arch>]`.
+- `IsSupportedBinary` and `CheckBinaryExists` helpers that accept ELF and Mach-O.
+- `pkg/target` (format detection and per-slice targets) and `pkg/macho` (Mach-O checks) packages.
+- Committed Mach-O test fixtures built on macOS by `tests/binaries/build_macho_fixtures.sh`, plus Mach-O assertions in `tests/hardening-checks.sh`.
+
+### Changed
+- CSV columns are now the union of all formats' checks plus a `Format` column; cells that do not apply to a row are empty.
+- Table output groups rows by format, each group with its own header.
+- `--fail-if` skips keys not defined for a report's format; unknown keys are still rejected.
+- A `--fail-if` key that applies to none of the scanned targets is now an error (non-zero exit) instead of passing silently; this covers `seccomp` outside `proc` mode.
+- `--exploit` is ELF-only; on non-ELF targets it prints one warning per run naming the first non-ELF target. `fortifyFile` rejects non-ELF input.
+- `FileFields` is now an alias of `ELFFields`.
+
 ## [3.2.0]
 ### Added
 - SafeStack detection for ELF binaries.

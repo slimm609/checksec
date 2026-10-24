@@ -29,8 +29,8 @@ func TestClassifySanitizers(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := classifySanitizers(tt.symbols); got != tt.want {
-				t.Errorf("classifySanitizers(%v) = %q, want %q", tt.symbols, got, tt.want)
+			if got := ClassifySanitizers(tt.symbols); got != tt.want {
+				t.Errorf("ClassifySanitizers(%v) = %q, want %q", tt.symbols, got, tt.want)
 			}
 		})
 	}

@@ -17,13 +17,14 @@ var fileCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		file := args[0]
 
-		utils.CheckElfExists(file)
+		utils.CheckBinaryExists(file)
 		var opts []utils.Option
 		if exploitEnabled || chainEnabled {
 			opts = append(opts, utils.WithExploit())
 		}
-		reports := []utils.FileReport{utils.RunFileChecks(file, libc, opts...)}
+		reports := utils.RunPathChecks(file, libc, opts...)
 		utils.FilePrinter(cmd.OutOrStdout(), outputFormat, reports, utils.PrintOptions{NoBanner: noBanner, NoHeader: noHeader, Chain: chainEnabled, LLMNoPreamble: llmNoPreamble})
+		warnExploitNonELF(reports)
 		applyFailIf(reports)
 	},
 }
