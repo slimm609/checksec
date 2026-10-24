@@ -1,6 +1,6 @@
 checksec
 ========
-Checksec checks the properties of executables (like PIE, RELRO, Canaries, ASLR, Fortify Source).
+Checksec checks the properties of executables (like PIE, RELRO, Canaries, ASLR, Fortify Source). Supports ELF and Mach-O binaries.
 It has been originally written by Tobias Klein and the original source is available here: http://www.trapkit.de/tools/checksec.html. Over time this has expanded in feature set and has now moved from Bash to Golang.
 
 Version: 3.0.1
@@ -20,6 +20,12 @@ Updates
 For OSX
 -------
 Checksec can scan linux files from OSX however, some checks may be limited due to OS dependencies on resources like glibc.
+
+File checks also read Mach-O binaries, thin or universal; a universal binary yields one row per slice:
+
+    $ checksec file /Applications/Safari.app/Contents/MacOS/Safari --no-banner
+    PIE           NX           Stack Canary   ...   Signature              Hardened   Name
+    PIE Enabled   NX enabled   Canary Found   ...   Signed [APPLE]         Enabled    .../Safari [arm64e]
 
 
 Examples

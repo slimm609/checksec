@@ -60,6 +60,35 @@ Each check's report also has a stable **key** (the JSON/YAML map key, e.g.
 [`--fail-if`](usage.md#ci-gating), and they're listed on every
 [check reference](checks/binary.md) page.
 
+## Multiple formats in one run
+
+`checksec file`, `dir`, and `listfile` accept ELF and Mach-O, and a single run
+may mix them. Each report carries its format (`elf` or `macho`) and, where
+known, its architecture.
+
+- **Universal (fat) Mach-O:** one report per slice, named `<path> [<arch>]`,
+  for example `./app [arm64]` and `./app [x86_64]`.
+- **Table:** rows are grouped by format in first-seen order. Each group prints
+  its own header row (unless `--no-header`) with that format's columns, and
+  column widths are computed per group. A single-format run looks the same as
+  before.
+- **CSV:** stays one rectangular table. The columns are the union of every
+  format's checks plus a `Format` column and `Name`; a column that does not
+  apply to a row is left empty.
+- **JSON / YAML:** every report has `format` and `arch` keys next to `name`,
+  and its `checks` map holds only that format's keys.
+- **XML:** `<file name="..." format="macho" arch="arm64">` with its own
+  `<checks>` list.
+
+```text
+RELRO           Stack Canary   NX           PIE           ...   Name
+Full RELRO      Canary Found   NX enabled   PIE Enabled   ...   ./server
+
+PIE           NX           Stack Canary   ...   Signature              Hardened   Name
+PIE Enabled   NX enabled   Canary Found   ...   Signed [ABCDE12345]    Enabled    ./app [arm64]
+PIE Enabled   NX enabled   Canary Found   ...   Signed [ABCDE12345]    Enabled    ./app [x86_64]
+```
+
 ## Reading a row
 
 ```text

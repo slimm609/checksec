@@ -200,5 +200,38 @@ for bin in none none32 none_cl none_cl32; do start_and_check "${bin}" fortify_so
 for bin in nolibc nolibc_cl nolibc32 nolibc_cl32 fszero fszero_cl fszero32 fszero_cl32; do start_and_check "${bin}" fortify_source "N/A"; done
 echo "Fortify process validation tests passed"
 
+#============================================
+# Mach-O file checks (committed fixtures)
+#============================================
+MACHO="${DIR}/binaries/output/macho"
+for bin in exec_arm64 nopie_x86_64 nocanary_arm64 dylib.dylib hardened_arm64 debuggable_arm64 unsigned_arm64 stripped_arm64 lazy_arm64 dyldenv_arm64; do
+  if [[ ! -f "${MACHO}/${bin}" ]]; then
+    echo "Could not find Mach-O fixture ${bin}. Run tests/binaries/build_macho_fixtures.sh on macOS."
+    exit 255
+  fi
+done
+
+echo "Starting Mach-O PIE check"
+[[ $(json_file_field "${MACHO}/exec_arm64" pie.value) == "PIE Enabled" ]]
+[[ $(json_file_field "${MACHO}/nopie_x86_64" pie.value) == "PIE Disabled" ]]
+[[ $(json_file_field "${MACHO}/dylib.dylib" pie.value) == "DSO" ]]
+echo "Starting Mach-O canary check"
+[[ $(json_file_field "${MACHO}/exec_arm64" canary.value) == "Canary Found" ]]
+[[ $(json_file_field "${MACHO}/nocanary_arm64" canary.value) == "No Canary Found" ]]
+echo "Starting Mach-O signature checks"
+[[ $(json_file_field "${MACHO}/exec_arm64" signature.value) == "Linker-signed" ]]
+[[ $(json_file_field "${MACHO}/unsigned_arm64" signature.value) == "Unsigned" ]]
+[[ $(json_file_field "${MACHO}/hardened_arm64" hardened_runtime.value) == "Enabled" ]]
+[[ $(json_file_field "${MACHO}/debuggable_arm64" entitlements.status) == "red" ]]
+echo "Starting Mach-O symbols / fixups / dyld_env checks"
+[[ $(json_file_field "${MACHO}/stripped_arm64" symbols.value) == "No Symbols" ]]
+[[ $(json_file_field "${MACHO}/lazy_arm64" fixups.value) == "Lazy binding" ]]
+[[ $(json_file_field "${MACHO}/exec_arm64" fixups.value) == "Chained fixups" ]]
+[[ $(json_file_field "${MACHO}/dyldenv_arm64" dyld_env.status) == "red" ]]
+echo "Starting fat Mach-O row count check"
+[[ $(json_out file "${MACHO}/fat" | jq 'length') == "2" ]]
+[[ $(json_out file "${MACHO}/fat" | jq -r '.[0].format') == "macho" ]]
+echo "Mach-O validation tests passed"
+
 echo "Done."
 echo "All hardening validation tests passed"

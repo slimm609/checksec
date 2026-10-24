@@ -63,6 +63,7 @@ nav:
   - LLM output: llm.md
   - Checks:
       - Binary hardening: checks/binary.md
+      - Mach-O hardening: checks/macho.md
       - Exploitability: checks/exploitability.md
       - FORTIFY: checks/fortify.md
       - Process: checks/process.md

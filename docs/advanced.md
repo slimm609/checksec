@@ -59,9 +59,9 @@ caveats:
 
 ## OSX and BSD
 
-Most checks target ELF binaries and the Linux kernel. They do **not** work on
-Mach-O binaries or the macOS/BSD kernels. checksec may run on some BSD systems
-but those platforms are not officially supported.
+File checks support ELF and Mach-O (thin and universal). Kernel, sysctl, and
+process checks read Linux interfaces and remain Linux-only. BSD is not
+officially supported.
 
 ## Verifying a release signature
 
