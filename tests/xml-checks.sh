@@ -71,6 +71,24 @@ wrap_and_validate "${PARENT}/checksec" -o xml file "${test_file}" || {
   exit 1
 }
 
+# file: Mach-O universal fixture (committed; two slices -> two <file> elements)
+macho_fat="${DIR}/binaries/output/macho/fat"
+if [[ ! -f "${macho_fat}" ]]; then
+  echo "Could not find Mach-O fixture fat. Run tests/binaries/build_macho_fixtures.sh on macOS."
+  exit 255
+fi
+echo "starting Mach-O fat file check - xml"
+wrap_and_validate "${PARENT}/checksec" -o xml file "${macho_fat}" || {
+  cat "${DIR}/output.xml"
+  echo "Mach-O fat file xml validation failed"
+  exit 1
+}
+if [[ $(grep -c 'format="macho"' "${DIR}/output.xml") != "2" ]]; then
+  cat "${DIR}/output.xml"
+  echo "Mach-O fat file xml expected two file elements with format=\"macho\""
+  exit 1
+fi
+
 # fortify-file
 echo "starting fortify-file check - xml"
 wrap_and_validate "${PARENT}/checksec" -o xml fortifyFile "${test_file}" || {

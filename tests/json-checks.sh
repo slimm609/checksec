@@ -69,6 +69,25 @@ if [[ ${RET} != 0 ]] || [[ ${JQRET} != 0 ]]; then
   exit 1
 fi
 
+# file: Mach-O universal fixture (committed; two slices -> two reports)
+macho_fat="${DIR}/binaries/output/macho/fat"
+if [[ ! -f "${macho_fat}" ]]; then
+  echo "Could not find Mach-O fixture fat. Run tests/binaries/build_macho_fixtures.sh on macOS."
+  exit 255
+fi
+echo "starting Mach-O fat file check - json"
+"${PARENT}/checksec" -o json file "${macho_fat}" > "${DIR}/output.json"
+"${jsonlint}" "${DIR}/output.json" > /dev/null
+RET=$?
+ROWS=$(jq 'length' < "${DIR}/output.json" 2> /dev/null)
+FORMATS=$(jq -r '[.[] | .format] | unique | join(",")' < "${DIR}/output.json" 2> /dev/null)
+ARCHES=$(jq -r '[.[] | .arch] | sort | join(",")' < "${DIR}/output.json" 2> /dev/null)
+if [[ ${RET} != 0 ]] || [[ "${ROWS}" != "2" ]] || [[ "${FORMATS}" != "macho" ]] || [[ "${ARCHES}" != "arm64,x86_64" ]]; then
+  cat "${DIR}/output.json"
+  echo "Mach-O fat file json validation failed (rows=${ROWS} formats=${FORMATS} arches=${ARCHES})"
+  exit 1
+fi
+
 # fortify-file
 echo "starting fortify-file check - json"
 "${PARENT}/checksec" -o json fortifyFile "${test_file}" > "${DIR}/output.json"
