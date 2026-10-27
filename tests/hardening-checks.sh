@@ -25,7 +25,9 @@ for bin in all all32 all_cl all_cl32 \
   rpath rpath32 rpath_cl rpath_cl32 \
   runpath runpath32 runpath_cl runpath_cl32 \
   nolibc nolibc_cl nolibc32 nolibc_cl32 \
-  fszero fszero_cl fszero32 fszero_cl32; do
+  fszero fszero_cl fszero32 fszero_cl32 \
+  nx_multi_rw_rwe nx_multi_rwe_rw nx_multi_rwe_rw_off \
+  nx_multi_rw_rwe32 nx_multi_rwe_rw32 nx_multi_rwe_rw_off32; do
   if [[ ! -f "${DIR}/binaries/output/${bin}" ]]; then
     echo "Could not find test file output/${bin}. Run build_binaries.sh in the binaries folder to generate it."
     exit 255
@@ -88,6 +90,13 @@ for bin in none none32 none_cl none_cl32; do
 done
 for bin in rel.o rel32.o rel_cl.o rel_cl32.o; do
   [[ $(json_file_field "${DIR}/binaries/output/${bin}" nx) == "N/A" ]]
+done
+# Binaries with two PT_GNU_STACK headers: like the kernel, the LAST one decides (slimm609/checksec#357)
+for bin in nx_multi_rw_rwe nx_multi_rw_rwe32; do
+  [[ $(json_file_field "${DIR}/binaries/output/${bin}" nx) == "NX disabled" ]]
+done
+for bin in nx_multi_rwe_rw nx_multi_rwe_rw32 nx_multi_rwe_rw_off nx_multi_rwe_rw_off32; do
+  [[ $(json_file_field "${DIR}/binaries/output/${bin}" nx) == "NX enabled" ]]
 done
 echo "NX validation tests passed"
 
@@ -219,6 +228,8 @@ echo "Stack Canary process validation tests passed"
 echo "Starting NX process check"
 for bin in all all32 all_cl all_cl32; do start_and_check "${bin}" nx "NX enabled"; done
 for bin in none none32 none_cl none_cl32; do start_and_check "${bin}" nx "NX disabled"; done
+for bin in nx_multi_rw_rwe nx_multi_rw_rwe32; do start_and_check "${bin}" nx "NX disabled"; done
+for bin in nx_multi_rwe_rw nx_multi_rwe_rw32 nx_multi_rwe_rw_off nx_multi_rwe_rw_off32; do start_and_check "${bin}" nx "NX enabled"; done
 echo "NX process validation tests passed"
 
 echo "Starting PIE process check"

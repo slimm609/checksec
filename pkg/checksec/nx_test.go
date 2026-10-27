@@ -110,6 +110,52 @@ func TestNX(t *testing.T) {
 			description:    "Binary with multiple segments including executable GNU_STACK should show NX disabled",
 		},
 		{
+			name:     "multiple GNU_STACK - RW then RWE: last wins, NX disabled",
+			filename: "/test/binary_multi_stack_rw_rwe",
+			mockProgs: []mockProgHeader{
+				{progType: elf.PT_GNU_STACK, flags: elf.PF_R | elf.PF_W},
+				{progType: elf.PT_LOAD, flags: elf.PF_R | elf.PF_X},
+				{progType: elf.PT_GNU_STACK, flags: elf.PF_R | elf.PF_W | elf.PF_X},
+			},
+			expectedOutput: "NX disabled",
+			expectedColor:  StatusBad,
+			description:    "The kernel lets the last PT_GNU_STACK decide, so a later executable entry makes the stack executable",
+		},
+		{
+			name:     "multiple GNU_STACK - RWE then RW: last wins, NX enabled",
+			filename: "/test/binary_multi_stack_rwe_rw",
+			mockProgs: []mockProgHeader{
+				{progType: elf.PT_GNU_STACK, flags: elf.PF_R | elf.PF_W | elf.PF_X},
+				{progType: elf.PT_LOAD, flags: elf.PF_R | elf.PF_X},
+				{progType: elf.PT_GNU_STACK, flags: elf.PF_R | elf.PF_W},
+			},
+			expectedOutput: "NX enabled",
+			expectedColor:  StatusGood,
+			description:    "The kernel lets the last PT_GNU_STACK decide, so a later non-executable entry makes the stack non-executable",
+		},
+		{
+			name:     "multiple GNU_STACK - RW then RW: NX enabled",
+			filename: "/test/binary_multi_stack_rw_rw",
+			mockProgs: []mockProgHeader{
+				{progType: elf.PT_GNU_STACK, flags: elf.PF_R | elf.PF_W},
+				{progType: elf.PT_GNU_STACK, flags: elf.PF_R | elf.PF_W},
+			},
+			expectedOutput: "NX enabled",
+			expectedColor:  StatusGood,
+			description:    "Two non-executable PT_GNU_STACK entries stay NX enabled",
+		},
+		{
+			name:     "multiple GNU_STACK - RWE then RWE: NX disabled",
+			filename: "/test/binary_multi_stack_rwe_rwe",
+			mockProgs: []mockProgHeader{
+				{progType: elf.PT_GNU_STACK, flags: elf.PF_R | elf.PF_W | elf.PF_X},
+				{progType: elf.PT_GNU_STACK, flags: elf.PF_R | elf.PF_W | elf.PF_X},
+			},
+			expectedOutput: "NX disabled",
+			expectedColor:  StatusBad,
+			description:    "Two executable PT_GNU_STACK entries stay NX disabled",
+		},
+		{
 			name:     "NX enabled - GNU_STACK with only read permission",
 			filename: "/test/binary_read_only_stack",
 			mockProgs: []mockProgHeader{

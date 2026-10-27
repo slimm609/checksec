@@ -110,7 +110,8 @@ gcc -fcf-protection -march=...zicfilp_zicfiss   # RISC-V
 data pages).
 
 **How checksec detects it:** inspects the `PT_GNU_STACK` program header's
-permission flags.
+permission flags. If a (non-standard) binary has more than one `PT_GNU_STACK`
+header, the last one decides, as it does in the Linux kernel.
 
 | Value | Color | Meaning |
 |-------|:-----:|---------|

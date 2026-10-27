@@ -5,7 +5,12 @@ import (
 )
 
 // NX analyzes the NX (No eXecute) bit status of an ELF binary
-// It checks for the presence of PT_GNU_STACK segment and whether it has execute permissions
+// It checks for the presence of PT_GNU_STACK segment and whether it has execute permissions.
+// If a (malformed or crafted) binary carries more than one PT_GNU_STACK header,
+// the last one decides, because that is what the Linux kernel does: the
+// PT_GNU_STACK case in the program-header loop of load_elf_binary()
+// (fs/binfmt_elf.c) overwrites executable_stack for every such header, without
+// a break.
 func NX(binary *elf.File) *Result {
 	// Input validation - follow security rule: "ALWAYS validate input before processing"
 	if binary == nil {
@@ -17,7 +22,8 @@ func NX(binary *elf.File) *Result {
 		return &Result{Value: "N/A", Status: StatusNA}
 	}
 
-	// Iterate through program headers to find GNU_STACK
+	// Iterate through program headers to find GNU_STACK. Keep scanning after the
+	// first match: the last PT_GNU_STACK wins (see above).
 	// Follow security rule: "ALWAYS validate array/slice bounds before access"
 	var gnuStack *elf.Prog
 	for i, p := range binary.Progs {
@@ -31,7 +37,6 @@ func NX(binary *elf.File) *Result {
 		}
 		if p.Type == elf.PT_GNU_STACK {
 			gnuStack = p
-			break
 		}
 	}
 
