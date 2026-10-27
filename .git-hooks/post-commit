@@ -9,4 +9,6 @@ if [[ -f ${CURRENT_REPO}/.gitlfs ]]; then
   git lfs post-commit "$@"
 fi
 
-"${CURRENT_REPO}"/hack/enable-git-hooks.sh
+# Run the script from the hooks repo rather than the current worktree, which may hold a stale copy
+HOOKS_REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." > /dev/null 2>&1 && pwd)"
+"${HOOKS_REPO}"/hack/enable-git-hooks.sh
