@@ -9,7 +9,11 @@
 
 # The git hooks repo
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null 2>&1 && pwd)"
-REPO_ROOT=$(cd "${DIR}" && git rev-parse --show-toplevel)
+# git exports GIT_DIR (and GIT_INDEX_FILE) while running hooks in a linked worktree, which makes rev-parse ignore ${DIR} and
+# resolve to the hooks dir itself, so unset them to find the repo that actually contains the hooks.
+REPO_ROOT=$(cd "${DIR}" && env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE git rev-parse --show-toplevel)
+# The enable_hooks check in .pre-commit-config.yaml runs hack/enable-git-hooks.sh from here, rather than from the current worktree, which may be stale
+export CHECKSEC_HOOKS_REPO="${REPO_ROOT}"
 # The current repo root, in case the repo is different from the hooks (this allows using a single pre-commit across multiple repos)
 CURRENT_REPO=$(git rev-parse --show-toplevel)
 

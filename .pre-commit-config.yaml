@@ -3,7 +3,7 @@ repos:
   hooks:
   - id: enable_hooks
     name: enable git hooks
-    entry: bash ./hack/enable-git-hooks.sh
+    entry: bash -c 'bash "${CHECKSEC_HOOKS_REPO:-.}/hack/enable-git-hooks.sh"'
     language: system
     pass_filenames: false
   - id: go-test
