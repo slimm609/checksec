@@ -116,6 +116,18 @@ func fortifyWithLdd(file *elf.File, ldd string, supportedFuncs []string) (*forti
 	checked, total = computeFortifyCounts(chkFuncLibs, funcLibs, fileFunc)
 	res.Functions = fortifyBreakdown(chkFuncLibs, funcLibs, fileFunc)
 
+	if total == 0 {
+		// Dynamically linked, but the binary references no fortifiable libc
+		// function, so there is nothing for _FORTIFY_SOURCE to protect.
+		res.Output = "N/A"
+		res.Color = "unset"
+		res.Fortified = "0"
+		res.Fortifiable = "0"
+		res.NoFortify = "0"
+		res.NumFileFunc = strconv.Itoa(len(dynSymbols))
+		return &res, nil
+	}
+
 	if checked > 0 {
 		res.Output = "Yes"
 		res.Color = "green"

@@ -115,3 +115,93 @@ func TestFortify_UnknownLDD(t *testing.T) {
 		t.Errorf("Color = %q, want unset for ldd=unk", result.Color)
 	}
 }
+
+// TestFortify_OutputByFortifiableCounts drives the Yes / No / N/A verdict from
+// real ELF fixtures against the stand-in libc dso.so (which provides
+// __printf_chk and __strcpy_chk). A binary that references no fortifiable libc
+// function at all has nothing for _FORTIFY_SOURCE to protect, so it must be
+// N/A rather than No (docs/checks/fortify.md; checksec.bash did the same when
+// the fortifiable total was 0).
+func TestFortify_OutputByFortifiableCounts(t *testing.T) {
+	libc := requireFixture(t, "dso.so")
+
+	tests := []struct {
+		name        string
+		target      func(t *testing.T) string
+		wantOutput  string
+		wantColor   string
+		wantFortif  string
+		wantFortble string
+		wantNoFort  string
+	}{
+		{
+			name:        "fortified calls",
+			target:      func(t *testing.T) string { return requireFixture(t, "all") },
+			wantOutput:  "Yes",
+			wantColor:   "green",
+			wantFortif:  "2",
+			wantFortble: "2",
+			wantNoFort:  "0",
+		},
+		{
+			name:        "fortifiable but unfortified calls",
+			target:      func(t *testing.T) string { return requireFixture(t, "none") },
+			wantOutput:  "No",
+			wantColor:   "red",
+			wantFortif:  "0",
+			wantFortble: "2",
+			wantNoFort:  "2",
+		},
+		{
+			// Dynamically linked executable (PT_DYNAMIC, a few dynsyms) that
+			// calls nothing fortifiable: the fszero* case.
+			name:        "dynamic binary with nothing fortifiable",
+			target:      func(t *testing.T) string { return goStdlibELFFixture(t, "gcc-amd64-linux-exec") },
+			wantOutput:  "N/A",
+			wantColor:   "unset",
+			wantFortif:  "0",
+			wantFortble: "0",
+			wantNoFort:  "0",
+		},
+		{
+			name:        "no dynamic symbols at all",
+			target:      func(t *testing.T) string { return requireFixture(t, "rel.o") },
+			wantOutput:  "N/A",
+			wantColor:   "unset",
+			wantFortif:  "0",
+			wantFortble: "0",
+			wantNoFort:  "0",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			target := tt.target(t)
+			ef, _ := openELF(t, target)
+
+			res, err := Fortify(target, ef, libc)
+			if err != nil {
+				t.Fatalf("Fortify() error = %v", err)
+			}
+			if res.Output != tt.wantOutput {
+				t.Errorf("Output = %q, want %q", res.Output, tt.wantOutput)
+			}
+			if res.Color != tt.wantColor {
+				t.Errorf("Color = %q, want %q", res.Color, tt.wantColor)
+			}
+			if res.Fortified != tt.wantFortif {
+				t.Errorf("Fortified = %q, want %q", res.Fortified, tt.wantFortif)
+			}
+			if res.Fortifiable != tt.wantFortble {
+				t.Errorf("Fortifiable = %q, want %q", res.Fortifiable, tt.wantFortble)
+			}
+			if res.NoFortify != tt.wantNoFort {
+				t.Errorf("NoFortify = %q, want %q", res.NoFortify, tt.wantNoFort)
+			}
+			// libc itself supports fortify in every case; N/A must not hide that.
+			if res.LibcSupport != "Yes" {
+				t.Errorf("LibcSupport = %q, want Yes", res.LibcSupport)
+			}
+		})
+	}
+}
