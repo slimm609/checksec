@@ -62,3 +62,12 @@ gcc -o output/fszero fszero.c -w -D_FORTIFY_SOURCE=0 -O2 -s
 clang -o output/fszero_cl fszero.c -w -D_FORTIFY_SOURCE=0 -O2 -s
 gcc -m32 -o output/fszero32 fszero.c -w -D_FORTIFY_SOURCE=0 -O2 -s
 clang -m32 -o output/fszero_cl32 fszero.c -w -D_FORTIFY_SOURCE=0 -O2 -s
+
+# Crafted ELFs with two PT_GNU_STACK program headers (slimm609/checksec#357). The kernel and ld.so let the LAST one
+# decide, so RW-RWE has an executable stack and RWE-RW a non-executable one. Patched from the hardened "all" builds;
+# the *_off variant gives the RW entry a non-zero p_offset.
+for sfx in "" 32; do
+  python3 mk_multi_gnu_stack.py "output/all${sfx}" "output/nx_multi_rw_rwe${sfx}" --first RW --last RWX
+  python3 mk_multi_gnu_stack.py "output/all${sfx}" "output/nx_multi_rwe_rw${sfx}" --first RWX --last RW
+  python3 mk_multi_gnu_stack.py "output/all${sfx}" "output/nx_multi_rwe_rw_off${sfx}" --first RWX --last RW --last-offset 0x1000
+done
