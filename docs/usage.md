@@ -116,8 +116,8 @@ The same scan rendered in each format (columns trimmed for space):
 !!! tip "Machine-readable output carries the color too"
 
     `json`, `yaml`, and `xml` emit a list of files, and every check reports both
-    a `value` (the text) and a `status` (`green`, `yellow`, `red`, `unset`,
-    `italic`). See [Understanding output](output.md) for what each status means.
+    a `value` (the text) and a `status` (`boldgreen`, `green`, `yellow`, `red`,
+    `unset`, `italic`). See [Understanding output](output.md) for what each status means.
 
 ## Exploitability reasoning
 
@@ -162,7 +162,7 @@ checksec file ./myapp -o llm --llm-no-preamble   # drop the directive (bring you
 
 `--fail-if` turns checksec into a build/CI gate. Pass a comma-separated list of
 [check keys](output.md#status-values); checksec exits non-zero if any of them is
-not green:
+neither `green` nor `boldgreen`:
 
 ```bash
 # Fail the pipeline unless the binary has RELRO, a stack canary, and PIE

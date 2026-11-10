@@ -9,6 +9,7 @@ report at a glance.
 | Swatch | Status (JSON/XML/YAML) | Meaning |
 |:------:|:-----------------------|:--------|
 | <span style="display:inline-block;width:1em;height:1em;border-radius:50%;background:#2e7d32"></span> **green** | `green` | **Good.** The mitigation is present and effective. |
+| <span style="display:inline-block;width:1em;height:1em;border-radius:50%;background:#1b8a2b;border:2px solid #2e7d32"></span> **bold green** | `boldgreen` | **Best.** A posture above *good* — currently only the AArch64 CFI check awards it (backward CFI + fine-grained forward CFI + BTI). |
 | <span style="display:inline-block;width:1em;height:1em;border-radius:50%;background:#f9a825"></span> **yellow** | `yellow` | **Warning.** Partial protection, or checksec **could not determine** the state (see [Unknown](#unknown-vs-na) below). |
 | <span style="display:inline-block;width:1em;height:1em;border-radius:50%;background:#c62828"></span> **red** | `red` | **Bad.** The mitigation is missing/disabled, or an error occurred reading the binary. |
 | <span style="display:inline-block;width:1em;height:1em;border-radius:50%;border:1px solid #888;background:transparent"></span> **plain** | `unset` | **Informational.** Neutral facts that aren't good or bad — counts, `DSO`, the active sanitizer set. |
@@ -49,6 +50,7 @@ The machine-readable `status` field takes one of these literal values:
 
 | `status` | Color | Source constant |
 |----------|-------|-----------------|
+| `boldgreen` | bold green | `StatusBoldGreen` |
 | `green`  | green | `StatusGood` |
 | `yellow` | yellow | `StatusWarn` |
 | `red`    | red | `StatusBad` / `StatusError` |

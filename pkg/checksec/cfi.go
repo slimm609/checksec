@@ -3,6 +3,7 @@ package checksec
 import (
 	"debug/elf"
 	"encoding/binary"
+	"strings"
 )
 
 type x86CET struct {
@@ -11,8 +12,11 @@ type x86CET struct {
 }
 
 type armPACBTI struct {
-	pac bool
-	bti bool
+	pac bool // return-address signing (backward edge): -mbranch-protection=pac-ret
+	gcs bool // Guarded Control Stack (backward edge, hardware): -mguarded-control-stack
+	scs bool // software shadow call stack (backward edge): -fsanitize=shadow-call-stack, code-pattern probe
+	fwd bool // function-pointer signing (forward edge): -fptrauth-calls (PAuth ABI)
+	bti bool // coarse-grained forward edge: BTI
 }
 
 type riscvCFI struct {
@@ -24,6 +28,24 @@ const GnuPropertyArmFeature1Flag uint32 = 0xc0000000
 const GnuPropertyX86Feature1Flag uint32 = 0xc0000002
 const GnuPropertyRiscvFeature1Flag uint32 = 0xc0000000
 
+// GnuPropertyArmFeaturePAuth marks a binary as using the PAuth ELF ABI
+// signing schema (function-pointer signing, e.g. LLVM 19+ -fptrauth-calls).
+// pauthabielf64: pr_data is two 64-bit words, platform identifier and
+// version number; (0, 0) is reserved as "incompatible".
+const GnuPropertyArmFeaturePAuth uint32 = 0xc0000001
+
+// pauthPlatformLLVMLinux is the platform identifier clang/lld emit for
+// -fptrauth-* on Linux targets (llvm/BinaryFormat/ELF.h). It is the only
+// platform whose version word has publicly defined feature bits.
+const pauthPlatformLLVMLinux = 0x10000002
+
+// Version-word feature bits for pauthPlatformLLVMLinux
+// (llvm/BinaryFormat/ELF.h).
+const (
+	pauthLLVMLinuxVersionCalls   = 1 << 1 // -fptrauth-calls (forward edge)
+	pauthLLVMLinuxVersionReturns = 1 << 2 // -fptrauth-returns (backward edge)
+)
+
 const (
 	GnuPropertyX86FeatureIBT uint32 = 1 << iota
 	GnuPropertyX86FeatureSHSTK
@@ -32,6 +54,7 @@ const (
 const (
 	GnuPropertyArmFeatureBTI uint32 = 1 << iota
 	GnuPropertyArmFeaturePAC
+	GnuPropertyArmFeatureSCS // GCS: Guarded Control Stack (hardware shadow call stack)
 )
 
 const (
@@ -44,23 +67,24 @@ func Cfi(file *elf.File) *Result {
 	res := &Result{}
 	var hwOutput string
 	var hwColor Status
-	notes := file.Section(".note.gnu.property")
-	if notes == nil {
-		resUnknown(res)
-		return res
+
+	var desc []byte
+	if notes := file.Section(".note.gnu.property"); notes != nil {
+		propertyData, err := notes.Data()
+		if err != nil {
+			resUnknown(res)
+			return res
+		}
+
+		// Section.Data() returns the FULL note section: namesz|descsz|type|"GNU\0"
+		// followed by the property array (the desc). Extract just the desc.
+		desc = gnuPropertyPayload(propertyData, file.ByteOrder)
 	}
 
-	propertyData, err := notes.Data()
-	if err != nil {
-		resUnknown(res)
-		return res
-	}
-
-	// Section.Data() returns the FULL note section: namesz|descsz|type|"GNU\0"
-	// followed by the property array (the desc). Extract just the desc.
-	if desc := gnuPropertyPayload(propertyData, file.ByteOrder); desc != nil {
-		hwOutput, hwColor = hwCFIDispatch(file.Machine, file.Class, desc, file.ByteOrder)
-	}
+	// Software shadow call stack (-fsanitize=shadow-call-stack) emits no ELF
+	// note, so AArch64 dispatch also runs its code-pattern probe; every other
+	// architecture reports "" without property notes, as before.
+	hwOutput, hwColor = hwCFIDispatch(file, desc)
 
 	// Detect Clang CFI presence and classify Single-Module vs Multi-Module
 	clangMode := "none"
@@ -105,24 +129,43 @@ func Cfi(file *elf.File) *Result {
 	return res
 }
 
-// hwCFIDispatch selects the per-arch hardware-CFI parser. Returns ("", "") for
-// architectures with no known .note.gnu.property CFI encoding — the caller
-// then falls back to Clang-CFI symbol detection or Unknown.
-func hwCFIDispatch(m elf.Machine, c elf.Class, data []byte, bo binary.ByteOrder) (string, Status) {
-	align := propAlign(c)
-	switch m {
+// hwCFIDispatch selects the per-arch hardware-CFI parser. desc is the
+// .note.gnu.property payload (nil when the binary carries no property notes)
+// and file supplies machine, class, byte order and sections. Returns ("", "")
+// when nothing is detected — the caller then falls back to Clang-CFI symbol
+// detection or Unknown.
+func hwCFIDispatch(file *elf.File, desc []byte) (string, Status) {
+	if desc == nil && file.Machine != elf.EM_AARCH64 {
+		// No property notes and no code-pattern probe available.
+		return "", ""
+	}
+	align := propAlign(file.Class)
+	switch file.Machine {
 	case elf.EM_X86_64, elf.EM_386:
 		// x86 CET (Shadow Stack + IBT) — same property encoding for both
 		// 32- and 64-bit x86, only the property-array alignment differs.
 		// https://gitlab.com/x86-psABIs/x86-64-ABI
-		return cetOutputString(parseX86CETFromNotes(data, bo, align))
+		return cetOutputString(parseX86CETFromNotes(desc, file.ByteOrder, align))
 	case elf.EM_AARCH64:
-		// AArch64 PAC + BTI.
-		return armOutputString(parseArmPACBTIFromNotes(data, bo, align))
+		// AArch64: PAC/GCS/BTI bits come from FEATURE_1_AND, FwdPAC from the
+		// PAuth property, and the software shadow call stack leaves no note,
+		// so it is probed from executable sections.
+		var parsed armPACBTI
+		if desc != nil {
+			parsed = parseArmPACBTIFromNotes(desc, file.ByteOrder, align)
+		}
+		scs := scsProbeScan(file)
+		if desc == nil && !scs {
+			return "", ""
+		}
+		if scs {
+			parsed.scs = true
+		}
+		return armOutputString(parsed)
 	case elf.EM_RISCV:
 		// RISC-V Zicfilp (landing pads) + Zicfiss (shadow stack).
 		// binutils include/elf/common.h: GNU_PROPERTY_RISCV_FEATURE_1_AND.
-		return riscvOutputString(parseRiscvCFIFromNotes(data, bo, align))
+		return riscvOutputString(parseRiscvCFIFromNotes(desc, file.ByteOrder, align))
 	default:
 		return "", ""
 	}
@@ -170,10 +213,12 @@ func propAlign(c elf.Class) int {
 	return 8
 }
 
-// walkGNUProperties walks a .note.gnu.property payload, calling fn for each
-// 4-byte (datasz==4) property whose pr_type matches want. The payload is
-// padded to align bytes per entry. Bounds-safe on truncated/malformed input.
-func walkGNUProperties(data []byte, bo binary.ByteOrder, align int, want uint32, fn func(mask uint32)) {
+// walkGNUProperties walks a .note.gnu.property payload, calling fn once per
+// property record with its pr_type, datasz and payload, so callers can
+// consume every property type in a single pass. The payload is padded to
+// align bytes per entry. Bounds-safe on truncated/malformed input. Callers
+// validate datasz for the record layouts they understand.
+func walkGNUProperties(data []byte, bo binary.ByteOrder, align int, fn func(ptype, datasz uint32, payload []byte)) {
 	alignUp := func(n uint32) uint64 { return (uint64(n) + uint64(align-1)) &^ uint64(align-1) }
 	i := 0
 	for i+8 <= len(data) {
@@ -184,34 +229,58 @@ func walkGNUProperties(data []byte, bo binary.ByteOrder, align int, want uint32,
 		if payloadLen > uint64(len(data)-i) {
 			break
 		}
-		if datasz == 4 && ptype == want {
-			fn(bo.Uint32(data[i : i+4]))
-		}
+		fn(ptype, datasz, data[i:i+int(datasz)])
 		i += int(payloadLen)
 	}
 }
 
 func parseX86CETFromNotes(data []byte, bo binary.ByteOrder, align int) x86CET {
 	var parsed x86CET
-	walkGNUProperties(data, bo, align, GnuPropertyX86Feature1Flag, func(m uint32) {
-		parsed = parseBitmaskForx86CET(m)
+	walkGNUProperties(data, bo, align, func(ptype, datasz uint32, payload []byte) {
+		if ptype == GnuPropertyX86Feature1Flag && datasz == 4 && len(payload) >= 4 {
+			parsed = parseBitmaskForx86CET(bo.Uint32(payload))
+		}
 	})
 	return parsed
 }
 
 func parseArmPACBTIFromNotes(data []byte, bo binary.ByteOrder, align int) armPACBTI {
 	var parsed armPACBTI
-	walkGNUProperties(data, bo, align, GnuPropertyArmFeature1Flag, func(m uint32) {
-		parsed = parseBitmaskForArmPACBTI(m)
+	walkGNUProperties(data, bo, align, func(ptype, datasz uint32, payload []byte) {
+		switch ptype {
+		case GnuPropertyArmFeature1Flag:
+			if datasz == 4 && len(payload) >= 4 {
+				f := parseBitmaskForArmPACBTI(bo.Uint32(payload))
+				parsed.pac = parsed.pac || f.pac
+				parsed.gcs = parsed.gcs || f.gcs
+				parsed.bti = parsed.bti || f.bti
+			}
+		case GnuPropertyArmFeaturePAuth:
+			// pauthabielf64: pr_data = { platform identifier, version }.
+			// The LLVM Linux platform's version word is a per-feature
+			// bitmask: bit 1 signs function pointers used in calls
+			// (-fptrauth-calls, forward edge); bit 2 signs return addresses
+			// (-fptrauth-returns, a backward-edge mechanism equivalent to
+			// PAC). Other platforms' version words are platform-defined, so
+			// a non-zero platform alone must not count as forward PAC.
+			if datasz == 16 && len(payload) >= 16 && bo.Uint64(payload[0:8]) == pauthPlatformLLVMLinux {
+				version := bo.Uint64(payload[8:16])
+				parsed.fwd = parsed.fwd || version&pauthLLVMLinuxVersionCalls != 0
+				parsed.pac = parsed.pac || version&pauthLLVMLinuxVersionReturns != 0
+			}
+		}
 	})
 	return parsed
 }
 
 func parseRiscvCFIFromNotes(data []byte, bo binary.ByteOrder, align int) riscvCFI {
 	var parsed riscvCFI
-	walkGNUProperties(data, bo, align, GnuPropertyRiscvFeature1Flag, func(m uint32) {
-		parsed.lp = m&GnuPropertyRiscvFeatureCFILP != 0
-		parsed.ss = m&GnuPropertyRiscvFeatureCFISS != 0
+	walkGNUProperties(data, bo, align, func(ptype, datasz uint32, payload []byte) {
+		if ptype == GnuPropertyRiscvFeature1Flag && datasz == 4 && len(payload) >= 4 {
+			m := bo.Uint32(payload)
+			parsed.lp = parsed.lp || m&GnuPropertyRiscvFeatureCFILP != 0
+			parsed.ss = parsed.ss || m&GnuPropertyRiscvFeatureCFISS != 0
+		}
 	})
 	return parsed
 }
@@ -244,18 +313,65 @@ func cetOutputString(s x86CET) (string, Status) {
 	}
 }
 
-// armOutputString maps parsed AArch64 PAC/BTI features to the display string and status.
+// armOutputString maps parsed AArch64 CFI features to the display string
+// and status. Backward edge — any one suffices:
+//
+//	PAC — return-address signing, -mbranch-protection=pac-ret (FEATURE_1 bit 1)
+//	GCS — hardware Guarded Control Stack, -mguarded-control-stack (FEATURE_1 bit 2)
+//	SCS — software shadow call stack, -fsanitize=shadow-call-stack (code probe)
+//
+// Forward edge: FwdPAC — fine-grained, -fptrauth-calls (PAuth ABI); BTI —
+// coarse-grained landing pads.
+//
+// Status policy (four states):
+//   - boldgreen: backward CFI AND fine-grained forward CFI (FwdPAC) AND BTI
+//   - green:     backward CFI AND at least one forward mechanism, without the
+//     full FwdPAC+BTI combination
+//   - yellow:    only forward or only backward enabled
+//   - red:       neither enabled
 func armOutputString(s armPACBTI) (string, Status) {
-	switch {
-	case s.pac && s.bti:
-		return "PAC & BTI", StatusGood
-	case s.pac:
-		return "PAC & NO BTI", StatusWarn
-	case s.bti:
-		return "NO PAC & BTI", StatusWarn
-	default:
-		return "NO PAC & NO BTI", StatusBad
+	var parts []string
+	if s.pac {
+		parts = append(parts, "PAC")
 	}
+	if s.gcs {
+		parts = append(parts, "GCS")
+	}
+	if s.scs {
+		parts = append(parts, "SCS")
+	}
+	if len(parts) == 0 {
+		// No backward-edge mechanism at all: keep the "… & NO …" pattern so
+		// one-edge results stay readable.
+		parts = append(parts, "NO PAC")
+	}
+	if s.fwd {
+		parts = append(parts, "FwdPAC")
+	}
+	if s.bti {
+		parts = append(parts, "BTI")
+	} else {
+		parts = append(parts, "NO BTI")
+	}
+
+	backward := s.pac || s.gcs || s.scs
+	forward := s.fwd || s.bti
+
+	var status Status
+	switch {
+	case backward && s.fwd && s.bti:
+		// Fine-grained forward CFI plus BTI landing-pad enforcement for
+		// indirect branches FwdPAC does not cover (asm, PLT, uninstrumented
+		// libraries), and a backward-edge mechanism.
+		status = StatusBoldGreen
+	case backward && forward:
+		status = StatusGood
+	case forward || backward:
+		status = StatusWarn
+	default:
+		status = StatusBad
+	}
+	return strings.Join(parts, " & "), status
 }
 
 func parseBitmaskForx86CET(bitmask uint32) x86CET {
@@ -280,6 +396,7 @@ func parseBitmaskForx86CET(bitmask uint32) x86CET {
 func parseBitmaskForArmPACBTI(bitmask uint32) armPACBTI {
 	result := armPACBTI{
 		pac: false,
+		gcs: false,
 		bti: false,
 	}
 	for bitmask > 0 {
@@ -289,6 +406,8 @@ func parseBitmaskForArmPACBTI(bitmask uint32) armPACBTI {
 		switch bit {
 		case GnuPropertyArmFeaturePAC:
 			result.pac = true
+		case GnuPropertyArmFeatureSCS:
+			result.gcs = true
 		case GnuPropertyArmFeatureBTI:
 			result.bti = true
 		}

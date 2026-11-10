@@ -9,7 +9,8 @@ import (
 )
 
 // applyFailIf evaluates the global --fail-if gate against reports and, if any
-// required check is not StatusGood, prints the failures to stderr and exits 1.
+// required check is neither StatusGood nor StatusBoldGreen, prints the failures
+// to stderr and exits 1.
 func applyFailIf(reports []utils.FileReport) {
 	keys := utils.ParseFailIfKeys(failIf)
 	if len(keys) == 0 {

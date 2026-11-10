@@ -13,7 +13,7 @@ import (
 // LLM-oriented output.
 func sevGlyph(s checksec.Status) string {
 	switch s {
-	case checksec.StatusGood:
+	case checksec.StatusGood, checksec.StatusBoldGreen:
 		return "ok"
 	case checksec.StatusWarn:
 		return "~"
@@ -55,7 +55,7 @@ func presentCheckIDs(reports []FileReport, fields []Field) ([]string, map[string
 				seen[f.Key] = true
 				ids = append(ids, f.Key)
 			}
-			if res.Status != checksec.StatusGood {
+			if res.Status != checksec.StatusGood && res.Status != checksec.StatusBoldGreen {
 				nonGood[f.Key] = true
 			}
 		}

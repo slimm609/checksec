@@ -33,10 +33,31 @@ func TestArmOutputString(t *testing.T) {
 		wantOut    string
 		wantStatus Status
 	}{
+		// boldgreen: backward (any of PAC/GCS/SCS) + fine-grained forward
+		// (FwdPAC) + BTI landing-pad enforcement
+		{armPACBTI{pac: true, fwd: true, bti: true}, "PAC & FwdPAC & BTI", StatusBoldGreen},
+		{armPACBTI{gcs: true, fwd: true, bti: true}, "GCS & FwdPAC & BTI", StatusBoldGreen},
+		{armPACBTI{scs: true, fwd: true, bti: true}, "SCS & FwdPAC & BTI", StatusBoldGreen},
+		{armPACBTI{pac: true, gcs: true, scs: true, fwd: true, bti: true}, "PAC & GCS & SCS & FwdPAC & BTI", StatusBoldGreen},
+		// good: backward + at least one forward mechanism, without the full
+		// FwdPAC+BTI combination
 		{armPACBTI{pac: true, bti: true}, "PAC & BTI", StatusGood},
-		{armPACBTI{pac: true, bti: false}, "PAC & NO BTI", StatusWarn},
-		{armPACBTI{pac: false, bti: true}, "NO PAC & BTI", StatusWarn},
-		{armPACBTI{pac: false, bti: false}, "NO PAC & NO BTI", StatusBad},
+		{armPACBTI{gcs: true, bti: true}, "GCS & BTI", StatusGood},
+		{armPACBTI{scs: true, bti: true}, "SCS & BTI", StatusGood},
+		{armPACBTI{pac: true, fwd: true}, "PAC & FwdPAC & NO BTI", StatusGood},
+		{armPACBTI{gcs: true, fwd: true}, "GCS & FwdPAC & NO BTI", StatusGood},
+		{armPACBTI{scs: true, fwd: true}, "SCS & FwdPAC & NO BTI", StatusGood},
+		{armPACBTI{pac: true, gcs: true, bti: true}, "PAC & GCS & BTI", StatusGood},
+		{armPACBTI{pac: true, scs: true, bti: true}, "PAC & SCS & BTI", StatusGood},
+		// warn: only forward or only backward enabled
+		{armPACBTI{pac: true}, "PAC & NO BTI", StatusWarn},
+		{armPACBTI{gcs: true}, "GCS & NO BTI", StatusWarn},
+		{armPACBTI{scs: true}, "SCS & NO BTI", StatusWarn},
+		{armPACBTI{bti: true}, "NO PAC & BTI", StatusWarn},
+		{armPACBTI{fwd: true}, "NO PAC & FwdPAC & NO BTI", StatusWarn},
+		{armPACBTI{fwd: true, bti: true}, "NO PAC & FwdPAC & BTI", StatusWarn},
+		// bad: neither
+		{armPACBTI{}, "NO PAC & NO BTI", StatusBad},
 	}
 	for _, c := range cases {
 		gotOut, gotStatus := armOutputString(c.in)
@@ -60,16 +81,17 @@ func TestProp_X86Bitmask_Oracle(t *testing.T) {
 	})
 }
 
-// parseBitmaskForArmPACBTI must set exactly the PAC/BTI flags corresponding to
-// the GNU property feature bits.
+// parseBitmaskForArmPACBTI must set exactly the PAC/BTI/SCS flags
+// corresponding to the GNU property feature bits.
 func TestProp_ArmBitmask_Oracle(t *testing.T) {
 	rapid.Check(t, func(t *rapid.T) {
 		m := rapid.Uint32().Draw(t, "mask")
 		got := parseBitmaskForArmPACBTI(m)
 		wantBTI := m&GnuPropertyArmFeatureBTI != 0
 		wantPAC := m&GnuPropertyArmFeaturePAC != 0
-		if got.bti != wantBTI || got.pac != wantPAC {
-			t.Fatalf("mask=%#x got=%+v want bti=%v pac=%v", m, got, wantBTI, wantPAC)
+		wantGCS := m&GnuPropertyArmFeatureSCS != 0
+		if got.bti != wantBTI || got.pac != wantPAC || got.gcs != wantGCS {
+			t.Fatalf("mask=%#x got=%+v want bti=%v pac=%v gcs=%v", m, got, wantBTI, wantPAC, wantGCS)
 		}
 	})
 }
@@ -126,6 +148,99 @@ func TestArmNotes_SkipsNon4ByteProperty(t *testing.T) {
 	got := parseArmPACBTIFromNotes(data, bo, 8)
 	if !got.pac || !got.bti {
 		t.Fatalf("feature property after an 8-byte property was missed: %+v", got)
+	}
+}
+
+// buildPauthNote assembles a GNU_PROPERTY_AARCH64_FEATURE_PAUTH record:
+// type(4) | datasz(4)=16 | platform identifier(8) | version number(8),
+// matching pauthabielf64 for ELFCLASS64.
+func buildPauthNote(bo binary.ByteOrder, platform, version uint64) []byte {
+	b := make([]byte, 24)
+	bo.PutUint32(b[0:4], GnuPropertyArmFeaturePAuth)
+	bo.PutUint32(b[4:8], 16)
+	bo.PutUint64(b[8:16], platform)
+	bo.PutUint64(b[16:24], version)
+	return b
+}
+
+// A FEATURE_PAUTH record is only meaningful for the LLVM Linux platform
+// (0x10000002), whose version word is a per-feature bitmask: bit 1 is
+// -fptrauth-calls (forward edge → FwdPAC), bit 2 is -fptrauth-returns
+// (backward edge → PAC). Other platforms' version words are platform-defined
+// and must not count; neither must the reserved "incompatible" tuples.
+func TestArmNotes_FwdPACProperty(t *testing.T) {
+	bo := binary.LittleEndian
+	cases := []struct {
+		name     string
+		platform uint64
+		version  uint64
+		wantFwd  bool
+		wantPac  bool
+	}{
+		{"llvm linux calls bit", pauthPlatformLLVMLinux, pauthLLVMLinuxVersionCalls, true, false},
+		{"llvm linux returns bit", pauthPlatformLLVMLinux, pauthLLVMLinuxVersionReturns, false, true},
+		{"llvm linux calls+returns", pauthPlatformLLVMLinux, 0x6, true, true},
+		{"llvm linux intrinsics only", pauthPlatformLLVMLinux, 1, false, false},
+		{"llvm linux zero version", pauthPlatformLLVMLinux, 0, false, false},
+		{"baremetal platform ignored", 1, 1, false, false},
+		{"nonzero platform zero version ignored", 0x1000, 0, false, false},
+		{"reserved incompatible tuple", 0, 0, false, false},
+		{"invalid platform zero", 0, 1, false, false},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			got := parseArmPACBTIFromNotes(buildPauthNote(bo, c.platform, c.version), bo, 8)
+			if got.fwd != c.wantFwd || got.pac != c.wantPac {
+				t.Fatalf("platform=%#x version=%#x got fwd=%v pac=%v, want fwd=%v pac=%v",
+					c.platform, c.version, got.fwd, got.pac, c.wantFwd, c.wantPac)
+			}
+		})
+	}
+}
+
+// FEATURE_1 (PAC/BTI/GCS bits) and FEATURE_PAUTH (LLVM Linux platform, calls
+// bit) records can coexist in one property array, in either order.
+func TestArmNotes_FeatureAndPAuthCombined(t *testing.T) {
+	bo := binary.LittleEndian
+	feat := buildPropertyNote(bo, GnuPropertyArmFeature1Flag, GnuPropertyArmFeaturePAC|GnuPropertyArmFeatureBTI)
+	pauth := buildPauthNote(bo, pauthPlatformLLVMLinux, pauthLLVMLinuxVersionCalls)
+
+	for _, data := range [][]byte{append(feat, pauth...), append(pauth, feat...)} {
+		got := parseArmPACBTIFromNotes(data, bo, 8)
+		if !got.pac || !got.fwd || !got.bti {
+			t.Fatalf("combined notes not fully parsed: %+v", got)
+		}
+	}
+
+	out, st := armOutputString(parseArmPACBTIFromNotes(append(feat, pauth...), bo, 8))
+	if out != "PAC & FwdPAC & BTI" || st != StatusBoldGreen {
+		t.Fatalf("combined notes output = %q/%q, want %q/%q", out, st, "PAC & FwdPAC & BTI", StatusBoldGreen)
+	}
+}
+
+// A FEATURE_1 record with only the GCS bit set marks the hardware shadow call
+// stack (backward edge) without PAC or BTI.
+func TestArmNotes_GCSFeature(t *testing.T) {
+	bo := binary.LittleEndian
+	data := buildPropertyNote(bo, GnuPropertyArmFeature1Flag, GnuPropertyArmFeatureSCS|GnuPropertyArmFeatureBTI)
+	got := parseArmPACBTIFromNotes(data, bo, 8)
+	if !got.gcs || !got.bti || got.pac || got.scs {
+		t.Fatalf("GCS feature parse = %+v, want {gcs,bti} only", got)
+	}
+	out, st := armOutputString(got)
+	if out != "GCS & BTI" || st != StatusGood {
+		t.Fatalf("GCS output = %q/%q, want %q/%q", out, st, "GCS & BTI", StatusGood)
+	}
+}
+
+// A FEATURE_PAUTH record whose declared datasz overruns the buffer must be
+// dropped without panicking and without setting forward PAC.
+func TestArmNotes_TruncatedPAuthIgnored(t *testing.T) {
+	bo := binary.LittleEndian
+	full := buildPauthNote(bo, pauthPlatformLLVMLinux, pauthLLVMLinuxVersionCalls)
+	truncated := full[:20] // header + only half the payload
+	if got := parseArmPACBTIFromNotes(truncated, bo, 8); got.fwd {
+		t.Fatalf("truncated FEATURE_PAUTH set fwd: %+v", got)
 	}
 }
 

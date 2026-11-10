@@ -34,10 +34,12 @@ func TestArmPACBTI(t *testing.T) {
 		expected armPACBTI
 	}{
 		{"no pac & no bti", 0, armPACBTI{pac: false, bti: false}},
-		{"no pac & bti", 1, armPACBTI{pac: false, bti: true}},
-		{"pac & no bti", 2, armPACBTI{pac: true, bti: false}},
+		{"no pac & bti", 1, armPACBTI{bti: true}},
+		{"pac & no bti", 2, armPACBTI{pac: true}},
 		{"pac & bti", 3, armPACBTI{pac: true, bti: true}},
-		{"additional bits set", 0xFFFFFFFF, armPACBTI{pac: true, bti: true}},
+		{"gcs only", 4, armPACBTI{gcs: true}},
+		{"pac & gcs & bti", 7, armPACBTI{pac: true, gcs: true, bti: true}},
+		{"additional bits set", 0xFFFFFFFF, armPACBTI{pac: true, gcs: true, bti: true}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -89,11 +91,12 @@ func TestParseBitmaskForArmPACBTI_EdgeCases(t *testing.T) {
 		expected armPACBTI
 	}{
 		{"zero", 0, armPACBTI{pac: false, bti: false}},
-		{"max uint32", 0xFFFFFFFF, armPACBTI{pac: true, bti: true}},
+		{"max uint32", 0xFFFFFFFF, armPACBTI{pac: true, gcs: true, bti: true}},
 		{"only pac", GnuPropertyArmFeaturePAC, armPACBTI{pac: true, bti: false}},
+		{"only gcs", GnuPropertyArmFeatureSCS, armPACBTI{gcs: true}},
 		{"only bti", GnuPropertyArmFeatureBTI, armPACBTI{pac: false, bti: true}},
 		{"both flags", GnuPropertyArmFeaturePAC | GnuPropertyArmFeatureBTI, armPACBTI{pac: true, bti: true}},
-		{"other bits set", 0xFFFFFFFC, armPACBTI{pac: false, bti: false}},
+		{"other bits set", 0xFFFFFFFC, armPACBTI{gcs: true}},
 	}
 
 	for _, tt := range tests {
@@ -135,6 +138,19 @@ func TestConstants(t *testing.T) {
 	}
 	if GnuPropertyArmFeaturePAC != 2 {
 		t.Errorf("Expected GnuPropertyArmFeaturePAC to be 2, got %d", GnuPropertyArmFeaturePAC)
+	}
+	if GnuPropertyArmFeatureSCS != 4 {
+		t.Errorf("Expected GnuPropertyArmFeatureSCS to be 4, got %d", GnuPropertyArmFeatureSCS)
+	}
+	if GnuPropertyArmFeaturePAuth != 0xc0000001 {
+		t.Errorf("Expected GnuPropertyArmFeaturePAuth to be 0xc0000001, got 0x%x", GnuPropertyArmFeaturePAuth)
+	}
+	if pauthPlatformLLVMLinux != 0x10000002 {
+		t.Errorf("Expected pauthPlatformLLVMLinux to be 0x10000002, got %#x", pauthPlatformLLVMLinux)
+	}
+	if pauthLLVMLinuxVersionCalls != 2 || pauthLLVMLinuxVersionReturns != 4 {
+		t.Errorf("Expected PAuth version bits calls=2 returns=4, got %d/%d",
+			pauthLLVMLinuxVersionCalls, pauthLLVMLinuxVersionReturns)
 	}
 
 	// Test flag constants

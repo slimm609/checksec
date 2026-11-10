@@ -6,12 +6,16 @@ package checksec
 type Status string
 
 const (
-	StatusGood  Status = "green"
-	StatusWarn  Status = "yellow"
-	StatusBad   Status = "red"
-	StatusInfo  Status = "unset"
-	StatusNA    Status = "italic"
-	StatusError Status = "red"
+	// StatusBoldGreen is a passing grade above StatusGood, rendered in bold
+	// green. Its string value stays a colour name because it appears verbatim
+	// in machine-readable output (the JSON/XML/YAML status field).
+	StatusBoldGreen Status = "boldgreen"
+	StatusGood      Status = "green"
+	StatusWarn      Status = "yellow"
+	StatusBad       Status = "red"
+	StatusInfo      Status = "unset"
+	StatusNA        Status = "italic"
+	StatusError     Status = "red"
 )
 
 // Result is the uniform return shape for every binary check. All output

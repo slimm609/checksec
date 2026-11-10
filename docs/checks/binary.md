@@ -81,22 +81,55 @@ gcc -fstack-protector-all      # every function (higher overhead)
 **How checksec detects it:** parses the `.note.gnu.property` `GNU_PROPERTY_*`
 bits, dispatched by architecture, and falls back to Clang-CFI symbol detection.
 
-CFI is **architecture-specific** — the value names the relevant feature pair:
+CFI is **architecture-specific** — the value names the relevant features:
 
-| Arch | Feature pair | Both | One | Neither |
+| Arch | Features | Both | One | Neither |
 |------|--------------|:----:|:---:|:-------:|
 | x86 / x86-64 | Shadow stack + IBT | `SHSTK & IBT` (green) | `… & NO …` (yellow) | `NO SHSTK & NO IBT` (red) |
-| ARM (aarch64) | PAC + BTI | `PAC & BTI` (green) | `… & NO …` (yellow) | `NO PAC & NO BTI` (red) |
+| ARM (aarch64) | backward (PAC/GCS/SCS) + forward (FwdPAC/BTI) | see policy below | `… & NO …` (yellow) | `NO PAC & NO BTI` (red) |
 | RISC-V | Zicfilp + Zicfiss | `Zicfilp & Zicfiss` (green) | `… & NO …` (yellow) | `NO Zicfilp & NO Zicfiss` (red) |
+
+On AArch64 every edge is reported as its own token:
+
+- Backward edge — any one suffices:
+  - `PAC` — return-address signing, `-mbranch-protection=pac-ret`, recorded
+    in `GNU_PROPERTY_AARCH64_FEATURE_1_AND` (PAC bit).
+  - `GCS` — hardware Guarded Control Stack (Armv8.9-A / Armv9.4-A),
+    `-mguarded-control-stack`, recorded in `FEATURE_1_AND` (GCS bit).
+  - `SCS` — software shadow call stack, `-fsanitize=shadow-call-stack`.
+    It emits no ELF note, so checksec detects it with a code-pattern probe
+    (the `str x30, [x18], #8` / `ldr x30, [x18, #-8]!` pair the backend emits
+    for the x18 shadow stack). Like the stack-clash probe, this is a
+    best-effort heuristic.
+- Forward edge:
+  - `FwdPAC` — function-pointer signing (fine-grained), LLVM 19+
+    `-fptrauth-calls`, recorded in `GNU_PROPERTY_AARCH64_FEATURE_PAUTH`
+    (0xc0000001, PAuth ABI). The version word of the LLVM Linux platform
+    (0x10000002) is checked per-feature: the calls bit sets `FwdPAC`, the
+    returns bit counts as `PAC`; other platforms' version words are not
+    interpreted.
+  - `BTI` — coarse-grained landing pads.
+
+The AArch64 status uses four levels:
+
+| Status | Condition |
+|:------:|-----------|
+| `boldgreen` (bold green) | backward CFI (any of `PAC`/`GCS`/`SCS`) **and** fine-grained forward CFI (`FwdPAC`) **and** `BTI` — BTI still matters under FwdPAC because indirect branches FwdPAC does not cover (hand-written asm, PLT, jump tables, uninstrumented libraries) get landing-pad enforcement |
+| `green` | backward CFI **and** at least one forward mechanism, without the full `FwdPAC`+`BTI` combination (e.g. `PAC & BTI`, `PAC & FwdPAC & NO BTI`) |
+| `yellow` | only forward or only backward enabled |
+| `red` | neither enabled |
 
 | Value | Color | Meaning |
 |-------|:-----:|---------|
-| `Unknown` | yellow | No CFI properties found, or the architecture isn't recognized. |
+| `Unknown` | yellow | No CFI properties found and no SCS probe hit, or the architecture isn't recognized. |
 
 **Enable:**
 ```bash
 gcc -fcf-protection=full                 # x86: shadow stack + IBT
-gcc -mbranch-protection=standard         # ARM: PAC + BTI
+gcc -mbranch-protection=standard         # ARM: PAC (return-address) + BTI
+gcc -mguarded-control-stack              # ARM: GCS (hardware shadow call stack)
+clang -fsanitize=shadow-call-stack       # ARM: SCS (software shadow call stack)
+clang -fptrauth-calls                    # ARM: FwdPAC (LLVM 19+, forward-edge)
 gcc -fcf-protection -march=...zicfilp_zicfiss   # RISC-V
 ```
 

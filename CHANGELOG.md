@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Added
+- AArch64 CFI check extended to all backward/forward-edge mechanisms. Backward edge (any one suffices, reported as its own token): `PAC` (return-address signing, `-mbranch-protection=pac-ret`), `GCS` (hardware Guarded Control Stack, Armv8.9-A/Armv9.4-A, `-mguarded-control-stack`, FEATURE_1_AND GCS bit), and `SCS` (software shadow call stack, `-fsanitize=shadow-call-stack`, detected by a code-pattern probe for the `str x30, [x18], #8` / `ldr x30, [x18, #-8]!` pair — it emits no ELF note). Forward edge: `FwdPAC` (fine-grained, LLVM 19+ `-fptrauth-calls`) and `BTI` (coarse-grained).
+- New `StatusBoldGreen` ("boldgreen", bold green) result level, used by the AArch64 CFI check: backward CFI (PAC/GCS/SCS) + fine-grained forward CFI (FwdPAC) + BTI = boldgreen, backward + any forward without the full FwdPAC+BTI combination = green, only one edge = yellow, neither = red. `--fail-if` and the LLM report treat `boldgreen` as passing, and the machine-readable `status` values are documented in `docs/output.md` / `docs/usage.md`.
+- `GNU_PROPERTY_AARCH64_FEATURE_PAUTH` (0xc0000001, PAuth ABI) parsing is now platform-aware: only the LLVM Linux platform (0x10000002) has publicly defined version bits — the calls bit (1<<1) sets `FwdPAC`, the returns bit (1<<2) counts as `PAC` (`-fptrauth-returns` is also return-address signing). Other platforms' version words and the reserved (0, 0) "incompatible" tuple are not counted.
+
 ## [3.2.0]
 ### Added
 - SafeStack detection for ELF binaries.

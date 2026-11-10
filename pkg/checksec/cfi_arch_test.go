@@ -123,6 +123,34 @@ func TestGNUPropertyPayload_Malformed(t *testing.T) {
 	}
 }
 
+// TestGNUPropertyPayloadAArch64FwdPAC exercises the full section-level path
+// (note wrapper strip → property walk) for an AArch64 binary carrying both
+// FEATURE_1 (pac-ret + BTI) and FEATURE_PAUTH (-fptrauth-calls) properties,
+// as LLVM 19+ emits them.
+func TestGNUPropertyPayloadAArch64FwdPAC(t *testing.T) {
+	le := binary.LittleEndian
+
+	feat := buildPropertyNote(le, GnuPropertyArmFeature1Flag, GnuPropertyArmFeaturePAC|GnuPropertyArmFeatureBTI)
+	pauth := buildPauthNote(le, pauthPlatformLLVMLinux, pauthLLVMLinuxVersionCalls)
+	desc := append(feat, pauth...)
+
+	raw := make([]byte, 16, 16+len(desc))
+	le.PutUint32(raw[0:4], 4)                 // namesz
+	le.PutUint32(raw[4:8], uint32(len(desc))) // descsz
+	le.PutUint32(raw[8:12], 5)                // NT_GNU_PROPERTY_TYPE_0
+	copy(raw[12:16], "GNU\x00")
+	raw = append(raw, desc...)
+
+	payload := gnuPropertyPayload(raw, le)
+	if payload == nil {
+		t.Fatalf("gnuPropertyPayload rejected well-formed AArch64 note section")
+	}
+	got := parseArmPACBTIFromNotes(payload, le, 8)
+	if !got.pac || !got.fwd || !got.bti {
+		t.Fatalf("AArch64 fwd+backward PAC parse = %+v, want {pac,fwd,bti} all true", got)
+	}
+}
+
 // TestCfi_RealELFWithCET uses the Go stdlib's own ELF test fixture (always
 // present) which carries .note.gnu.property with IBT+SHSTK. End-to-end
 // regression guard for the note-header-offset bug.
@@ -135,24 +163,32 @@ func TestCfi_RealELFWithCET(t *testing.T) {
 	}
 }
 
-// TestHwCFIDispatch asserts the per-arch dispatch covers i386 and RISC-V.
+// TestHwCFIDispatch asserts the per-arch dispatch covers i386 and RISC-V, and
+// documents the desc contract: a nil payload means "no .note.gnu.property"
+// and only AArch64 can still produce output then (its software-SCS code
+// probe); every other architecture falls through to Unknown.
 func TestHwCFIDispatch(t *testing.T) {
+	empty := []byte{}
 	tests := []struct {
 		machine elf.Machine
 		class   elf.Class
+		desc    []byte
 		want    bool // should produce a non-empty hwOutput (vs falling through to Unknown)
 	}{
-		{elf.EM_X86_64, elf.ELFCLASS64, true},
-		{elf.EM_386, elf.ELFCLASS32, true},
-		{elf.EM_AARCH64, elf.ELFCLASS64, true},
-		{elf.EM_RISCV, elf.ELFCLASS64, true},
-		{elf.EM_RISCV, elf.ELFCLASS32, true},
-		{elf.EM_MIPS, elf.ELFCLASS64, false},
+		{elf.EM_X86_64, elf.ELFCLASS64, empty, true},
+		{elf.EM_386, elf.ELFCLASS32, empty, true},
+		{elf.EM_AARCH64, elf.ELFCLASS64, empty, true},
+		{elf.EM_RISCV, elf.ELFCLASS64, empty, true},
+		{elf.EM_RISCV, elf.ELFCLASS32, empty, true},
+		{elf.EM_MIPS, elf.ELFCLASS64, empty, false},
+		{elf.EM_X86_64, elf.ELFCLASS64, nil, false},
+		{elf.EM_AARCH64, elf.ELFCLASS64, nil, false}, // no notes and no SCS probe hit
 	}
 	for _, tt := range tests {
-		out, _ := hwCFIDispatch(tt.machine, tt.class, nil, binary.LittleEndian)
+		file := &elf.File{FileHeader: elf.FileHeader{Machine: tt.machine, Class: tt.class}}
+		out, _ := hwCFIDispatch(file, tt.desc)
 		if (out != "") != tt.want {
-			t.Errorf("hwCFIDispatch(%v, %v) out=%q, want non-empty=%v", tt.machine, tt.class, out, tt.want)
+			t.Errorf("hwCFIDispatch(%v, %v, desc=%v) out=%q, want non-empty=%v", tt.machine, tt.class, tt.desc != nil, out, tt.want)
 		}
 	}
 }
