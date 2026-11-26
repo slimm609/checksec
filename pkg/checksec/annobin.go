@@ -66,7 +66,7 @@ func parseAnnobinName(raw []byte) (kind byte, attr string, val []byte) {
 // walkAnnobinNotes walks a .gnu.build.attributes payload, calling fn for each
 // OPEN/FUNC note's parsed name. Bounds-safe on truncated/hostile input.
 func walkAnnobinNotes(data []byte, bo binary.ByteOrder, fn func(kind byte, attr string, val []byte)) {
-	pad4 := func(n uint32) int { return int((uint64(n) + 3) &^ 3) }
+	pad4 := func(n uint32) uint64 { return (uint64(n) + 3) &^ 3 }
 	i := 0
 	for i+12 <= len(data) {
 		namesz := bo.Uint32(data[i : i+4])
@@ -76,11 +76,13 @@ func walkAnnobinNotes(data []byte, bo binary.ByteOrder, fn func(kind byte, attr 
 
 		nameLen := pad4(namesz)
 		descLen := pad4(descsz)
-		if nameLen < 0 || descLen < 0 || i+nameLen+descLen > len(data) || i+nameLen < i {
+		// Compare as uint64: these sizes can overflow int on 32-bit platforms.
+		remaining := uint64(len(data) - i)
+		if nameLen > remaining || descLen > remaining-nameLen {
 			break
 		}
 		name := data[i : i+int(namesz)]
-		i += nameLen + descLen
+		i += int(nameLen + descLen)
 
 		if ntype != ntGnuBuildAttributeOpen && ntype != ntGnuBuildAttributeFunc {
 			continue
